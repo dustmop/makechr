@@ -44,7 +44,14 @@ def flatten(matrix):
   return [e for sublist in matrix for e in sublist]
 
 
-LEGAL_COLORS = flatten(transpose(LEGAL_COLORS))
+def to_lookup_table(elems):
+  answer = {}
+  for i,val in enumerate(elems):
+    answer[val] = i
+  return answer
+
+
+LEGAL_COLORS = to_lookup_table(flatten(transpose(LEGAL_COLORS)))
 
 
 class TooManyColorsError(StandardError):
@@ -55,10 +62,10 @@ def pixel_to_nescolor(pixel):
   # TODO: Can we use ** syntax?
   (r, g, b) = (pixel[0], pixel[1], pixel[2])
   color_num = r * 256 * 256 + g * 256 + b
-  for i,val in enumerate(LEGAL_COLORS):
-    if val == color_num:
-      return i
-  return -1
+  nc = LEGAL_COLORS.get(color_num)
+  if nc is None:
+    return -1
+  return nc
 
 
 def add_nescolor_to_needs(nc, needs):
