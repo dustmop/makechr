@@ -17,12 +17,12 @@ NUM_BLOCKS_Y = HEIGHT / BLOCK_SIZE
 
 # From: http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php?title=NES_Palette
                 # 00        10        20        30
-LEGAL_COLORS = [[0x7c7c7c, 0xbcbcbc, 0xf8f8f8, 0xfcfcfc], # gray
-                [0x0000fc, 0x0078f8, 0x3cbcfc, 0xa4e4fc], # blue
+LEGAL_COLORS = [[0x636363, 0xbababa, 0xf8f8f8, 0xfcfcfc], # gray
+                [0x004eff, 0x0078f8, 0x3cbcfc, 0xa4e4fc], # blue
                 [0x0000bc, 0x0058f8, 0x6888fc, 0xb8b8f8], # blue dark
                 [0x4428bc, 0x6844fc, 0x9878f8, 0xd8b8f8], # purple
                 [0x940084, 0xd800cc, 0xf878f8, 0xf8b8f8], # pink
-                [0xa80020, 0xe40058, 0xf85898, 0xf8a4c0], # red
+                [0xff0000, 0xe40058, 0xf85898, 0xf8a4c0], # red
                 [0xa81000, 0xf83800, 0xf87858, 0xf0d0b0], # orange
                 [0x881400, 0xe45c10, 0xfca044, 0xfce0a8], # orange dark
                 [0x503000, 0xac7c00, 0xf8b800, 0xf8d878], # yellow
@@ -54,8 +54,27 @@ def to_lookup_table(elems):
 LEGAL_COLORS = to_lookup_table(flatten(transpose(LEGAL_COLORS)))
 
 
-class TooManyColorsError(StandardError):
-  pass
+class TooManyColorsError(Exception):
+  def __init__(self, block_y, block_x):
+    self.block_y = block_y
+    self.block_x = block_x
+
+  def __str__(self):
+    return repr('@ block (%dy,%dx)' % (self.block_y, self.block_x))
+
+
+class ColorNotAllowedError(Exception):
+  def __init__(self, pixel, block_y, block_x, y, x):
+    self.pixel = pixel
+    self.block_y = block_y
+    self.block_x = block_x
+    self.y = y
+    self.x = x
+
+  def __str__(self):
+    return repr('%x %x %x @ block (%dy,%dx) and pixel (%dy,%dx)' %
+                (self.pixel[0], self.pixel[1], self.pixel[2],
+                 self.block_y, self.block_x, self.y, self.x))
 
 
 def pixel_to_nescolor(pixel):
@@ -75,7 +94,7 @@ def add_nescolor_to_needs(nc, needs):
     if needs[i] is None:
       needs[i] = nc
       return True
-  needs.push(nc)
+  needs.append(nc)
   return False
 
 
@@ -99,8 +118,10 @@ def validate_block(img, block_y, block_x):
         continue
       p = raw_pixels[pixel_x, pixel_y]
       nc = pixel_to_nescolor(p)
+      if nc == -1:
+        raise ColorNotAllowedError(p, block_y, block_x, y, x)
       if not add_nescolor_to_needs(nc, needs):
-        raise TooManyColorsError()
+        raise TooManyColorsError(block_y, block_x)
 
 
 def validate_image(img):
