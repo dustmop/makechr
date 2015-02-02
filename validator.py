@@ -13,26 +13,29 @@ TILE_SIZE = 8
 NUM_BLOCKS_X = WIDTH / BLOCK_SIZE
 NUM_BLOCKS_Y = HEIGHT / BLOCK_SIZE
 
+COLOR_TOLERANCE = 64
+
 
 # From: http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php?title=NES_Palette
                 # 00        10        20        30
-LEGAL_COLORS = [[0x636363, 0xbababa, 0xf8f8f8, 0xfcfcfc], # gray
-                [0x004eff, 0x0078f8, 0x3cbcfc, 0xa4e4fc], # blue
-                [0x0000bc, 0x0058f8, 0x6888fc, 0xb8b8f8], # blue dark
-                [0x4428bc, 0x6844fc, 0x9878f8, 0xd8b8f8], # purple
-                [0x940084, 0xd800cc, 0xf878f8, 0xf8b8f8], # pink
-                [0xff0000, 0xe40058, 0xf85898, 0xf8a4c0], # red
-                [0xa81000, 0xf83800, 0xf87858, 0xf0d0b0], # orange
-                [0x881400, 0xe45c10, 0xfca044, 0xfce0a8], # orange dark
-                [0x503000, 0xac7c00, 0xf8b800, 0xf8d878], # yellow
-                [0x007800, 0x00b800, 0xb8f818, 0xd8f878], # green light
-                [0x006800, 0x00a800, 0x58d854, 0xb8f8b8], # green
-                [0x005800, 0x00a844, 0x58f898, 0xb8f8d8], # green dark
-                [0x004058, 0x008888, 0x00e8d8, 0x00fcfc], # blue green
-                [0x000001, 0x000001, 0x787878, 0xf8d8f8], # gray dark
-                [0x000001, 0x000001, 0x000001, 0x000001], # black 1
-                [0x000000, 0x000001, 0x000001, 0x000001], # black 2
-                ]
+RGB_COLORS = [[0x7c7c7c, 0xbcbcbc, 0xf8f8f8, 0xfcfcfc], # gray
+              [0x0000fc, 0x0078f8, 0x3cbcfc, 0xa4e4fc], # blue
+              [0x0000bc, 0x0058f8, 0x6888fc, 0xb8b8f8], # blue dark
+              [0x4428bc, 0x6844fc, 0x9878f8, 0xd8b8f8], # purple
+              [0x940084, 0xd800cc, 0xf878f8, 0xf8b8f8], # pink
+              [0xa80020, 0xe40058, 0xf85898, 0xf8a4c0], # red
+              [0xa81000, 0xf83800, 0xf87858, 0xf0d0b0], # orange
+              [0x881400, 0xe45c10, 0xfca044, 0xfce0a8], # orange dark
+              [0x503000, 0xac7c00, 0xf8b800, 0xf8d878], # yellow
+              [0x007800, 0x00b800, 0xb8f818, 0xd8f878], # green light
+              [0x006800, 0x00a800, 0x58d854, 0xb8f8b8], # green
+              [0x005800, 0x00a844, 0x58f898, 0xb8f8d8], # green dark
+              [0x004058, 0x008888, 0x00e8d8, 0x00fcfc], # blue green
+              [0x000000, 0x000001, 0x787878, 0xf8d8f8], # gray dark
+              [0x000000, 0x000000, 0x000000, 0x000000], # black 1
+              [0x000000, 0x000000, 0x000000, 0x000000], # black 2
+              ]
+
 
 
 def transpose(matrix):
@@ -50,7 +53,8 @@ def to_lookup_table(elems):
   return answer
 
 
-LEGAL_COLORS = to_lookup_table(flatten(transpose(LEGAL_COLORS)))
+RGB_COLORS = flatten(transpose(RGB_COLORS))
+RGB_XLAT = to_lookup_table(RGB_COLORS)
 
 
 class TooManyColorsError(Exception):
@@ -80,10 +84,24 @@ def pixel_to_nescolor(pixel):
   # Note: If we convert to python3, use the (r, g, b, *unused) syntax.
   (r, g, b) = (pixel[0], pixel[1], pixel[2])
   color_num = r * 256 * 256 + g * 256 + b
-  nc = LEGAL_COLORS.get(color_num)
-  if nc is None:
+  nc = RGB_XLAT.get(color_num)
+  if not nc is None:
+    return nc
+  # Resolve color.
+  found_nc = -1
+  found_diff = float('infinity')
+  for i,rgb in enumerate(RGB_COLORS):
+    diff_r = abs(r - rgb / (256 * 256))
+    diff_g = abs(g - (rgb / 256) % 256)
+    diff_b = abs(b - rgb % 256)
+    diff = diff_r + diff_g + diff_b
+    if diff < found_diff:
+      found_nc = i
+      found_diff = diff
+  if found_diff > COLOR_TOLERANCE:
     return -1
-  return nc
+  RGB_XLAT[color_num] = found_nc
+  return found_nc
 
 
 def add_nescolor_to_needs(nc, needs):
