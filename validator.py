@@ -1,7 +1,6 @@
 from PIL import Image
 import sys
 
-# TODO: Convert to python3
 # TODO: Multiple files
 # TODO: Try different image libraries
 # TODO: Performance test
@@ -78,7 +77,7 @@ class ColorNotAllowedError(Exception):
 
 
 def pixel_to_nescolor(pixel):
-  # TODO: Can we use ** syntax?
+  # Note: If we convert to python3, use the (r, g, b, *unused) syntax.
   (r, g, b) = (pixel[0], pixel[1], pixel[2])
   color_num = r * 256 * 256 + g * 256 + b
   nc = LEGAL_COLORS.get(color_num)
