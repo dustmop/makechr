@@ -81,7 +81,14 @@ class ColorNotAllowedError(Exception):
                 (self.pixel[0], self.pixel[1], self.pixel[2],
                  self.block_y, self.block_x, self.y, self.x))
 
-
+# pixel_to_nescolor
+#
+# Given an rgb pixel, in the form (red, green, blue, *unused), from PIL/pillow,
+# find the corresponding index in the NES system palette that most closely
+# matches that color. RGB_XLAT makes this fast by caching searches, and finding
+# answers with a dictionary lookup. If the color cannot be converted, return -1.
+#
+# pixel: An RGB color.
 def pixel_to_nescolor(pixel):
   # Note: If we convert to python3, use the (r, g, b, *unused) syntax.
   (r, g, b) = (pixel[0], pixel[1], pixel[2])
@@ -106,6 +113,13 @@ def pixel_to_nescolor(pixel):
   return found_nc
 
 
+# add_nescolor_to_needs
+#
+# Add a nescolor to a list of needed nescolors. The needs array must be
+# at least length 4, with unused entries set to None.
+#
+# nc: A nescolor index, integer 0 - 63.
+# needs: An array of at least length 4, with unused entries set to None.
 def add_nescolor_to_needs(nc, needs):
   for i in xrange(4):
     if needs[i] == nc:
