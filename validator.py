@@ -31,7 +31,7 @@ RGB_COLORS = [[0x7c7c7c, 0xbcbcbc, 0xf8f8f8, 0xfcfcfc], # gray
               [0x006800, 0x00a800, 0x58d854, 0xb8f8b8], # green
               [0x005800, 0x00a844, 0x58f898, 0xb8f8d8], # green dark
               [0x004058, 0x008888, 0x00e8d8, 0x00fcfc], # blue green
-              [0x000000, 0x000001, 0x787878, 0xf8d8f8], # gray dark
+              [0x000000, 0x2c2c2c, 0x787878, 0xf8d8f8], # gray dark
               [0x000000, 0x000000, 0x000000, 0x000000], # black 1
               [0x000000, 0x000000, 0x000000, 0x000000], # black 2
               ]
@@ -50,6 +50,8 @@ def to_lookup_table(elems):
   answer = {}
   for i,val in enumerate(elems):
     answer[val] = i
+  # Set black.
+  answer[0] = 0xf
   return answer
 
 
@@ -107,12 +109,11 @@ def pixel_to_nescolor(pixel):
 def add_nescolor_to_needs(nc, needs):
   for i in xrange(4):
     if needs[i] == nc:
-      return True
+      return
     if needs[i] is None:
       needs[i] = nc
-      return True
+      return
   needs.append(nc)
-  return False
 
 
 # validate_block
@@ -137,8 +138,9 @@ def validate_block(img, block_y, block_x):
       nc = pixel_to_nescolor(p)
       if nc == -1:
         raise ColorNotAllowedError(p, block_y, block_x, y, x)
-      if not add_nescolor_to_needs(nc, needs):
-        raise TooManyColorsError(block_y, block_x)
+      add_nescolor_to_needs(nc, needs)
+  if len(needs) > 4:
+    raise TooManyColorsError(block_y, block_x)
 
 
 def validate_image(img):
