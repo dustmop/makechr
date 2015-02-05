@@ -60,26 +60,27 @@ RGB_XLAT = to_lookup_table(RGB_COLORS)
 
 
 class TooManyColorsError(Exception):
-  def __init__(self, block_y, block_x):
-    self.block_y = block_y
-    self.block_x = block_x
+  def __init__(self, tile_y, tile_x):
+    self.tile_y = tile_y
+    self.tile_x = tile_x
 
   def __str__(self):
-    return repr('@ block (%dy,%dx)' % (self.block_y, self.block_x))
+    return repr('@ tile (%dy,%dx)' % (self.tile_y, self.tile_x))
 
 
 class ColorNotAllowedError(Exception):
-  def __init__(self, pixel, block_y, block_x, y, x):
+  def __init__(self, pixel, tile_y, tile_x, y, x):
     self.pixel = pixel
-    self.block_y = block_y
-    self.block_x = block_x
+    self.tile_y = tile_y
+    self.tile_x = tile_x
     self.y = y
     self.x = x
 
   def __str__(self):
-    return repr('%x %x %x @ block (%dy,%dx) and pixel (%dy,%dx)' %
+    return repr('%x %x %x @ tile (%dy,%dx) and pixel (%dy,%dx)' %
                 (self.pixel[0], self.pixel[1], self.pixel[2],
-                 self.block_y, self.block_x, self.y, self.x))
+                 self.tile_y, self.tile_x, self.y, self.x))
+
 
 # pixel_to_nescolor
 #
@@ -118,7 +119,7 @@ def pixel_to_nescolor(pixel):
 # Add a nescolor to a list of needed nescolors. The needs array must be
 # at least length 4, with unused entries set to None.
 #
-# nc: A nescolor index, integer 0 - 63.
+# nc: A nescolor index, integer 0..63.
 # needs: An array of at least length 4, with unused entries set to None.
 def add_nescolor_to_needs(nc, needs):
   for i in xrange(4):
@@ -130,31 +131,49 @@ def add_nescolor_to_needs(nc, needs):
   needs.append(nc)
 
 
-# validate_block
+# validate_tile
 #
-# Verify that the block contains colors that match the system palette, and
+# Verify that the tile contains colors that match the system palette, and
 # does not contain too many colors.
 #
 # img: The full pixel art image.
-# block_y: The y position of the block, 0..15
-# block_x: The x position of the block, 0..15
-def validate_block(img, block_y, block_x):
+# tile_y: The y position of the tile, 0..31.
+# tile_x: The x position of the tile, 0..29.
+def validate_tile(img, tile_y, tile_x):
+  (image_x, image_y) = img.size
+  pixel_y = tile_y * TILE_SIZE
+  pixel_x = tile_x * TILE_SIZE
+  # Check if this tile overruns the image.
+  if pixel_y + TILE_SIZE > image_y or pixel_x + TILE_SIZE > image_x:
+    return
   needs = [None] * 4
   raw_pixels = img.load()
-  (image_x, image_y) = img.size
-  for y in xrange(BLOCK_SIZE):
-    for x in xrange(BLOCK_SIZE):
-      pixel_x = x + block_x * BLOCK_SIZE
-      pixel_y = y + block_y * BLOCK_SIZE
-      if pixel_x >= image_x or pixel_y >= image_y:
-        continue
-      p = raw_pixels[pixel_x, pixel_y]
+  for i in xrange(TILE_SIZE):
+    for j in xrange(TILE_SIZE):
+      y = pixel_y + i
+      x = pixel_x + j
+      p = raw_pixels[x, y]
       nc = pixel_to_nescolor(p)
       if nc == -1:
-        raise ColorNotAllowedError(p, block_y, block_x, y, x)
+        raise ColorNotAllowedError(p, tile_y, tile_x, i, j)
       add_nescolor_to_needs(nc, needs)
   if len(needs) > 4:
-    raise TooManyColorsError(block_y, block_x)
+    raise TooManyColorsError(tile_y, tile_x)
+
+
+# validate_block
+#
+# Verify that the block contains valid tiles.
+#
+# img: The full pixel art image.
+# block_y: The y position of the block, 0..15.
+# block_x: The x position of the block, 0..14.
+def validate_block(img, block_y, block_x):
+  tile_y = block_y * 2
+  tile_x = block_x * 2
+  for i in xrange(2):
+    for j in xrange(2):
+      validate_tile(img, tile_y + i, tile_x + j)
 
 
 def validate_image(img):
