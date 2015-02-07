@@ -1,3 +1,4 @@
+import collections
 from PIL import Image
 import sys
 
@@ -124,29 +125,33 @@ def pixel_to_nescolor(pixel):
 def add_nescolor_to_needs(nc, needs):
   for i in xrange(4):
     if needs[i] == nc:
-      return
+      return i
     if needs[i] is None:
       needs[i] = nc
-      return
+      return i
   needs.append(nc)
+  return len(needs) - 1
 
 
-# validate_tile
+# process_tile
 #
-# Verify that the tile contains colors that match the system palette, and
-# does not contain too many colors.
+# Process the tile to obtain its color needs and dot profile, verifying that
+# the tile contains colors that match the system palette, and does not contain
+# too many colors.
 #
 # img: The full pixel art image.
 # tile_y: The y position of the tile, 0..31.
 # tile_x: The x position of the tile, 0..29.
-def validate_tile(img, tile_y, tile_x):
+# Returns the color_needs and dot_profile.
+def process_tile(img, tile_y, tile_x):
   (image_x, image_y) = img.size
   pixel_y = tile_y * TILE_SIZE
   pixel_x = tile_x * TILE_SIZE
   # Check if this tile overruns the image.
   if pixel_y + TILE_SIZE > image_y or pixel_x + TILE_SIZE > image_x:
-    return
-  needs = [None] * 4
+    return None, None
+  color_needs = [None] * 4
+  dot_profile = [None] * (TILE_SIZE * TILE_SIZE)
   raw_pixels = img.load()
   for i in xrange(TILE_SIZE):
     for j in xrange(TILE_SIZE):
@@ -156,36 +161,42 @@ def validate_tile(img, tile_y, tile_x):
       nc = pixel_to_nescolor(p)
       if nc == -1:
         raise ColorNotAllowedError(p, tile_y, tile_x, i, j)
-      add_nescolor_to_needs(nc, needs)
-  if len(needs) > 4:
+      idx = add_nescolor_to_needs(nc, color_needs)
+      dot_profile[i * TILE_SIZE + j] = idx
+  if len(color_needs) > 4:
     raise TooManyColorsError(tile_y, tile_x)
+  return color_needs, dot_profile
 
 
-# validate_block
+# process_block
 #
-# Verify that the block contains valid tiles.
+# Process the individual tiles in the block.
 #
 # img: The full pixel art image.
 # block_y: The y position of the block, 0..15.
 # block_x: The x position of the block, 0..14.
-def validate_block(img, block_y, block_x):
+# profile_tally: A map from each dot_profile to how many times it has appeared.
+def process_block(img, block_y, block_x, profile_tally):
   tile_y = block_y * 2
   tile_x = block_x * 2
   for i in xrange(2):
     for j in xrange(2):
-      validate_tile(img, tile_y + i, tile_x + j)
+      (color_needs, dot_profile) = process_tile(img, tile_y + i, tile_x + j)
+      profile_tally[str(dot_profile)] += 1
 
 
-def validate_image(img):
+def process_image(img):
+  profile_tally = collections.defaultdict(int)
   for y in xrange(NUM_BLOCKS_Y):
     for x in xrange(NUM_BLOCKS_X):
-      validate_block(img, y, x)
+      process_block(img, y, x, profile_tally)
+  print('Number of dot-profiles: {0}'.format(len(profile_tally)))
 
 
 def run():
   filename = sys.argv[1]
   img = Image.open(filename)
-  validate_image(img)
+  process_image(img)
 
 
 if __name__ == '__main__':
