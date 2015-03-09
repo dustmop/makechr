@@ -97,7 +97,7 @@ class ImageProcessor(object):
         idx = self.add_nescolor_to_needs(nc, color_needs)
         dot_profile[i * TILE_SIZE + j] = idx
     if len(color_needs) > 4:
-      raise errors.TooManyColorsError(tile_y, tile_x)
+      raise errors.PaletteOverflowError(tile_y, tile_x)
     return color_needs, dot_profile
 
   # process_block

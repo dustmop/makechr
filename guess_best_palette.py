@@ -1,5 +1,9 @@
+import errors
 import rgb
 import palette
+
+
+NUM_ALLOWED_PALETTES = 4
 
 
 class GuessBestPalette(object):
@@ -71,5 +75,7 @@ class GuessBestPalette(object):
   def make_palette(self, color_manifest):
     uniq_color_sets = self.get_uniq_color_sets(color_manifest)
     minimal_colors = self.get_minimal_colors(uniq_color_sets)
+    if len(minimal_colors) > NUM_ALLOWED_PALETTES:
+      raise errors.TooManyPalettesError(len(minimal_colors))
     bg_color = self.get_background_color(minimal_colors)
     return self.get_palette(bg_color, minimal_colors)
