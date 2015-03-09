@@ -175,22 +175,40 @@ def process_tile(img, tile_y, tile_x):
 # img: The full pixel art image.
 # block_y: The y position of the block, 0..15.
 # block_x: The x position of the block, 0..14.
-# profile_tally: A map from each dot_profile to how many times it has appeared.
-def process_block(img, block_y, block_x, profile_tally):
+# color_manifest: Dict where the keys are all color_needs, vals are counters.
+# dot_manifest: Dict where the keys are all dot_profiles, vals are counters.
+# artifacts: Matrix containing color_need & dot_profile counters for each tile.
+def process_block(img, block_y, block_x, color_manifest, dot_manifest,
+                  artifacts):
   tile_y = block_y * 2
   tile_x = block_x * 2
   for i in xrange(2):
     for j in xrange(2):
       (color_needs, dot_profile) = process_tile(img, tile_y + i, tile_x + j)
-      profile_tally[str(dot_profile)] += 1
+      key = str(color_needs)
+      if key in color_manifest:
+        cid = color_manifest[key]
+      else:
+        cid = len(color_manifest)
+        color_manifest[key] = cid
+      key = str(dot_profile)
+      if key in dot_manifest:
+        did = dot_manifest[key]
+      else:
+        did = len(dot_manifest)
+        dot_manifest[key] = did
+      artifacts[tile_y + i][tile_x + j] = (cid, did)
 
 
 def process_image(img):
-  profile_tally = collections.defaultdict(int)
+  color_manifest = {}
+  dot_manifest = {}
+  artifacts = [[None] * (NUM_BLOCKS_X * 2)] * (NUM_BLOCKS_Y * 2)
   for y in xrange(NUM_BLOCKS_Y):
     for x in xrange(NUM_BLOCKS_X):
-      process_block(img, y, x, profile_tally)
-  print('Number of dot-profiles: {0}'.format(len(profile_tally)))
+      process_block(img, y, x, color_manifest, dot_manifest, artifacts)
+  print('Number of dot-profiles: {0}'.format(len(dot_manifest)))
+  print('Number of color-needs: {0}'.format(len(color_manifest)))
 
 
 def run():
