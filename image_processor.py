@@ -8,7 +8,7 @@ import rgb
 # TODO: Use actual command-line parsing
 
 WIDTH = 256
-HEIGHT = 256
+HEIGHT = 240
 BLOCK_SIZE = 16
 TILE_SIZE = 8
 NUM_BLOCKS_X = WIDTH / BLOCK_SIZE
@@ -136,6 +136,6 @@ class ImageProcessor(object):
       for x in xrange(NUM_BLOCKS_X):
         self.process_block(img, y, x)
     guesser = guess_best_palette.GuessBestPalette()
-    palette = guesser.make_palette(self._color_manifest)
+    self._palette = guesser.make_palette(self._color_manifest)
     print('Number of dot-profiles: {0}'.format(len(self._dot_manifest)))
-    print('Palette: {0}'.format(palette))
+    print('Palette: {0}'.format(self._palette))
