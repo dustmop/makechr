@@ -31,12 +31,15 @@ def flatten(matrix):
   return [e for sublist in matrix for e in sublist]
 
 
+BLACK = 0xf
+
+
 def to_lookup_table(elems):
   answer = {}
   for i,val in enumerate(elems):
     answer[val] = i
   # Set black.
-  answer[0] = 0xf
+  answer[0] = BLACK
   return answer
 
 

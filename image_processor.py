@@ -1,4 +1,5 @@
 import errors
+import guess_best_palette
 import rgb
 
 
@@ -134,5 +135,7 @@ class ImageProcessor(object):
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
         self.process_block(img, y, x)
+    guesser = guess_best_palette.GuessBestPalette()
+    palette = guesser.make_palette(self._color_manifest)
     print('Number of dot-profiles: {0}'.format(len(self._dot_manifest)))
-    print('Number of color-needs: {0}'.format(len(self._color_manifest)))
+    print('Palette: {0}'.format(palette))
