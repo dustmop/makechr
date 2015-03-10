@@ -15,10 +15,8 @@ class GuessBestPalette(object):
   # easy to do subset comparisions later.
   #
   # text: A text representation of a color set. Example: '[45, 15, 8, None]'
-  def to_color_set(self, text):
-    # Key is a stringified array, that may contain None for some elements.
-    return sorted([int(e) for e in text.strip('[]').split(', ') if e != 'None'],
-                  reverse=True)
+  def to_color_set(self, color_needs):
+    return sorted([e for e in color_needs if not e is None], reverse=True)
 
   # is_color_subset
   #
@@ -36,8 +34,8 @@ class GuessBestPalette(object):
   # color_manifest: A dict of color sets.
   def get_uniq_color_sets(self, color_manifest):
     seen = {}
-    for key in color_manifest:
-      color_set = self.to_color_set(key)
+    for color_needs in color_manifest:
+      color_set = self.to_color_set(color_needs)
       name = '-'.join(['%02x' % e for e in color_set])
       seen[name] = color_set
     return sorted(seen.values())
@@ -72,8 +70,8 @@ class GuessBestPalette(object):
       pal.add([bg_color] + [c for c in color_set if c != bg_color])
     return pal
 
-  def make_palette(self, color_manifest):
-    uniq_color_sets = self.get_uniq_color_sets(color_manifest)
+  def make_palette(self, color_needs_list):
+    uniq_color_sets = self.get_uniq_color_sets(color_needs_list)
     minimal_colors = self.get_minimal_colors(uniq_color_sets)
     if len(minimal_colors) > NUM_ALLOWED_PALETTES:
       raise errors.TooManyPalettesError(len(minimal_colors))

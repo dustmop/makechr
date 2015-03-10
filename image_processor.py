@@ -120,22 +120,26 @@ class ImageProcessor(object):
         else:
           cid = len(self._color_manifest)
           self._color_manifest[key] = cid
+          self._color_list.append(color_needs)
         key = str(dot_profile)
         if key in self._dot_manifest:
           did = self._dot_manifest[key]
         else:
           did = len(self._dot_manifest)
           self._dot_manifest[key] = did
+          self._dot_list.append(dot_profile)
         self._artifacts[tile_y + i][tile_x + j] = (cid, did)
 
   def process_image(self, img):
     self._color_manifest = {}
+    self._color_list = []
     self._dot_manifest = {}
+    self._dot_list = []
     self._artifacts = [[None] * (NUM_BLOCKS_X * 2)] * (NUM_BLOCKS_Y * 2)
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
         self.process_block(img, y, x)
     guesser = guess_best_palette.GuessBestPalette()
-    self._palette = guesser.make_palette(self._color_manifest)
+    self._palette = guesser.make_palette(self._color_list)
     print('Number of dot-profiles: {0}'.format(len(self._dot_manifest)))
     print('Palette: {0}'.format(self._palette))
