@@ -135,7 +135,8 @@ class ImageProcessor(object):
     self._color_list = []
     self._dot_manifest = {}
     self._dot_list = []
-    self._artifacts = [[None] * (NUM_BLOCKS_X * 2)] * (NUM_BLOCKS_Y * 2)
+    self._artifacts = [row[:] for row in
+                       [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
         self.process_block(img, y, x)
