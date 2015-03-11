@@ -22,8 +22,12 @@ class ColorNotAllowedError(Exception):
 
 
 class TooManyPalettesError(Exception):
-  def __init__(self, num):
-    self.num = num
+  def __init__(self, colors):
+    self.colors = colors
 
   def __str__(self):
-    return '%d palettes > 4' % self.num
+    accum = []
+    for row in self.colors:
+      p = '-'.join(['%02x' % c for c in row])
+      accum.append(p)
+    return '/'.join(accum)
