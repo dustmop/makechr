@@ -35,3 +35,7 @@ class Palette(object):
     else:
       raise IndexError
     return (i, self.pals[i])
+
+  def get(self, i):
+    if i < len(self.pals):
+      return self.pals[i]

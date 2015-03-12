@@ -1,7 +1,9 @@
+import chr_tile
 import errors
 import guess_best_palette
 import id_manifest
 import rgb
+import sys
 
 
 # TODO: Try different image libraries
@@ -127,7 +129,37 @@ class ImageProcessor(object):
     bcid = self._block_color_manifest.id(block_color_needs)
     self._artifacts[y][x][ARTIFACT_BCID] = bcid
 
+  def get_dot_xlat(self, color_needs, palette_option):
+    dot_xlat = []
+    for c in color_needs:
+      if c is None:
+        continue
+      for i,p in enumerate(palette_option):
+        if c == p:
+          dot_xlat.append(i)
+          break
+      else:
+        raise IndexError
+    return dot_xlat
+
+  def get_nametable_num(self, xlat, did):
+    key = str([did] + xlat)
+    if not key in self._nametable_cache:
+      dot_profile = self._dot_manifest.get(did)
+      tile = chr_tile.ChrTile()
+      for row in xrange(8):
+        for col in xrange(8):
+          i = row * 8 + col
+          val = xlat[dot_profile[i]]
+          tile.set(val, col, row)
+      nt_num = len(self._chr_data)
+      self._chr_data.append(tile)
+      self._nametable_cache[key] = nt_num
+    return self._nametable_cache[key]
+
   def process_image(self, img):
+    self._nametable_cache = {}
+    self._chr_data = []
     self._color_manifest = id_manifest.IdManifest()
     self._dot_manifest = id_manifest.IdManifest()
     self._block_color_manifest = id_manifest.IdManifest()
@@ -149,8 +181,21 @@ class ImageProcessor(object):
         (cid, did, bcid, unused) = self._artifacts[y][x]
         block_color_needs = self._block_color_manifest.get(bcid)
         (pid, palette_option) = self._palette.select(block_color_needs)
+        # TODO: Maybe better to get palette per block instead of assigning it
+        # to each tile?
         self._artifacts[y][x][ARTIFACT_PID] = pid
+        self._artifacts[y][x+1][ARTIFACT_PID] = pid
+        self._artifacts[y+1][x][ARTIFACT_PID] = pid
+        self._artifacts[y+1][x+1][ARTIFACT_PID] = pid
     # For each tile in the artifact table, create the chr and nametable.
-    # TODO
+    for y in xrange(NUM_BLOCKS_Y * 2):
+      for x in xrange(NUM_BLOCKS_X * 2):
+        (cid, did, bcid, pid) = self._artifacts[y][x]
+        palette_option = self._palette.get(pid)
+        color_needs = self._color_manifest.get(cid)
+        dot_xlat = self.get_dot_xlat(color_needs, palette_option)
+        nt_num = self.get_nametable_num(dot_xlat, did)
+    # Output.
     print('Number of dot-profiles: {0}'.format(self._dot_manifest.size()))
+    print('Number of tiles: {0}'.format(len(self._chr_data)))
     print('Palette: {0}'.format(self._palette))
