@@ -195,7 +195,13 @@ class ImageProcessor(object):
         color_needs = self._color_manifest.get(cid)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
         nt_num = self.get_nametable_num(dot_xlat, did)
-    # Output.
+    # Output chr.dat.
+    fout = open('chr.dat', 'wb')
+    for d in self._chr_data:
+      d.write(fout)
+    padding = 8192 - (len(self._chr_data) * 16)
+    fout.write(chr(0) * padding)
+    fout.close()
     print('Number of dot-profiles: {0}'.format(self._dot_manifest.size()))
     print('Number of tiles: {0}'.format(len(self._chr_data)))
     print('Palette: {0}'.format(self._palette))
