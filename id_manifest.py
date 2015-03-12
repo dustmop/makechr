@@ -13,6 +13,9 @@ class IdManifest(object):
       self._elems.append(obj)
     return result
 
+  def get(self, id):
+    return self._elems[id]
+
   def elems(self):
     return self._elems
 

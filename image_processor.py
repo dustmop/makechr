@@ -142,5 +142,14 @@ class ImageProcessor(object):
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
     self._palette = guesser.make_palette(self._block_color_manifest.elems())
+    # For each block, get the attribute aka the palette.
+    for y in xrange(NUM_BLOCKS_Y):
+      for x in xrange(NUM_BLOCKS_X):
+        (cid, did, mcid, unused) = self._artifacts[y * 2][x * 2]
+        color_needs = self._color_manifest.get(cid)
+        (pid, palette_option) = self._palette.select(color_needs)
+        self._artifacts[y * 2][x * 2][ARTIFACT_PID] = pid
+    # For each tile in the artifact table, create the chr and nametable.
+    # TODO
     print('Number of dot-profiles: {0}'.format(self._dot_manifest.size()))
     print('Palette: {0}'.format(self._palette))

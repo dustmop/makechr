@@ -10,6 +10,7 @@ class Palette(object):
   def __init__(self):
     self.bg_color = None
     self.pals = []
+    self.pal_as_sets = []
 
   def __str__(self):
     return ('P/' +
@@ -22,6 +23,15 @@ class Palette(object):
   def add(self, p):
     if not self.bg_color in p:
       raise PaletteError('Background color not found in PaletteOption')
-    self.pals.append([self.bg_color] + [c for c in p if c != self.bg_color])
+    p = [self.bg_color] + [c for c in p if c != self.bg_color]
+    self.pals.append(p)
+    self.pal_as_sets.append(set(p))
 
-
+  def select(self, color_needs):
+    want = set([c for c in color_needs if not c is None])
+    for i,p in enumerate(self.pal_as_sets):
+      if want <= p:
+        break
+    else:
+      raise IndexError
+    return (i, self.pals[i])
