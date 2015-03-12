@@ -115,18 +115,17 @@ class ImageProcessor(object):
   # block_x: The x position of the block, 0..14.
   def process_block(self, img, block_y, block_x):
     block_color_needs = set([])
-    tile_y = block_y * 2
-    tile_x = block_x * 2
+    y = block_y * 2
+    x = block_x * 2
     for i in xrange(2):
       for j in xrange(2):
-        (color_needs, dot_profile) = self.process_tile(img, tile_y + i,
-                                                       tile_x + j)
+        (color_needs, dot_profile) = self.process_tile(img, y + i, x + j)
         cid = self._color_manifest.id(color_needs)
         did = self._dot_manifest.id(dot_profile)
-        self._artifacts[tile_y + i][tile_x + j] = [cid, did, None, None]
+        self._artifacts[y + i][x + j] = [cid, did, None, None]
         block_color_needs |= set(color_needs)
     bcid = self._block_color_manifest.id(block_color_needs)
-    self._artifacts[tile_y][tile_x][ARTIFACT_BCID] = bcid
+    self._artifacts[y][x][ARTIFACT_BCID] = bcid
 
   def process_image(self, img):
     self._color_manifest = id_manifest.IdManifest()
@@ -136,19 +135,21 @@ class ImageProcessor(object):
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.
-    for y in xrange(NUM_BLOCKS_Y):
-      for x in xrange(NUM_BLOCKS_X):
-        self.process_block(img, y, x)
+    for block_y in xrange(NUM_BLOCKS_Y):
+      for block_x in xrange(NUM_BLOCKS_X):
+        self.process_block(img, block_y, block_x)
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
     self._palette = guesser.make_palette(self._block_color_manifest.elems())
     # For each block, get the attribute aka the palette.
-    for y in xrange(NUM_BLOCKS_Y):
-      for x in xrange(NUM_BLOCKS_X):
-        (cid, did, bcid, unused) = self._artifacts[y * 2][x * 2]
+    for block_y in xrange(NUM_BLOCKS_Y):
+      for block_x in xrange(NUM_BLOCKS_X):
+        y = block_y * 2
+        x = block_x * 2
+        (cid, did, bcid, unused) = self._artifacts[y][x]
         block_color_needs = self._block_color_manifest.get(bcid)
         (pid, palette_option) = self._palette.select(block_color_needs)
-        self._artifacts[y * 2][x * 2][ARTIFACT_PID] = pid
+        self._artifacts[y][x][ARTIFACT_PID] = pid
     # For each tile in the artifact table, create the chr and nametable.
     # TODO
     print('Number of dot-profiles: {0}'.format(self._dot_manifest.size()))
