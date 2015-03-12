@@ -12,9 +12,9 @@ class Palette(object):
     self.pals = []
 
   def __str__(self):
-    return ('P|' +
-            '|'.join(['-'.join(['%02x' % c for c in row]) for row in self.pals])
-            + '|')
+    return ('P/' +
+            '/'.join(['-'.join(['%02x' % c for c in row]) for row in self.pals])
+            + '/')
 
   def set_bg_color(self, bg_color):
     self.bg_color = bg_color

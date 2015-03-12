@@ -14,6 +14,11 @@ TILE_SIZE = 8
 NUM_BLOCKS_X = WIDTH / BLOCK_SIZE
 NUM_BLOCKS_Y = HEIGHT / BLOCK_SIZE
 
+ARTIFACT_CID = 0
+ARTIFACT_DID = 1
+ARTIFACT_BCID = 2
+ARTIFACT_PID = 3
+
 
 class ImageProcessor(object):
 
@@ -108,6 +113,7 @@ class ImageProcessor(object):
   # block_y: The y position of the block, 0..15.
   # block_x: The x position of the block, 0..14.
   def process_block(self, img, block_y, block_x):
+    block_color_needs = set([])
     tile_y = block_y * 2
     tile_x = block_x * 2
     for i in xrange(2):
@@ -128,19 +134,33 @@ class ImageProcessor(object):
           did = len(self._dot_manifest)
           self._dot_manifest[key] = did
           self._dot_list.append(dot_profile)
-        self._artifacts[tile_y + i][tile_x + j] = (cid, did)
+        self._artifacts[tile_y + i][tile_x + j] = [cid, did, None, None]
+        block_color_needs |= set(color_needs)
+    key = str(block_color_needs)
+    if key in self._block_color_manifest:
+      bcid = self._block_color_manifest[key]
+    else:
+      bcid = len(self._block_color_manifest)
+      self._block_color_manifest[key] = bcid
+      self._block_color_list.append(block_color_needs)
+    self._artifacts[tile_y][tile_x][ARTIFACT_BCID] = bcid
 
   def process_image(self, img):
     self._color_manifest = {}
     self._color_list = []
     self._dot_manifest = {}
     self._dot_list = []
+    self._block_color_manifest = {}
+    self._block_color_list = []
     self._artifacts = [row[:] for row in
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+    # For each block, look at each tile and get their color needs and
+    # dot profile. Save the corresponding ids in the artifact table.
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
         self.process_block(img, y, x)
+    # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
-    self._palette = guesser.make_palette(self._color_list)
+    self._palette = guesser.make_palette(self._block_color_list)
     print('Number of dot-profiles: {0}'.format(len(self._dot_manifest)))
     print('Palette: {0}'.format(self._palette))
