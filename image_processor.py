@@ -20,7 +20,7 @@ NUM_BLOCKS_Y = HEIGHT / BLOCK_SIZE
 ARTIFACT_CID = 0
 ARTIFACT_DID = 1
 ARTIFACT_BCID = 2
-ARTIFACT_PID = 3
+ARTIFACT_PID = 2
 
 
 class ImageProcessor(object):
@@ -124,7 +124,7 @@ class ImageProcessor(object):
         (color_needs, dot_profile) = self.process_tile(img, y + i, x + j)
         cid = self._color_manifest.id(color_needs)
         did = self._dot_manifest.id(dot_profile)
-        self._artifacts[y + i][x + j] = [cid, did, None, None]
+        self._artifacts[y + i][x + j] = [cid, did, None]
         block_color_needs |= set(color_needs)
     bcid = self._block_color_manifest.id(block_color_needs)
     self._artifacts[y][x][ARTIFACT_BCID] = bcid
@@ -178,7 +178,7 @@ class ImageProcessor(object):
       for block_x in xrange(NUM_BLOCKS_X):
         y = block_y * 2
         x = block_x * 2
-        (cid, did, bcid, unused) = self._artifacts[y][x]
+        (cid, did, bcid) = self._artifacts[y][x]
         block_color_needs = self._block_color_manifest.get(bcid)
         (pid, palette_option) = self._palette.select(block_color_needs)
         # TODO: Maybe better to get palette per block instead of assigning it
@@ -188,19 +188,43 @@ class ImageProcessor(object):
         self._artifacts[y+1][x][ARTIFACT_PID] = pid
         self._artifacts[y+1][x+1][ARTIFACT_PID] = pid
     # For each tile in the artifact table, create the chr and nametable.
+    # Output nametable.dat.
+    fout = open('nametable.dat', 'wb')
     for y in xrange(NUM_BLOCKS_Y * 2):
       for x in xrange(NUM_BLOCKS_X * 2):
-        (cid, did, bcid, pid) = self._artifacts[y][x]
+        (cid, did, pid) = self._artifacts[y][x]
         palette_option = self._palette.get(pid)
         color_needs = self._color_manifest.get(cid)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
         nt_num = self.get_nametable_num(dot_xlat, did)
+        fout.write(chr(nt_num))
+    fout.close()
     # Output chr.dat.
     fout = open('chr.dat', 'wb')
     for d in self._chr_data:
       d.write(fout)
     padding = 8192 - (len(self._chr_data) * 16)
     fout.write(chr(0) * padding)
+    fout.close()
+    # Output palette.dat.
+    fout = open('palette.dat', 'wb')
+    for i in xrange(4):
+      palette_option = self._palette.get(i)
+      for j in xrange(4):
+        fout.write(chr(palette_option[j]))
+    fout.write(chr(0xf) * 16)
+    fout.close()
+    # Output attributes.dat.
+    fout = open('attribute.dat', 'wb')
+    for attr_y in xrange(NUM_BLOCKS_Y / 2):
+      for attr_x in xrange(NUM_BLOCKS_X / 2):
+        p0 = self._artifacts[attr_y * 4 + 0][attr_x * 4 + 0][ARTIFACT_PID]
+        p1 = self._artifacts[attr_y * 4 + 0][attr_x * 4 + 2][ARTIFACT_PID]
+        p2 = self._artifacts[attr_y * 4 + 2][attr_x * 4 + 0][ARTIFACT_PID]
+        p3 = self._artifacts[attr_y * 4 + 2][attr_x * 4 + 2][ARTIFACT_PID]
+        attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
+        fout.write(chr(attr))
+    fout.write(chr(0) * 8)
     fout.close()
     print('Number of dot-profiles: {0}'.format(self._dot_manifest.size()))
     print('Number of tiles: {0}'.format(len(self._chr_data)))

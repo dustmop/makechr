@@ -10,10 +10,10 @@ class ChrTile(object):
     self.set_hi(hi_bit, offset, index)
 
   def set_low(self, bit, offset, index):
-    self.low[index] |= (bit << offset)
+    self.low[index] |= (bit << (7 - offset))
 
   def set_hi(self, bit, offset, index):
-    self.hi[index] |= (bit << offset)
+    self.hi[index] |= (bit << (7 - offset))
 
   def write(self, fp):
     for b in self.low:
