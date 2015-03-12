@@ -1,5 +1,6 @@
 import errors
 import guess_best_palette
+import id_manifest
 import rgb
 
 
@@ -120,38 +121,17 @@ class ImageProcessor(object):
       for j in xrange(2):
         (color_needs, dot_profile) = self.process_tile(img, tile_y + i,
                                                        tile_x + j)
-        key = str(color_needs)
-        if key in self._color_manifest:
-          cid = self._color_manifest[key]
-        else:
-          cid = len(self._color_manifest)
-          self._color_manifest[key] = cid
-          self._color_list.append(color_needs)
-        key = str(dot_profile)
-        if key in self._dot_manifest:
-          did = self._dot_manifest[key]
-        else:
-          did = len(self._dot_manifest)
-          self._dot_manifest[key] = did
-          self._dot_list.append(dot_profile)
+        cid = self._color_manifest.id(color_needs)
+        did = self._dot_manifest.id(dot_profile)
         self._artifacts[tile_y + i][tile_x + j] = [cid, did, None, None]
         block_color_needs |= set(color_needs)
-    key = str(block_color_needs)
-    if key in self._block_color_manifest:
-      bcid = self._block_color_manifest[key]
-    else:
-      bcid = len(self._block_color_manifest)
-      self._block_color_manifest[key] = bcid
-      self._block_color_list.append(block_color_needs)
+    bcid = self._block_color_manifest.id(block_color_needs)
     self._artifacts[tile_y][tile_x][ARTIFACT_BCID] = bcid
 
   def process_image(self, img):
-    self._color_manifest = {}
-    self._color_list = []
-    self._dot_manifest = {}
-    self._dot_list = []
-    self._block_color_manifest = {}
-    self._block_color_list = []
+    self._color_manifest = id_manifest.IdManifest()
+    self._dot_manifest = id_manifest.IdManifest()
+    self._block_color_manifest = id_manifest.IdManifest()
     self._artifacts = [row[:] for row in
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     # For each block, look at each tile and get their color needs and
@@ -161,6 +141,6 @@ class ImageProcessor(object):
         self.process_block(img, y, x)
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
-    self._palette = guesser.make_palette(self._block_color_list)
-    print('Number of dot-profiles: {0}'.format(len(self._dot_manifest)))
+    self._palette = guesser.make_palette(self._block_color_manifest.elems())
+    print('Number of dot-profiles: {0}'.format(self._dot_manifest.size()))
     print('Palette: {0}'.format(self._palette))
