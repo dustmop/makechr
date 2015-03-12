@@ -145,9 +145,9 @@ class ImageProcessor(object):
     # For each block, get the attribute aka the palette.
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
-        (cid, did, mcid, unused) = self._artifacts[y * 2][x * 2]
-        color_needs = self._color_manifest.get(cid)
-        (pid, palette_option) = self._palette.select(color_needs)
+        (cid, did, bcid, unused) = self._artifacts[y * 2][x * 2]
+        block_color_needs = self._block_color_manifest.get(bcid)
+        (pid, palette_option) = self._palette.select(block_color_needs)
         self._artifacts[y * 2][x * 2][ARTIFACT_PID] = pid
     # For each tile in the artifact table, create the chr and nametable.
     # TODO
