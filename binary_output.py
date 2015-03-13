@@ -26,11 +26,14 @@ class BinaryOutput(object):
 
   def save_palette(self, filename, palette):
     fout = open(filename, 'wb')
+    bg_color = palette.bg_color
     for i in xrange(4):
       palette_option = palette.get(i)
+      if palette_option is None:
+        palette_option = [bg_color] * 4
       for j in xrange(4):
         fout.write(chr(palette_option[j]))
-    self.pad(fout, 16, 0xf)
+    self.pad(fout, 16, bg_color)
     fout.close()
 
   def save_attribute(self, filename, artifacts):

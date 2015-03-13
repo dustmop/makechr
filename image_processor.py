@@ -190,8 +190,6 @@ class ImageProcessor(object):
     self._output.save_chr('chr.dat', self._chr_data)
     self._output.save_palette('palette.dat', self._palette)
     self._output.save_attribute('attribute.dat', self._artifacts)
-
-
     print('Number of dot-profiles: {0}'.format(self._dot_manifest.size()))
     print('Number of tiles: {0}'.format(len(self._chr_data)))
     print('Palette: {0}'.format(self._palette))
