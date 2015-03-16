@@ -9,7 +9,6 @@ from constants import *
 
 # TODO: Try different image libraries
 # TODO: Performance test
-# TODO: Use actual command-line parsing
 
 class ImageProcessor(object):
 
