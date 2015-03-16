@@ -1,7 +1,7 @@
 import argparse
 import image_processor
 from PIL import Image
-import sys
+import rom_builder
 
 
 def run():
@@ -17,11 +17,13 @@ def run():
                       help='filename for error image')
   args = parser.parse_args()
 
-  # TODO: -c flag for compiled rom
   # TODO: -e flag for error image filename
   img = Image.open(args.input)
   processor = image_processor.ImageProcessor()
   processor.process_image(img)
+  if args.compile:
+    builder = rom_builder.RomBuilder()
+    builder.build(args.compile)
 
 
 if __name__ == '__main__':
