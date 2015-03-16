@@ -12,6 +12,23 @@ from constants import *
 
 class ImageProcessor(object):
 
+  def __init__(self):
+    self._nametable_cache = {}
+    self._chr_data = []
+    self._output = binary_output.BinaryOutput()
+    self._color_manifest = id_manifest.IdManifest()
+    self._dot_manifest = id_manifest.IdManifest()
+    self._block_color_manifest = id_manifest.IdManifest()
+    self._artifacts = [row[:] for row in
+                       [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+    self._palette = None
+
+  def artifacts(self):
+    return self._artifacts
+
+  def palette(self):
+    return self._palette
+
   # pixel_to_nescolor
   #
   # Given an rgb pixel, in the form (red, green, blue, *unused), from
@@ -145,14 +162,6 @@ class ImageProcessor(object):
     return self._nametable_cache[key]
 
   def process_image(self, img):
-    self._nametable_cache = {}
-    self._chr_data = []
-    self._output = binary_output.BinaryOutput()
-    self._color_manifest = id_manifest.IdManifest()
-    self._dot_manifest = id_manifest.IdManifest()
-    self._block_color_manifest = id_manifest.IdManifest()
-    self._artifacts = [row[:] for row in
-                       [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.
     for block_y in xrange(NUM_BLOCKS_Y):
