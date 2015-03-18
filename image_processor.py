@@ -14,6 +14,7 @@ from constants import *
 class ImageProcessor(object):
 
   def __init__(self):
+    self._nt_count = {}
     self._nametable_cache = {}
     self._chr_data = []
     self._output = binary_output.BinaryOutput()
@@ -30,6 +31,9 @@ class ImageProcessor(object):
 
   def palette(self):
     return self._palette
+
+  def nt_count(self):
+    return self._nt_count
 
   def err(self):
     return self._err
@@ -172,8 +176,11 @@ class ImageProcessor(object):
           tile.set(val, col, row)
       nt_num = len(self._chr_data)
       self._chr_data.append(tile)
+      self._nt_count[nt_num] = 0
       self._nametable_cache[key] = nt_num
-    return self._nametable_cache[key]
+    nt_num = self._nametable_cache[key]
+    self._nt_count[nt_num] += 1
+    return nt_num
 
   def process_image(self, img, want_errors):
     # For each block, look at each tile and get their color needs and

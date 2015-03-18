@@ -22,6 +22,9 @@ def run():
   parser.add_argument('--colorization-view', dest='colorization_view',
                       metavar='image fileanme',
                       help='filename for colorization view')
+  parser.add_argument('--reuse-view', dest='reuse_view',
+                      metavar='image fileanme',
+                      help='filename for reuse view')
   args = parser.parse_args()
 
   img = Image.open(args.input)
@@ -47,6 +50,10 @@ def run():
     renderer = view_renderer.ViewRenderer()
     renderer.create_colorization_view(args.colorization_view,
         processor.artifacts(), processor.palette())
+  if args.reuse_view:
+    renderer = view_renderer.ViewRenderer()
+    renderer.create_reuse_view(args.reuse_view, processor.artifacts(),
+        processor.nt_count())
 
 
 if __name__ == '__main__':

@@ -28,6 +28,22 @@ class ViewRenderer(object):
   def palette_option_to_colors(self, poption):
     return [self.to_tuple(rgb.RGB_COLORS[poption[n]]) for n in xrange(4)]
 
+  def count_to_color(self, count):
+    COLORS = [None,               # unused
+              None,               # clear
+              (0x00, 0x80, 0x00), # dark green
+              (0x00, 0xff, 0x00), # light green
+              (0x00, 0xff, 0xff), # light blue
+              (0x00, 0x00, 0xff), # blue
+              (0x80, 0x00, 0x80), # dark purple
+              (0xff, 0x00, 0xff), # light purple
+              (0xff, 0x40, 0x40), # red
+              (0xff, 0x80, 0x00), # orange
+              (0xff, 0xff, 0x00)] # yellow
+    if count < len(COLORS):
+      return COLORS[count]
+    return (0xff, 0xff, 0xff)
+
   def draw_block(self, block_y, block_x, poption):
     i = block_y * 16
     j = block_x * 16
@@ -47,6 +63,14 @@ class ViewRenderer(object):
     self.draw.rectangle([j+16,8,j+23,15], color[2])
     self.draw.rectangle([j+24,8,j+31,15], color[3])
 
+  def draw_square(self, tile_y, tile_x, count):
+    i = tile_y * 8
+    j = tile_x * 8
+    color = self.count_to_color(count)
+    if not color:
+      color = (0x00, 0x00, 0x00)
+    self.draw.rectangle([j+0,i+0,j+8,i+8], color)
+
   # create_colorization_view
   #
   # Create an image that shows which palette is used for each block.
@@ -61,6 +85,26 @@ class ViewRenderer(object):
         pid = artifacts[y * 2][x * 2][ARTIFACT_PID]
         poption = palette.get(pid)
         self.draw_block(y, x, poption)
+    self.save_file()
+
+  # create_resuse_view
+  #
+  # Create an image that shows which tiles are reused, color coded by how many
+  # times they appear.
+  #
+  # outfile: Filename to output the view to.
+  # artifacts: Artifacts created by the image processor.
+  # nt_count: TODO
+  def create_reuse_view(self, outfile, artifacts, nt_count):
+    self.create_file(outfile, 256, 240)
+    for block_y in xrange(NUM_BLOCKS_Y):
+      for block_x in xrange(NUM_BLOCKS_X):
+        for i in range(2):
+          for j in range(2):
+            y = block_y * 2 + i
+            x = block_x * 2 + j
+            nt = artifacts[y][x][ARTIFACT_NT]
+            self.draw_square(y, x, nt_count[nt])
     self.save_file()
 
   # create_palette_view

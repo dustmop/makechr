@@ -32,7 +32,10 @@ class BinaryOutput(object):
       if palette_option is None:
         palette_option = [bg_color] * 4
       for j in xrange(4):
-        fout.write(chr(palette_option[j]))
+        if j < len(palette_option):
+          fout.write(chr(palette_option[j]))
+        else:
+          fout.write(chr(bg_color))
     self.pad(fout, 16, bg_color)
     fout.close()
 
