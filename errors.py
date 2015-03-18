@@ -16,9 +16,9 @@ class ColorNotAllowedError(Exception):
     self.x = x
 
   def __str__(self):
-    return ('%x %x %x @ tile (%dy,%dx) and pixel (%dy,%dx)' %
-            (self.pixel[0], self.pixel[1], self.pixel[2],
-             self.tile_y, self.tile_x, self.y, self.x))
+    return ('@ tile (%dy,%dx) and pixel (%dy,%dx) - "%02x,%02x,%02x"' %
+            (self.tile_y, self.tile_x, self.y, self.x,
+             self.pixel[0], self.pixel[1], self.pixel[2]))
 
 
 class TooManyPalettesError(Exception):
@@ -31,3 +31,17 @@ class TooManyPalettesError(Exception):
       p = '-'.join(['%02x' % c for c in row])
       accum.append(p)
     return '/'.join(accum)
+
+
+class ErrorCollector(object):
+  def __init__(self):
+    self.e = []
+
+  def add(self, error):
+    self.e.append(error)
+
+  def has(self):
+    return len(self.e)
+
+  def get(self):
+    return self.e

@@ -75,3 +75,48 @@ class ViewRenderer(object):
       poption = palette.get(i)
       self.draw_poption(i, poption)
     self.save_file()
+
+  # create_error_view
+  #
+  # Create an image that shows the errors.
+  #
+  # outfile: Filename to output the error display to.
+  # img: Input pixel art image.
+  # errs: List of errors created by processor.
+  def create_error_view(self, outfile, img, errs):
+    width = 256 * 2
+    height = 240 * 2
+    tile_grid_color = (0x50,0xa0,0x50)
+    block_grid_color = (0x00,0xf0,0x00)
+    error_grid_color = (0xf0, 0x20, 0x20)
+    error_grid_color2 = (0xc0, 0x00, 0x00)
+    self.img = img.resize((width, height), Image.NEAREST)
+    self.draw = ImageDraw.Draw(self.img)
+    self.outfile = outfile
+    # Draw tile grid.
+    for col in xrange(16):
+      self.draw.line([col*32+16, 0, col*32+16, height], tile_grid_color)
+    for row in xrange(15):
+      self.draw.line([0, row*32+16, width, row*32+16], tile_grid_color)
+    # Draw block grid.
+    for col in xrange(1, 16):
+      self.draw.line([col*32, 0, col*32, height], block_grid_color)
+    for row in xrange(1, 15):
+      self.draw.line([0, row*32, width, row*32], block_grid_color)
+    # Draw errors.
+    for e in errs:
+      if not (getattr(e, 'tile_y', None) and getattr(e, 'tile_x', None)):
+        continue
+      y = e.tile_y * 8 * 2
+      x = e.tile_x * 8 * 2
+      # Inner line.
+      self.draw.line([   x,    y, x+16,    y], error_grid_color)
+      self.draw.line([   x,    y,    x, y+16], error_grid_color)
+      self.draw.line([   x, y+16, x+16, y+16], error_grid_color)
+      self.draw.line([x+16,    y, x+16, y+16], error_grid_color)
+      # Outer line.
+      self.draw.line([ x-1,  y-1, x+17,  y-1], error_grid_color2)
+      self.draw.line([ x-1,  y-1,  x-1, y+17], error_grid_color2)
+      self.draw.line([ x-1, y+17, x+17, y+17], error_grid_color2)
+      self.draw.line([x+17,  y-1, x+17, y+17], error_grid_color2)
+    self.save_file()

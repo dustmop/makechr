@@ -14,7 +14,7 @@ def run():
                       help='enable experimental features (required)')
   parser.add_argument('-c', dest='compile', metavar='rom filename',
                       help='filename for compiled NES rom')
-  parser.add_argument('-e', dest='error', metavar='image filename',
+  parser.add_argument('-e', dest='error_outfile', metavar='image filename',
                       help='filename for error image')
   parser.add_argument('--palette-view', dest='palette_view',
                       metavar='image filename',
@@ -24,10 +24,19 @@ def run():
                       help='filename for colorization view')
   args = parser.parse_args()
 
-  # TODO: -e flag for error image filename
   img = Image.open(args.input)
   processor = image_processor.ImageProcessor()
-  processor.process_image(img)
+  processor.process_image(img, args.error_outfile)
+  if processor.err().has():
+    es = processor.err().get()
+    print('Found {0} error{1}:'.format(len(es), 's'[len(es) == 1:]))
+    for e in es:
+      print('{0} {1}'.format(type(e).__name__, e))
+    if args.error_outfile:
+      print('Errors displayed in "{0}"'.format(args.error_outfile))
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_error_view(args.error_outfile, img, processor.err().get())
+    return
   if args.compile:
     builder = rom_builder.RomBuilder()
     builder.build(args.compile)

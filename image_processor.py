@@ -3,6 +3,7 @@ import chr_tile
 import errors
 import guess_best_palette
 import id_manifest
+import palette
 import rgb
 from constants import *
 
@@ -22,12 +23,16 @@ class ImageProcessor(object):
     self._artifacts = [row[:] for row in
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     self._palette = None
+    self._err = errors.ErrorCollector()
 
   def artifacts(self):
     return self._artifacts
 
   def palette(self):
     return self._palette
+
+  def err(self):
+    return self._err
 
   # pixel_to_nescolor
   #
@@ -125,7 +130,16 @@ class ImageProcessor(object):
     x = block_x * 2
     for i in xrange(2):
       for j in xrange(2):
-        (color_needs, dot_profile) = self.process_tile(img, y + i, x + j)
+        try:
+          (color_needs, dot_profile) = self.process_tile(img, y + i, x + j)
+        except errors.PaletteOverflowError as e:
+          self._err.add(e)
+          self._artifacts[y + i][x + j] = [0, 0, 0, 0]
+          continue
+        except errors.ColorNotAllowedError as e:
+          self._err.add(e)
+          self._artifacts[y + i][x + j] = [0, 0, 0, 0]
+          continue
         cid = self._color_manifest.id(color_needs)
         did = self._dot_manifest.id(dot_profile)
         self._artifacts[y + i][x + j] = [cid, did, None, None]
@@ -161,7 +175,7 @@ class ImageProcessor(object):
       self._nametable_cache[key] = nt_num
     return self._nametable_cache[key]
 
-  def process_image(self, img):
+  def process_image(self, img, want_errors):
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.
     for block_y in xrange(NUM_BLOCKS_Y):
@@ -169,7 +183,11 @@ class ImageProcessor(object):
         self.process_block(img, block_y, block_x)
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
-    self._palette = guesser.make_palette(self._block_color_manifest.elems())
+    try:
+      self._palette = guesser.make_palette(self._block_color_manifest.elems())
+    except errors.TooManyPalettesError as e:
+      self._err.add(e)
+      return
     # For each block, get the attribute aka the palette.
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
@@ -193,6 +211,9 @@ class ImageProcessor(object):
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
         nt_num = self.get_nametable_num(dot_xlat, did)
         self._artifacts[y][x][ARTIFACT_NT] = nt_num
+    # Fail if there were any errors.
+    if self._err.has():
+      return
     # Output.
     self._output.save_nametable('nametable.dat', self._artifacts)
     self._output.save_chr('chr.dat', self._chr_data)
