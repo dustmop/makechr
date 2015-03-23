@@ -10,9 +10,12 @@ class ViewRenderer(object):
   def __init__(self):
     self.img = None
     self.draw = None
+    self.font = None
 
-  def create_file(self, outfile, width, height):
-    self.img = Image.new('RGB', (width, height), GRAY_COLOR)
+  def create_file(self, outfile, width, height, color=None):
+    if color is None:
+      color = GRAY_COLOR
+    self.img = Image.new('RGB', (width, height), color)
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
 
@@ -44,6 +47,13 @@ class ViewRenderer(object):
       return COLORS[count]
     return (0xff, 0xff, 0xff)
 
+  def load_nt_font(self):
+    self.font = [None] * 16
+    font_img = Image.open('res/nt_font.png')
+    for n in range(16):
+      self.font[n] = font_img.crop([n*7,0,n*7+7,11])
+    font_img.close()
+
   def draw_block(self, block_y, block_x, poption):
     i = block_y * 16
     j = block_x * 16
@@ -71,6 +81,14 @@ class ViewRenderer(object):
       color = (0x00, 0x00, 0x00)
     self.draw.rectangle([j+0,i+0,j+8,i+8], color)
 
+  def draw_nt_value(self, tile_y, tile_x, nt):
+    upper = self.font[nt / 16]
+    lower = self.font[nt % 16]
+    # Left digit (upper nibble).
+    self.img.paste(upper, [tile_x*16+1,tile_y*16+2,tile_x*16+8,tile_y*16+13])
+    # Right digit (lower nibble).
+    self.img.paste(lower, [tile_x*16+8,tile_y*16+2,tile_x*16+15,tile_y*16+13])
+
   # create_colorization_view
   #
   # Create an image that shows which palette is used for each block.
@@ -94,7 +112,7 @@ class ViewRenderer(object):
   #
   # outfile: Filename to output the view to.
   # artifacts: Artifacts created by the image processor.
-  # nt_count: TODO
+  # nt_count: Dict mapping nametable values to number of times.
   def create_reuse_view(self, outfile, artifacts, nt_count):
     self.create_file(outfile, 256, 240)
     for block_y in xrange(NUM_BLOCKS_Y):
@@ -118,6 +136,26 @@ class ViewRenderer(object):
     for i in xrange(4):
       poption = palette.get(i)
       self.draw_poption(i, poption)
+    self.save_file()
+
+  # create_nametable_view
+  #
+  # Create an image that shows nametable values for each tile.
+  #
+  # outfile: Filename to output the view to.
+  # artifacts: Artifacts created by the image processor.
+  def create_nametable_view(self, outfile, artifacts):
+    self.load_nt_font()
+    self.create_file(outfile, 512, 480, (255, 255, 255))
+    for block_y in xrange(NUM_BLOCKS_Y):
+      for block_x in xrange(NUM_BLOCKS_X):
+        for i in range(2):
+          for j in range(2):
+            y = block_y * 2 + i
+            x = block_x * 2 + j
+            nt = artifacts[y][x][ARTIFACT_NT]
+            if nt != 0:
+              self.draw_nt_value(y, x, nt)
     self.save_file()
 
   # create_error_view
