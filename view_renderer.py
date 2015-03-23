@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw
 from constants import *
+import os
 import rgb
 
 
@@ -47,9 +48,12 @@ class ViewRenderer(object):
       return COLORS[count]
     return (0xff, 0xff, 0xff)
 
+  def resource(self, rel):
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), rel)
+
   def load_nt_font(self):
     self.font = [None] * 16
-    font_img = Image.open('res/nt_font.png')
+    font_img = Image.open(self.resource('res/nt_font.png'))
     for n in range(16):
       self.font[n] = font_img.crop([n*7,0,n*7+7,11])
     font_img.close()
