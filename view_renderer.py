@@ -172,7 +172,7 @@ class ViewRenderer(object):
   def create_error_view(self, outfile, img, errs):
     width = 256 * 2
     height = 240 * 2
-    tile_grid_color = (0x50,0xa0,0x50)
+    tile_grid_color = (0x20,0x80,0x20)
     block_grid_color = (0x00,0xf0,0x00)
     error_grid_color = (0xf0, 0x20, 0x20)
     error_grid_color2 = (0xc0, 0x00, 0x00)
@@ -206,3 +206,29 @@ class ViewRenderer(object):
       self.draw.line([ x-1, y+17, x+17, y+17], error_grid_color2)
       self.draw.line([x+17,  y-1, x+17, y+17], error_grid_color2)
     self.save_file()
+
+  # create_grid_view
+  #
+  # Create an image that shows the blocks and tiles.
+  #
+  # outfile: Filename to output the grid view to.
+  # img: Input pixel art image.
+  def create_grid_view(self, outfile, img):
+    width, height = (512, 480)
+    tile_grid_color = (0x20,0x80,0x20)
+    block_grid_color = (0x00,0xf0,0x00)
+    self.img = img.resize((width, height), Image.NEAREST)
+    self.draw = ImageDraw.Draw(self.img)
+    self.outfile = outfile
+    # Draw tile grid.
+    for col in xrange(16):
+      self.draw.line([col*32+16, 0, col*32+16, height], tile_grid_color)
+    for row in xrange(15):
+      self.draw.line([0, row*32+16, width, row*32+16], tile_grid_color)
+    # Draw block grid.
+    for col in xrange(1, 16):
+      self.draw.line([col*32, 0, col*32, height], block_grid_color)
+    for row in xrange(1, 15):
+      self.draw.line([0, row*32, width, row*32], block_grid_color)
+    self.save_file()
+
