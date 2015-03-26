@@ -85,6 +85,11 @@ class ViewRenderer(object):
       color = (0x00, 0x00, 0x00)
     self.draw.rectangle([j+0,i+0,j+8,i+8], color)
 
+  def draw_empty_block(self, block_y, block_x):
+    i = block_y * 16
+    j = block_x * 16
+    self.draw.rectangle([j+0,i+0,j+16,i+16], (0,0,0,255))
+
   def draw_nt_value(self, tile_y, tile_x, nt):
     upper = self.font[nt / 16]
     lower = self.font[nt % 16]
@@ -93,6 +98,19 @@ class ViewRenderer(object):
     # Right digit (lower nibble).
     self.img.paste(lower, [tile_x*16+8,tile_y*16+2,tile_x*16+15,tile_y*16+13])
 
+  def is_empty_block(self, y, x, artifacts, cmanifest, bg):
+    # TODO: This could be much more efficient. Perhaps add a value to artifacts
+    # that determines whether the tile / block is empty.
+    cid_0 = artifacts[y * 2  ][x * 2  ][ARTIFACT_CID]
+    cid_1 = artifacts[y * 2  ][x * 2+1][ARTIFACT_CID]
+    cid_2 = artifacts[y * 2+1][x * 2  ][ARTIFACT_CID]
+    cid_3 = artifacts[y * 2+1][x * 2+1][ARTIFACT_CID]
+    if cid_0 == cid_1 and cid_1 == cid_2 and cid_2 == cid_3:
+      color_needs = cmanifest.get(cid_0)
+      if color_needs == [bg, None, None, None]:
+        return True
+    return False
+
   # create_colorization_view
   #
   # Create an image that shows which palette is used for each block.
@@ -100,12 +118,15 @@ class ViewRenderer(object):
   # outfile: Filename to output the view to.
   # artifacts: Artifacts created by the image processor.
   # palette: The palette for the image.
-  def create_colorization_view(self, outfile, artifacts, palette):
+  def create_colorization_view(self, outfile, artifacts, palette, cmanifest):
     self.create_file(outfile, 256, 240)
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
         pid = artifacts[y * 2][x * 2][ARTIFACT_PID]
         poption = palette.get(pid)
+        if self.is_empty_block(y, x, artifacts, cmanifest, poption[0]):
+          self.draw_empty_block(y, x)
+          continue
         self.draw_block(y, x, poption)
     self.save_file()
 

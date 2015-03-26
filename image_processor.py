@@ -38,6 +38,9 @@ class ImageProcessor(object):
   def err(self):
     return self._err
 
+  def color_manifest(self):
+    return self._color_manifest
+
   # pixel_to_nescolor
   #
   # Given an rgb pixel, in the form (red, green, blue, *unused), from

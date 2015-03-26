@@ -55,7 +55,7 @@ def run():
   if args.colorization_view:
     renderer = view_renderer.ViewRenderer()
     renderer.create_colorization_view(args.colorization_view,
-        processor.artifacts(), processor.palette())
+        processor.artifacts(), processor.palette(), processor.color_manifest())
   if args.reuse_view:
     renderer = view_renderer.ViewRenderer()
     renderer.create_reuse_view(args.reuse_view, processor.artifacts(),
