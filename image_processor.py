@@ -9,7 +9,7 @@ from constants import *
 
 
 # TODO: Try different image libraries
-# TODO: Performance test
+
 
 class ImageProcessor(object):
 
@@ -26,6 +26,10 @@ class ImageProcessor(object):
     self._palette = None
     self._err = errors.ErrorCollector()
 
+  def load_image(self, img):
+    (self.image_x, self.image_y) = img.size
+    self.pixels = img.load()
+
   def artifacts(self):
     return self._artifacts
 
@@ -41,36 +45,32 @@ class ImageProcessor(object):
   def color_manifest(self):
     return self._color_manifest
 
-  # pixel_to_nescolor
+  # components_to_nescolor
   #
-  # Given an rgb pixel, in the form (red, green, blue, *unused), from
-  # PIL/pillow, find the corresponding index in the NES system palette that
-  # most closely matches that color. RGB_XLAT makes this fast by caching
-  # searches, and finding answers with a dictionary lookup. If the color cannot
-  # be converted, return -1.
+  # Given the color components of a pixel from PIL/pillow, find the
+  # corresponding index in the NES system palette that most closely matches
+  # that color. Save the result in RGB_XLAT so future accesses will be fast.
+  # If the color cannot be converted, return -1.
   #
-  # pixel: An RGB color.
-  def pixel_to_nescolor(self, pixel):
-    # Note: If we convert to python3, use the (r, g, b, *unused) syntax.
-    (r, g, b) = (pixel[0], pixel[1], pixel[2])
-    color_num = r * 256 * 256 + g * 256 + b
-    nc = rgb.RGB_XLAT.get(color_num)
-    if not nc is None:
-      return nc
-    # Resolve color.
+  # r: The red value of the pixel.
+  # g: The green value of the pixel.
+  # b: The blue value of the pixel.
+  def components_to_nescolor(self, r, g, b):
     found_nc = -1
     found_diff = float('infinity')
-    for i,color_value in enumerate(rgb.RGB_COLORS):
-      diff_r = abs(r - color_value / (256 * 256))
-      diff_g = abs(g - (color_value / 256) % 256)
-      diff_b = abs(b - color_value % 256)
+    colors = rgb.RGB_COLORS
+    for i,allow_val in enumerate(colors):
+      diff_r = abs(r - allow_val / (256 * 256))
+      diff_g = abs(g - (allow_val / 256) % 256)
+      diff_b = abs(b - allow_val % 256)
       diff = diff_r + diff_g + diff_b
       if diff < found_diff:
         found_nc = i
         found_diff = diff
     if found_diff > rgb.COLOR_TOLERANCE:
       return -1
-    rgb.RGB_XLAT[color_num] = found_nc
+    color_val = r * 256 * 256 + g * 256 + b
+    rgb.RGB_XLAT[color_val] = found_nc
     return found_nc
 
   # add_nescolor_to_needs
@@ -94,31 +94,41 @@ class ImageProcessor(object):
   #
   # Process the tile to obtain its color needs and dot profile, verifying that
   # the tile contains colors that match the system palette, and does not contain
-  # too many colors.
+  # too many colors. This method is called many times for an image, so it
+  # performs a lot of micro-optimizations. The image should have already been
+  # loaded using self.load_image.
   #
-  # img: The full pixel art image.
   # tile_y: The y position of the tile, 0..31.
   # tile_x: The x position of the tile, 0..29.
   # Returns the color_needs and dot_profile.
-  def process_tile(self, img, tile_y, tile_x):
-    (image_x, image_y) = img.size
+  def process_tile(self, tile_y, tile_x):
     pixel_y = tile_y * TILE_SIZE
     pixel_x = tile_x * TILE_SIZE
     # Check if this tile overruns the image.
-    if pixel_y + TILE_SIZE > image_y or pixel_x + TILE_SIZE > image_x:
+    if pixel_y + TILE_SIZE > self.image_y or pixel_x + TILE_SIZE > self.image_x:
       return None, None
     color_needs = [None] * 4
-    dot_profile = [None] * (TILE_SIZE * TILE_SIZE)
-    raw_pixels = img.load()
+    dot_profile = [0] * (TILE_SIZE * TILE_SIZE)
+    # Get local variables for frequently accessed data. This improves
+    # performance.
+    ps = self.pixels
+    xlat = rgb.RGB_XLAT
+    add_func = self.add_nescolor_to_needs
     for i in xrange(TILE_SIZE):
       for j in xrange(TILE_SIZE):
         y = pixel_y + i
         x = pixel_x + j
-        p = raw_pixels[x, y]
-        nc = self.pixel_to_nescolor(p)
-        if nc == -1:
-          raise errors.ColorNotAllowedError(p, tile_y, tile_x, i, j)
-        idx = self.add_nescolor_to_needs(nc, color_needs)
+        p = ps[x, y]
+        # Note: If we convert to python3, use the (r, g, b, *unused) syntax.
+        (r, g, b) = (p[0], p[1], p[2])
+        color_val = r * 256 * 256 + g * 256 + b
+        if color_val in xlat:
+          nc = xlat[color_val]
+        else:
+          nc = self.components_to_nescolor(r, g, b)
+          if nc == -1:
+            raise errors.ColorNotAllowedError(p, tile_y, tile_x, i, j)
+        idx = add_func(nc, color_needs)
         dot_profile[i * TILE_SIZE + j] = idx
     if len(color_needs) > 4:
       raise errors.PaletteOverflowError(tile_y, tile_x)
@@ -128,17 +138,16 @@ class ImageProcessor(object):
   #
   # Process the individual tiles in the block.
   #
-  # img: The full pixel art image.
   # block_y: The y position of the block, 0..15.
   # block_x: The x position of the block, 0..14.
-  def process_block(self, img, block_y, block_x):
+  def process_block(self, block_y, block_x):
     block_color_needs = set([])
     y = block_y * 2
     x = block_x * 2
     for i in xrange(2):
       for j in xrange(2):
         try:
-          (color_needs, dot_profile) = self.process_tile(img, y + i, x + j)
+          (color_needs, dot_profile) = self.process_tile(y + i, x + j)
         except errors.PaletteOverflowError as e:
           self._err.add(e)
           self._artifacts[y + i][x + j] = [0, 0, 0, 0]
@@ -186,11 +195,12 @@ class ImageProcessor(object):
     return nt_num
 
   def process_image(self, img, want_errors):
+    self.load_image(img)
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
-        self.process_block(img, block_y, block_x)
+        self.process_block(block_y, block_x)
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
     try:
