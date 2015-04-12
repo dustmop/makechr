@@ -62,8 +62,8 @@ class ViewRenderer(object):
     i = block_y * 16
     j = block_x * 16
     offsets = [[ 0, 0,15,15],
-               [ 8, 1,15, 8],
-               [ 1, 8, 8,15],
+               [ 8, 1,15, 7],
+               [ 1, 8, 7,15],
                [ 8, 8,15,15]]
     color = self.palette_option_to_colors(poption)
     for k, c in enumerate(color):
