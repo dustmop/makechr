@@ -28,7 +28,7 @@ class ImageProcessor(object):
 
   def load_image(self, img):
     (self.image_x, self.image_y) = img.size
-    self.pixels = img.load()
+    self.pixels = img.convert('RGB').load()
 
   def artifacts(self):
     return self._artifacts

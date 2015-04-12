@@ -30,7 +30,7 @@ class ViewRenderer(object):
     return (r,g,b)
 
   def palette_option_to_colors(self, poption):
-    return [self.to_tuple(rgb.RGB_COLORS[poption[n]]) for n in xrange(4)]
+    return [self.to_tuple(rgb.RGB_COLORS[p]) for p in poption]
 
   def count_to_color(self, count):
     COLORS = [None,               # unused
@@ -61,21 +61,27 @@ class ViewRenderer(object):
   def draw_block(self, block_y, block_x, poption):
     i = block_y * 16
     j = block_x * 16
+    offsets = [[ 0, 0,15,15],
+               [ 8, 1,15, 8],
+               [ 1, 8, 8,15],
+               [ 8, 8,15,15]]
     color = self.palette_option_to_colors(poption)
-    self.draw.rectangle([j+0,i+0,j+15,i+15], color[0])
-    self.draw.rectangle([j+8,i+1,j+15,i+ 8], color[1])
-    self.draw.rectangle([j+1,i+8,j+ 8,i+15], color[2])
-    self.draw.rectangle([j+8,i+8,j+15,i+15], color[3])
+    for k, c in enumerate(color):
+      f = offsets[k]
+      self.draw.rectangle([j+f[0],i+f[1],j+f[2],i+f[3]], c)
 
   def draw_poption(self, n, poption):
     if not poption:
       return
     j = n * 5 * 8 + 8
+    offsets = [[ 0, 8, 7,15],
+               [ 8, 8,15,15],
+               [16, 8,23,15],
+               [24, 8,31,15]]
     color = self.palette_option_to_colors(poption)
-    self.draw.rectangle([j+ 0,8,j+ 7,15], color[0])
-    self.draw.rectangle([j+ 8,8,j+15,15], color[1])
-    self.draw.rectangle([j+16,8,j+23,15], color[2])
-    self.draw.rectangle([j+24,8,j+31,15], color[3])
+    for k, c in enumerate(color):
+      f = offsets[k]
+      self.draw.rectangle([j+f[0],f[1],j+f[2],f[3]], c)
 
   def draw_square(self, tile_y, tile_x, count):
     i = tile_y * 8
@@ -197,7 +203,7 @@ class ViewRenderer(object):
     block_grid_color = (0x00,0xf0,0x00)
     error_grid_color = (0xf0, 0x20, 0x20)
     error_grid_color2 = (0xc0, 0x00, 0x00)
-    self.img = img.resize((width, height), Image.NEAREST)
+    self.img = img.resize((width, height), Image.NEAREST).convert('RGB')
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
     # Draw tile grid.
@@ -238,7 +244,7 @@ class ViewRenderer(object):
     width, height = (512, 480)
     tile_grid_color = (0x20,0x80,0x20)
     block_grid_color = (0x00,0xf0,0x00)
-    self.img = img.resize((width, height), Image.NEAREST)
+    self.img = img.resize((width, height), Image.NEAREST).convert('RGB')
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
     # Draw tile grid.
