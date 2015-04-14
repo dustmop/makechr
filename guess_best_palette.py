@@ -2,10 +2,7 @@ import errors
 import rgb
 import palette
 import partitions
-
-
-NUM_ALLOWED_PALETTES = 4
-PALETTE_SIZE = 4
+from constants import *
 
 
 class GuessBestPalette(object):
@@ -83,7 +80,7 @@ class GuessBestPalette(object):
   #
   # Some of the color_sets are finalized (full PaletteOptions) the others
   # remaining need to be merged. Try all possible combinations, and for each
-  # one determine the background color. Return all possibilities.
+  # one determine the background color. Return all possibilities, at least 1.
   #
   # finalized: Full color sets.
   # remaining: Color sets that need to be merged.
@@ -101,6 +98,8 @@ class GuessBestPalette(object):
       if bg_color is None:
         continue
       merged_color_possibilities.append([bg_color, combined_colors])
+    if not len(merged_color_possibilities):
+      raise errors.TooManyPalettesError(finalized, to_merge=remaining)
     return merged_color_possibilities
 
   def get_merged_color_possibilities(self, minimal_colors):
@@ -116,11 +115,14 @@ class GuessBestPalette(object):
       else:
         remaining.append(color_set)
     if remaining:
+      # There are remaining unmerged palettes. Generate all valid combinations
+      # of merged palettes, which may fail if there is no way to merge them.
       return self.get_valid_combinations(finalized, remaining)
     elif len(finalized) > NUM_ALLOWED_PALETTES:
-      # TODO: This error should appear for merged combinations as well.
+      # The number of necessary palettes is more than the number allowed.
       raise errors.TooManyPalettesError(minimal_colors)
     else:
+      # There is only one valid combination.
       bg_color = self.get_background_color(finalized)
       return [[bg_color, finalized]]
 
@@ -128,7 +130,7 @@ class GuessBestPalette(object):
   #
   # Given list of possible palettes, just pick and build the first one.
   #
-  # possibilities: List of possible palettes
+  # possibilities: List of possible palettes, must have at least one element.
   def get_palette(self, possibilities):
     (bg_color, color_set_collection) = possibilities[0]
     pal = palette.Palette()

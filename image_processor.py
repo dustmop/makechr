@@ -133,7 +133,7 @@ class ImageProcessor(object):
             raise errors.ColorNotAllowedError(p, tile_y, tile_x, i, j)
         idx = add_func(nc, color_needs)
         dot_profile[i * TILE_SIZE + j] = idx
-    if len(color_needs) > 4:
+    if len(color_needs) > PALETTE_SIZE:
       raise errors.PaletteOverflowError(tile_y, tile_x)
     return color_needs, dot_profile
 
@@ -163,6 +163,9 @@ class ImageProcessor(object):
         did = self._dot_manifest.id(dot_profile)
         self._artifacts[y + i][x + j] = [cid, did, None, None]
         block_color_needs |= set(color_needs)
+    block_color_needs = block_color_needs - set([None])
+    if len(block_color_needs) > PALETTE_SIZE:
+      raise errors.PaletteOverflowError(block_y, block_x, is_block=True)
     bcid = self._block_color_manifest.id(block_color_needs)
     self._artifacts[y][x][ARTIFACT_BCID] = bcid
 
@@ -203,7 +206,15 @@ class ImageProcessor(object):
     # dot profile. Save the corresponding ids in the artifact table.
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
-        self.process_block(block_y, block_x)
+        try:
+          self.process_block(block_y, block_x)
+        except errors.PaletteOverflowError as e:
+          self._err.add(e)
+          self._artifacts[block_y * 2 + 0][block_x * 2 + 0] = [0, 0, 0, 0]
+          self._artifacts[block_y * 2 + 0][block_x * 2 + 1] = [0, 0, 0, 0]
+          self._artifacts[block_y * 2 + 1][block_x * 2 + 0] = [0, 0, 0, 0]
+          self._artifacts[block_y * 2 + 1][block_x * 2 + 1] = [0, 0, 0, 0]
+          continue
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
     try:
