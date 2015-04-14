@@ -28,6 +28,9 @@ def run():
   parser.add_argument('--nametable-view', dest='nametable_view',
                       metavar='image fileanme',
                       help='filename for nametable view')
+  parser.add_argument('--chr-view', dest='chr_view',
+                      metavar='image fileanme',
+                      help='filename for nametable view')
   parser.add_argument('--grid-view', dest='grid_view',
                       metavar='image fileanme',
                       help='filename for grid view')
@@ -63,6 +66,9 @@ def run():
   if args.nametable_view:
     renderer = view_renderer.ViewRenderer()
     renderer.create_nametable_view(args.nametable_view, processor.artifacts())
+  if args.chr_view:
+    renderer = view_renderer.ViewRenderer()
+    renderer.create_chr_view(args.chr_view, processor.chr_data())
   if args.grid_view:
     renderer = view_renderer.ViewRenderer()
     renderer.create_grid_view(args.grid_view, img)

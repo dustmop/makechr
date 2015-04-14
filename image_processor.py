@@ -45,6 +45,9 @@ class ImageProcessor(object):
   def color_manifest(self):
     return self._color_manifest
 
+  def chr_data(self):
+    return self._chr_data
+
   # components_to_nescolor
   #
   # Given the color components of a pixel from PIL/pillow, find the
@@ -185,7 +188,7 @@ class ImageProcessor(object):
         for col in xrange(8):
           i = row * 8 + col
           val = xlat[dot_profile[i]]
-          tile.set(val, col, row)
+          tile.set(row, col, val)
       nt_num = len(self._chr_data)
       self._chr_data.append(tile)
       self._nt_count[nt_num] = 0

@@ -5,6 +5,7 @@ import rgb
 
 
 GRAY_COLOR = (64, 64, 64)
+GRAY_PALETTE = [225, 150, 75, 0]
 SCALE_FACTOR = 2
 
 
@@ -89,6 +90,19 @@ class ViewRenderer(object):
     for k, c in enumerate(color):
       f = offsets[k]
       self.draw.rectangle([j+f[0],f[1],j+f[2],f[3]], c)
+
+  def draw_chr(self, tile, tile_y, tile_x):
+    s = self.scale * 8
+    t = self.scale
+    for y in xrange(8):
+      for x in xrange(8):
+        base_y = tile_y * (s + 1)
+        base_x = tile_x * (s + 1)
+        pixel = tile.get(y, x)
+        gray = GRAY_PALETTE[pixel]
+        self.draw.rectangle([base_x + x * t, base_y + y * t,
+                             base_x + x * t + t - 1, base_y + y * t + t - 1],
+                             (gray, gray, gray))
 
   def draw_square(self, tile_y, tile_x, count):
     s = self.scale * 8
@@ -219,6 +233,25 @@ class ViewRenderer(object):
             if nt != 0:
               self.draw_nt_value(y, x, nt)
     self.draw_grid(width, height)
+    self.save_file()
+
+  # create_chr_view
+  #
+  # Create an image that shows chr tiles in a 16x16 grid layout. Has an
+  # abnormal size, which is the size of a chr tile, times 16, plus a 1-pixel
+  # border between each tile.
+  #
+  # outfile: Filename to output the view to.
+  # chr_data: List of chr tiles.
+  def create_chr_view(self, outfile, chr_data):
+    self.scale = SCALE_FACTOR
+    s = self.scale * 8
+    width, height = (16 * s + 15, 16 * s + 15)
+    self.create_file(outfile, width, height, (255, 255, 255))
+    for k, tile in enumerate(chr_data):
+      tile_y = k / 16
+      tile_x = k % 16
+      self.draw_chr(tile, tile_y, tile_x)
     self.save_file()
 
   # create_error_view
