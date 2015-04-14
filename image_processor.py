@@ -93,6 +93,26 @@ class ImageProcessor(object):
     needs.append(nc)
     return len(needs) - 1
 
+  # collect_errors
+  #
+  # Add the exception to the error exception and clear the artifacts entry.
+  #
+  # e: The exception that got caught.
+  # block_y: The y of the block.
+  # block_x: The x of the block.
+  # i: Y offset of the tile within the block.
+  # j: X offset of the tile within the block.
+  # is_block: Whether the error is at the block level, or tile level.
+  def collect_error(self, e, block_y, block_x, i, j, is_block=False):
+    self._err.add(e)
+    if is_block:
+      self._artifacts[block_y * 2 + 0][block_x * 2 + 0] = [0, 0, 0, 0]
+      self._artifacts[block_y * 2 + 0][block_x * 2 + 1] = [0, 0, 0, 0]
+      self._artifacts[block_y * 2 + 1][block_x * 2 + 0] = [0, 0, 0, 0]
+      self._artifacts[block_y * 2 + 1][block_x * 2 + 1] = [0, 0, 0, 0]
+    else:
+      self._artifacts[block_y * 2 + i][block_x * 2 + j] = [0, 0, 0, 0]
+
   # process_tile
   #
   # Process the tile to obtain its color needs and dot profile, verifying that
@@ -151,13 +171,8 @@ class ImageProcessor(object):
       for j in xrange(2):
         try:
           (color_needs, dot_profile) = self.process_tile(y + i, x + j)
-        except errors.PaletteOverflowError as e:
-          self._err.add(e)
-          self._artifacts[y + i][x + j] = [0, 0, 0, 0]
-          continue
-        except errors.ColorNotAllowedError as e:
-          self._err.add(e)
-          self._artifacts[y + i][x + j] = [0, 0, 0, 0]
+        except (errors.PaletteOverflowError, errors.ColorNotAllowedError) as e:
+          self.collect_error(e, block_y, block_x, i, j)
           continue
         cid = self._color_manifest.id(color_needs)
         did = self._dot_manifest.id(dot_profile)
@@ -209,11 +224,7 @@ class ImageProcessor(object):
         try:
           self.process_block(block_y, block_x)
         except errors.PaletteOverflowError as e:
-          self._err.add(e)
-          self._artifacts[block_y * 2 + 0][block_x * 2 + 0] = [0, 0, 0, 0]
-          self._artifacts[block_y * 2 + 0][block_x * 2 + 1] = [0, 0, 0, 0]
-          self._artifacts[block_y * 2 + 1][block_x * 2 + 0] = [0, 0, 0, 0]
-          self._artifacts[block_y * 2 + 1][block_x * 2 + 1] = [0, 0, 0, 0]
+          self.collect_error(e, block_y, block_x, 0, 0, is_block=True)
           continue
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
