@@ -5,6 +5,7 @@ import rgb
 
 
 GRAY_COLOR = (64, 64, 64)
+SCALE_FACTOR = 2
 
 
 class ViewRenderer(object):
@@ -59,12 +60,18 @@ class ViewRenderer(object):
     font_img.close()
 
   def draw_block(self, block_y, block_x, poption):
-    i = block_y * 16
-    j = block_x * 16
-    offsets = [[ 0, 0,15,15],
-               [ 8, 1,15, 7],
-               [ 1, 8, 7,15],
-               [ 8, 8,15,15]]
+    s = self.scale * 8
+    i = block_y * 2 * s
+    j = block_x * 2 * s
+    # Borders for the individual colors in the palette block.
+    # 0) Background color, fills entire block.
+    # 1) Color 1, upper-right with a 1-pixel border, squatter than a square.
+    # 2) Color 2, lower-left with a 1-pixel border, thinner than a square.
+    # 3) Color 3, lower-right, true square.
+    offsets = [[ 0, 0, s*2-1, s*2-1],
+               [ s, 1, s*2-1,   s-1],
+               [ 1, s,   s-1, s*2-1],
+               [ s, s, s*2-1, s*2-1]]
     color = self.palette_option_to_colors(poption)
     for k, c in enumerate(color):
       f = offsets[k]
@@ -84,25 +91,28 @@ class ViewRenderer(object):
       self.draw.rectangle([j+f[0],f[1],j+f[2],f[3]], c)
 
   def draw_square(self, tile_y, tile_x, count):
-    i = tile_y * 8
-    j = tile_x * 8
+    s = self.scale * 8
+    i = tile_y * s
+    j = tile_x * s
     color = self.count_to_color(count)
     if not color:
       color = (0x00, 0x00, 0x00)
-    self.draw.rectangle([j+0,i+0,j+8,i+8], color)
+    self.draw.rectangle([j+0,i+0,j+s,i+s], color)
 
   def draw_empty_block(self, block_y, block_x):
-    i = block_y * 16
-    j = block_x * 16
-    self.draw.rectangle([j+0,i+0,j+16,i+16], (0,0,0,255))
+    s = self.scale * 8
+    i = block_y * 2 * s
+    j = block_x * 2 * s
+    self.draw.rectangle([j+0,i+0,j+s*2,i+s*2], (0,0,0,255))
 
   def draw_nt_value(self, tile_y, tile_x, nt):
+    s = self.scale * 8
     upper = self.font[nt / 16]
     lower = self.font[nt % 16]
     # Left digit (upper nibble).
-    self.img.paste(upper, [tile_x*16+1,tile_y*16+2,tile_x*16+8,tile_y*16+13])
+    self.img.paste(upper, [tile_x*s+1,tile_y*s+2,tile_x*s+8,tile_y*s+13])
     # Right digit (lower nibble).
-    self.img.paste(lower, [tile_x*16+8,tile_y*16+2,tile_x*16+15,tile_y*16+13])
+    self.img.paste(lower, [tile_x*s+8,tile_y*s+2,tile_x*s+15,tile_y*s+13])
 
   def is_empty_block(self, y, x, artifacts, cmanifest, bg):
     # TODO: This could be much more efficient. Perhaps add a value to artifacts
@@ -117,6 +127,21 @@ class ViewRenderer(object):
         return True
     return False
 
+  def draw_grid(self, width, height):
+    s = self.scale * 8
+    tile_grid_color = (0x20,0x80,0x20)
+    block_grid_color = (0x00,0xf0,0x00)
+    # Draw tile grid.
+    for col in xrange(16):
+      self.draw.line([col*2*s+s, 0, col*2*s+s, height], tile_grid_color)
+    for row in xrange(15):
+      self.draw.line([0, row*2*s+s, width, row*2*s+s], tile_grid_color)
+    # Draw block grid.
+    for col in xrange(1, 16):
+      self.draw.line([col*2*s, 0, col*2*s, height], block_grid_color)
+    for row in xrange(1, 15):
+      self.draw.line([0, row*2*s, width, row*2*s], block_grid_color)
+
   # create_colorization_view
   #
   # Create an image that shows which palette is used for each block.
@@ -125,7 +150,9 @@ class ViewRenderer(object):
   # artifacts: Artifacts created by the image processor.
   # palette: The palette for the image.
   def create_colorization_view(self, outfile, artifacts, palette, cmanifest):
-    self.create_file(outfile, 256, 240)
+    self.scale = SCALE_FACTOR
+    width, height = (256 * self.scale, 240 * self.scale)
+    self.create_file(outfile, width, height)
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
         pid = artifacts[y * 2][x * 2][ARTIFACT_PID]
@@ -145,7 +172,9 @@ class ViewRenderer(object):
   # artifacts: Artifacts created by the image processor.
   # nt_count: Dict mapping nametable values to number of times.
   def create_reuse_view(self, outfile, artifacts, nt_count):
-    self.create_file(outfile, 256, 240)
+    self.scale = SCALE_FACTOR
+    width, height = (256 * self.scale, 240 * self.scale)
+    self.create_file(outfile, width, height)
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
         for i in range(2):
@@ -176,8 +205,10 @@ class ViewRenderer(object):
   # outfile: Filename to output the view to.
   # artifacts: Artifacts created by the image processor.
   def create_nametable_view(self, outfile, artifacts):
+    self.scale = SCALE_FACTOR
+    width, height = (256 * self.scale, 240 * self.scale)
     self.load_nt_font()
-    self.create_file(outfile, 512, 480, (255, 255, 255))
+    self.create_file(outfile, width, height, (255, 255, 255))
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
         for i in range(2):
@@ -187,6 +218,7 @@ class ViewRenderer(object):
             nt = artifacts[y][x][ARTIFACT_NT]
             if nt != 0:
               self.draw_nt_value(y, x, nt)
+    self.draw_grid(width, height)
     self.save_file()
 
   # create_error_view
@@ -197,41 +229,31 @@ class ViewRenderer(object):
   # img: Input pixel art image.
   # errs: List of errors created by processor.
   def create_error_view(self, outfile, img, errs):
-    width = 256 * 2
-    height = 240 * 2
-    tile_grid_color = (0x20,0x80,0x20)
-    block_grid_color = (0x00,0xf0,0x00)
+    self.scale = SCALE_FACTOR
+    width, height = (256 * self.scale, 240 * self.scale)
     error_grid_color = (0xf0, 0x20, 0x20)
     error_grid_color2 = (0xc0, 0x00, 0x00)
     self.img = img.resize((width, height), Image.NEAREST).convert('RGB')
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
-    # Draw tile grid.
-    for col in xrange(16):
-      self.draw.line([col*32+16, 0, col*32+16, height], tile_grid_color)
-    for row in xrange(15):
-      self.draw.line([0, row*32+16, width, row*32+16], tile_grid_color)
-    # Draw block grid.
-    for col in xrange(1, 16):
-      self.draw.line([col*32, 0, col*32, height], block_grid_color)
-    for row in xrange(1, 15):
-      self.draw.line([0, row*32, width, row*32], block_grid_color)
+    self.draw_grid(width, height)
+    s = self.scale * 8
     # Draw errors.
     for e in errs:
       if not (getattr(e, 'tile_y', None) and getattr(e, 'tile_x', None)):
         continue
-      y = e.tile_y * 8 * 2
-      x = e.tile_x * 8 * 2
+      y = e.tile_y * 8 * self.scale
+      x = e.tile_x * 8 * self.scale
       # Inner line.
-      self.draw.line([   x,    y, x+16,    y], error_grid_color)
-      self.draw.line([   x,    y,    x, y+16], error_grid_color)
-      self.draw.line([   x, y+16, x+16, y+16], error_grid_color)
-      self.draw.line([x+16,    y, x+16, y+16], error_grid_color)
+      self.draw.line([  x,   y, x+s,   y], error_grid_color)
+      self.draw.line([  x,   y,   x, y+s], error_grid_color)
+      self.draw.line([  x, y+s, x+s, y+s], error_grid_color)
+      self.draw.line([x+s,   y, x+s, y+s], error_grid_color)
       # Outer line.
-      self.draw.line([ x-1,  y-1, x+17,  y-1], error_grid_color2)
-      self.draw.line([ x-1,  y-1,  x-1, y+17], error_grid_color2)
-      self.draw.line([ x-1, y+17, x+17, y+17], error_grid_color2)
-      self.draw.line([x+17,  y-1, x+17, y+17], error_grid_color2)
+      self.draw.line([  x-1,   y-1, x+s+1,   y-1], error_grid_color2)
+      self.draw.line([  x-1,   y-1,   x-1, y+s+1], error_grid_color2)
+      self.draw.line([  x-1, y+s+1, x+s+1, y+s+1], error_grid_color2)
+      self.draw.line([x+s+1,   y-1, x+s+1, y+s+1], error_grid_color2)
     self.save_file()
 
   # create_grid_view
@@ -241,21 +263,11 @@ class ViewRenderer(object):
   # outfile: Filename to output the grid view to.
   # img: Input pixel art image.
   def create_grid_view(self, outfile, img):
-    width, height = (512, 480)
-    tile_grid_color = (0x20,0x80,0x20)
-    block_grid_color = (0x00,0xf0,0x00)
+    self.scale = SCALE_FACTOR
+    width, height = (256 * self.scale, 240 * self.scale)
     self.img = img.resize((width, height), Image.NEAREST).convert('RGB')
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
-    # Draw tile grid.
-    for col in xrange(16):
-      self.draw.line([col*32+16, 0, col*32+16, height], tile_grid_color)
-    for row in xrange(15):
-      self.draw.line([0, row*32+16, width, row*32+16], tile_grid_color)
-    # Draw block grid.
-    for col in xrange(1, 16):
-      self.draw.line([col*32, 0, col*32, height], block_grid_color)
-    for row in xrange(1, 15):
-      self.draw.line([0, row*32, width, row*32], block_grid_color)
+    self.draw_grid(width, height)
     self.save_file()
 
