@@ -1,3 +1,7 @@
+import errors
+import string
+
+
 class PaletteError(StandardError):
   def __init__(self, msg):
     self.msg = msg
@@ -39,3 +43,56 @@ class Palette(object):
   def get(self, i):
     if i < len(self.pals):
       return self.pals[i]
+
+
+class PaletteParser(object):
+  def parse(self, text):
+    self.i = 0
+    self.text = text
+    self.fetch_literal('P') or self.die('Expected: "P"')
+    pal = Palette()
+    for n in xrange(4):
+      if not self.fetch_literal('/'):
+        break
+      row = []
+      val = self.fetch_hex()
+      if not val:
+        break
+      row.append(val)
+      pal.set_bg_color(val)
+      for q in xrange(3):
+        if not self.fetch_literal('-'):
+          break
+        val = self.fetch_hex()
+        if not val:
+          self.die('Invalid hex value')
+        row.append(val)
+      pal.add(row)
+    self.fetch_literal('/') or self.die('Expected: "/"')
+    self.fetch_done() or self.die('Expected: end of input')
+    return pal
+
+  def fetch_literal(self, want):
+    if self.i >= len(self.text):
+      return False
+    if self.text[self.i] == want:
+      self.i += 1
+      return True
+    return False
+
+  def fetch_hex(self):
+    if self.i + 1 >= len(self.text):
+      return None
+    if not self.text[self.i] in string.hexdigits:
+      return None
+    if not self.text[self.i + 1] in string.hexdigits:
+      return None
+    val = int(self.text[self.i:self.i + 2], 16)
+    self.i += 2
+    return val
+
+  def fetch_done(self):
+    return self.i >= len(self.text)
+
+  def die(self, msg):
+    raise errors.PaletteParseError(self.text, self.i, msg)

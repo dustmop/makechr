@@ -78,3 +78,15 @@ class ErrorCollector(object):
     if include_dups:
       return self.e + self.dup
     return self.e
+
+
+class PaletteParseError(Exception):
+  def __init__(self, input, i, msg):
+    self.input = input
+    self.i = i
+    self.msg = msg
+
+  def __str__(self):
+    text = (self.msg + (' at position %d\n"' % self.i) +
+            self.input + '"\n ' + (' ' * self.i) + '^')
+    return text

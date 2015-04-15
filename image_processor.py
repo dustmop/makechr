@@ -215,7 +215,7 @@ class ImageProcessor(object):
     self._nt_count[nt_num] += 1
     return nt_num
 
-  def process_image(self, img, want_errors):
+  def process_image(self, img, palette_text, want_errors):
     self.load_image(img)
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.
@@ -226,13 +226,22 @@ class ImageProcessor(object):
         except errors.PaletteOverflowError as e:
           self.collect_error(e, block_y, block_x, 0, 0, is_block=True)
           continue
-    # Make the palette from the color needs.
-    guesser = guess_best_palette.GuessBestPalette()
-    try:
-      self._palette = guesser.make_palette(self._block_color_manifest.elems())
-    except errors.TooManyPalettesError as e:
-      self._err.add(e)
-      return
+    # If palette argument was passed, use that palette.
+    if palette_text:
+      try:
+        parser = palette.PaletteParser()
+        self._palette = parser.parse(palette_text)
+      except errors.PaletteParseError as e:
+        self._err.add(e)
+        return
+    else:
+      # Make the palette from the color needs.
+      guesser = guess_best_palette.GuessBestPalette()
+      try:
+        self._palette = guesser.make_palette(self._block_color_manifest.elems())
+      except errors.TooManyPalettesError as e:
+        self._err.add(e)
+        return
     # For each block, get the attribute aka the palette.
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):

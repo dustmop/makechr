@@ -3,6 +3,7 @@ import image_processor
 from PIL import Image
 import rom_builder
 import view_renderer
+import sys
 
 
 def run():
@@ -16,6 +17,8 @@ def run():
                       help='filename for compiled NES rom')
   parser.add_argument('-e', dest='error_outfile', metavar='image filename',
                       help='filename for error image')
+  parser.add_argument('-p', dest='palette', metavar='palette',
+                      help='palette for the pixel art image')
   parser.add_argument('--palette-view', dest='palette_view',
                       metavar='image filename',
                       help='filename for palette view')
@@ -36,9 +39,13 @@ def run():
                       help='filename for grid view')
   args = parser.parse_args()
 
-  img = Image.open(args.input)
+  try:
+    img = Image.open(args.input)
+  except IOError:
+    sys.stderr.write('Input file not found: "%s"\n' % args.input)
+    sys.exit(1)
   processor = image_processor.ImageProcessor()
-  processor.process_image(img, args.error_outfile)
+  processor.process_image(img, args.palette, args.error_outfile)
   if processor.err().has():
     es = processor.err().get()
     print('Found {0} error{1}:'.format(len(es), 's'[len(es) == 1:]))
