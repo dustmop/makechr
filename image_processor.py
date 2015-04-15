@@ -127,11 +127,11 @@ class ImageProcessor(object):
   def process_tile(self, tile_y, tile_x):
     pixel_y = tile_y * TILE_SIZE
     pixel_x = tile_x * TILE_SIZE
-    # Check if this tile overruns the image.
-    if pixel_y + TILE_SIZE > self.image_y or pixel_x + TILE_SIZE > self.image_x:
-      return None, None
     color_needs = [None] * 4
     dot_profile = [0] * (TILE_SIZE * TILE_SIZE)
+    # Check if this tile overruns the image.
+    if pixel_y + TILE_SIZE > self.image_y or pixel_x + TILE_SIZE > self.image_x:
+      return color_needs, dot_profile
     # Get local variables for frequently accessed data. This improves
     # performance.
     ps = self.pixels
@@ -254,8 +254,11 @@ class ImageProcessor(object):
         palette_option = self._palette.get(pid)
         color_needs = self._color_manifest.get(cid)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
-        nt_num = self.get_nametable_num(dot_xlat, did)
-        self._artifacts[y][x][ARTIFACT_NT] = nt_num
+        # If there was an error in the tile, the dot_xlat will be empty. So
+        # skip this entry.
+        if dot_xlat:
+          nt_num = self.get_nametable_num(dot_xlat, did)
+          self._artifacts[y][x][ARTIFACT_NT] = nt_num
     # Fail if there were any errors.
     if self._err.has():
       return
