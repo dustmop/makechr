@@ -50,10 +50,9 @@ class PaletteParser(object):
     self.i = 0
     self.text = text
     self.fetch_literal('P') or self.die('Expected: "P"')
+    self.fetch_literal('/') or self.die('Expected: "/"')
     pal = Palette()
     for n in xrange(4):
-      if not self.fetch_literal('/'):
-        break
       row = []
       val = self.fetch_hex()
       if not val:
@@ -67,8 +66,8 @@ class PaletteParser(object):
         if not val:
           self.die('Invalid hex value')
         row.append(val)
+      self.fetch_literal('/') or self.die('Expected: "/"')
       pal.add(row)
-    self.fetch_literal('/') or self.die('Expected: "/"')
     self.fetch_done() or self.die('Expected: end of input')
     return pal
 
