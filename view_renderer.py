@@ -5,6 +5,8 @@ import rgb
 
 
 GRAY_COLOR = (64, 64, 64)
+ERROR_GRID_COLOR  = (0xf0, 0x20, 0x20)
+ERROR_GRID_COLOR2 = (0xf0, 0x80, 0x80)
 GRAY_PALETTE = [225, 150, 75, 0]
 SCALE_FACTOR = 2
 
@@ -127,6 +129,18 @@ class ViewRenderer(object):
     self.img.paste(upper, [tile_x*s+1,tile_y*s+2,tile_x*s+8,tile_y*s+13])
     # Right digit (lower nibble).
     self.img.paste(lower, [tile_x*s+8,tile_y*s+2,tile_x*s+15,tile_y*s+13])
+
+  def draw_error(self, y, x, sz):
+    # Inner line.
+    self.draw.line([   x,    y, x+sz,    y], ERROR_GRID_COLOR)
+    self.draw.line([   x,    y,    x, y+sz], ERROR_GRID_COLOR)
+    self.draw.line([   x, y+sz, x+sz, y+sz], ERROR_GRID_COLOR)
+    self.draw.line([x+sz,    y, x+sz, y+sz], ERROR_GRID_COLOR)
+    # Outer line.
+    self.draw.line([   x-1,    y-1, x+sz+1,    y-1], ERROR_GRID_COLOR2)
+    self.draw.line([   x-1,    y-1,    x-1, y+sz+1], ERROR_GRID_COLOR2)
+    self.draw.line([   x-1, y+sz+1, x+sz+1, y+sz+1], ERROR_GRID_COLOR2)
+    self.draw.line([x+sz+1,    y-1, x+sz+1, y+sz+1], ERROR_GRID_COLOR2)
 
   def is_empty_block(self, y, x, artifacts, cmanifest, bg):
     # TODO: This could be much more efficient. Perhaps add a value to artifacts
@@ -264,8 +278,6 @@ class ViewRenderer(object):
   def create_error_view(self, outfile, img, errs):
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
-    error_grid_color = (0xf0, 0x20, 0x20)
-    error_grid_color2 = (0xc0, 0x00, 0x00)
     self.img = img.resize((width, height), Image.NEAREST).convert('RGB')
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
@@ -273,20 +285,14 @@ class ViewRenderer(object):
     s = self.scale * 8
     # Draw errors.
     for e in errs:
-      if not (getattr(e, 'tile_y', None) and getattr(e, 'tile_x', None)):
-        continue
-      y = e.tile_y * 8 * self.scale
-      x = e.tile_x * 8 * self.scale
-      # Inner line.
-      self.draw.line([  x,   y, x+s,   y], error_grid_color)
-      self.draw.line([  x,   y,   x, y+s], error_grid_color)
-      self.draw.line([  x, y+s, x+s, y+s], error_grid_color)
-      self.draw.line([x+s,   y, x+s, y+s], error_grid_color)
-      # Outer line.
-      self.draw.line([  x-1,   y-1, x+s+1,   y-1], error_grid_color2)
-      self.draw.line([  x-1,   y-1,   x-1, y+s+1], error_grid_color2)
-      self.draw.line([  x-1, y+s+1, x+s+1, y+s+1], error_grid_color2)
-      self.draw.line([x+s+1,   y-1, x+s+1, y+s+1], error_grid_color2)
+      if getattr(e, 'tile_y', None) and getattr(e, 'tile_x', None):
+        y = e.tile_y * 8 * self.scale
+        x = e.tile_x * 8 * self.scale
+        self.draw_error(y, x, s)
+      elif getattr(e, 'block_y', None) and getattr(e, 'block_x', None):
+        y = e.block_y * 16 * self.scale
+        x = e.block_x * 16 * self.scale
+        self.draw_error(y, x, s * 2)
     self.save_file()
 
   # create_grid_view

@@ -46,8 +46,9 @@ def run():
       print('{0} {1}'.format(type(e).__name__, e))
     if args.error_outfile:
       print('Errors displayed in "{0}"'.format(args.error_outfile))
+      errs = processor.err().get(include_dups=True)
       renderer = view_renderer.ViewRenderer()
-      renderer.create_error_view(args.error_outfile, img, processor.err().get())
+      renderer.create_error_view(args.error_outfile, img, errs)
     return
   if args.compile:
     builder = rom_builder.RomBuilder()
