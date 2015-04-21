@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw
 from constants import *
+import math
 import os
 import rgb
 
@@ -260,7 +261,8 @@ class ViewRenderer(object):
   def create_chr_view(self, outfile, chr_data):
     self.scale = SCALE_FACTOR
     s = self.scale * 8
-    width, height = (16 * s + 15, 16 * s + 15)
+    rows = int(math.ceil(len(chr_data) / 16.0))
+    width, height = (16 * (s + 1) - 1, rows * (s + 1) - 1)
     self.create_file(outfile, width, height, (255, 255, 255))
     for k, tile in enumerate(chr_data):
       tile_y = k / 16
