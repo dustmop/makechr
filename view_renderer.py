@@ -127,9 +127,9 @@ class ViewRenderer(object):
     upper = self.font[nt / 16]
     lower = self.font[nt % 16]
     # Left digit (upper nibble).
-    self.img.paste(upper, [tile_x*s+1,tile_y*s+2,tile_x*s+8,tile_y*s+13])
+    self.img.paste(upper, [tile_x*s+1,tile_y*s+3,tile_x*s+8,tile_y*s+14])
     # Right digit (lower nibble).
-    self.img.paste(lower, [tile_x*s+8,tile_y*s+2,tile_x*s+15,tile_y*s+13])
+    self.img.paste(lower, [tile_x*s+8,tile_y*s+3,tile_x*s+15,tile_y*s+14])
 
   def draw_error(self, y, x, sz):
     # Inner line.
