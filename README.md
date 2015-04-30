@@ -44,7 +44,7 @@ This will output four files: chr.dat, nametable.dat, palette.dat, attribute.dat.
                                      10: yellow
                                      11+: white (common tile)
 
-    --nametable-view    [view_file]  Ouptut an image file showing the nametable
+    --nametable-view    [view_file]  Output an image file showing the nametable
                                      value for each position, in hexidecimal.
                                      Positions that have value 0 do not output
                                      anything.

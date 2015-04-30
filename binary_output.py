@@ -2,30 +2,34 @@ from constants import *
 
 
 class BinaryOutput(object):
-  def __init__(self):
+  def __init__(self, tmpl):
     self._nametable_cache = {}
+    self._tmpl = tmpl
 
   def pad(self, fout, num, byte_value=0):
     fout.write(chr(byte_value) * num)
 
-  def save_nametable(self, filename, artifacts):
-    fout = open(filename, 'wb')
+  def fill_template(self, replace):
+    return self._tmpl.replace('%s', replace)
+
+  def save_nametable(self, artifacts):
+    fout = open(self.fill_template('nametable'), 'wb')
     for y in xrange(NUM_BLOCKS_Y * 2):
       for x in xrange(NUM_BLOCKS_X * 2):
         nt = artifacts[y][x][ARTIFACT_NT]
         fout.write(chr(nt))
     fout.close()
 
-  def save_chr(self, filename, chr_data):
-    fout = open(filename, 'wb')
+  def save_chr(self, chr_data):
+    fout = open(self.fill_template('chr'), 'wb')
     for d in chr_data:
       d.write(fout)
     padding = 8192 - (len(chr_data) * 16)
     self.pad(fout, padding)
     fout.close()
 
-  def save_palette(self, filename, palette):
-    fout = open(filename, 'wb')
+  def save_palette(self, palette):
+    fout = open(self.fill_template('palette'), 'wb')
     bg_color = palette.bg_color
     for i in xrange(4):
       palette_option = palette.get(i)
@@ -39,8 +43,8 @@ class BinaryOutput(object):
     self.pad(fout, 16, bg_color)
     fout.close()
 
-  def save_attribute(self, filename, artifacts):
-    fout = open(filename, 'wb')
+  def save_attribute(self, artifacts):
+    fout = open(self.fill_template('attribute'), 'wb')
     for attr_y in xrange(NUM_BLOCKS_Y / 2):
       for attr_x in xrange(NUM_BLOCKS_X / 2):
         y = attr_y * 4

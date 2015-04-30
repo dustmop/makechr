@@ -1,4 +1,3 @@
-import binary_output
 import chr_tile
 import errors
 import guess_best_palette
@@ -17,7 +16,6 @@ class ImageProcessor(object):
     self._nt_count = {}
     self._nametable_cache = {}
     self._chr_data = []
-    self._output = binary_output.BinaryOutput()
     self._color_manifest = id_manifest.IdManifest()
     self._dot_manifest = id_manifest.IdManifest()
     self._block_color_manifest = id_manifest.IdManifest()
@@ -44,6 +42,9 @@ class ImageProcessor(object):
 
   def color_manifest(self):
     return self._color_manifest
+
+  def dot_manifest(self):
+    return self._dot_manifest
 
   def chr_data(self):
     return self._chr_data
@@ -271,11 +272,3 @@ class ImageProcessor(object):
     # Fail if there were any errors.
     if self._err.has():
       return
-    # Output.
-    self._output.save_nametable('nametable.dat', self._artifacts)
-    self._output.save_chr('chr.dat', self._chr_data)
-    self._output.save_palette('palette.dat', self._palette)
-    self._output.save_attribute('attribute.dat', self._artifacts)
-    print('Number of dot-profiles: {0}'.format(self._dot_manifest.size()))
-    print('Number of tiles: {0}'.format(len(self._chr_data)))
-    print('Palette: {0}'.format(self._palette))

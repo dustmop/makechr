@@ -1,3 +1,11 @@
+class CommandLineArgError(Exception):
+  def __init__(self, msg):
+    self.msg = msg
+
+  def __str__(self):
+    return self.msg
+
+
 class PaletteOverflowError(Exception):
   def __init__(self, elem_y, elem_x, is_block=False):
     if is_block:

@@ -19,14 +19,14 @@ class RomBuilder(object):
     fout.write(fin.read())
     fin.close()
 
-  def build(self, outfile):
+  def build(self, binfiles, outfile):
     fout = open(outfile, 'wb')
     fout.write(self.rom_header)
-    self.copy_file(fout, 'palette.dat')
-    self.copy_file(fout, 'nametable.dat')
-    self.copy_file(fout, 'attribute.dat')
+    self.copy_file(fout, binfiles.fill_template('palette'))
+    self.copy_file(fout, binfiles.fill_template('nametable'))
+    self.copy_file(fout, binfiles.fill_template('attribute'))
     fout.write(self.rom_code)
     fout.write('\x00' * self.fill_size)
     fout.write(self.rom_vectors)
-    self.copy_file(fout, 'chr.dat')
+    self.copy_file(fout, binfiles.fill_template('chr'))
     fout.close()

@@ -1,8 +1,6 @@
+import app
 import argparse
-import image_processor
 from PIL import Image
-import rom_builder
-import view_renderer
 import sys
 
 
@@ -19,6 +17,8 @@ def run():
                       help='filename for error image')
   parser.add_argument('-p', dest='palette', metavar='palette',
                       help='palette for the pixel art image')
+  parser.add_argument('-o', dest='output', metavar='output',
+                      help='template for naming output files')
   parser.add_argument('--palette-view', dest='palette_view',
                       metavar='image filename',
                       help='filename for palette view')
@@ -38,48 +38,13 @@ def run():
                       metavar='image fileanme',
                       help='filename for grid view')
   args = parser.parse_args()
-
   try:
     img = Image.open(args.input)
   except IOError:
     sys.stderr.write('Input file not found: "%s"\n' % args.input)
     sys.exit(1)
-  processor = image_processor.ImageProcessor()
-  processor.process_image(img, args.palette, args.error_outfile)
-  if processor.err().has():
-    es = processor.err().get()
-    print('Found {0} error{1}:'.format(len(es), 's'[len(es) == 1:]))
-    for e in es:
-      print('{0} {1}'.format(type(e).__name__, e))
-    if args.error_outfile:
-      print('Errors displayed in "{0}"'.format(args.error_outfile))
-      errs = processor.err().get(include_dups=True)
-      renderer = view_renderer.ViewRenderer()
-      renderer.create_error_view(args.error_outfile, img, errs)
-    return
-  if args.compile:
-    builder = rom_builder.RomBuilder()
-    builder.build(args.compile)
-  if args.palette_view:
-    renderer = view_renderer.ViewRenderer()
-    renderer.create_palette_view(args.palette_view, processor.palette())
-  if args.colorization_view:
-    renderer = view_renderer.ViewRenderer()
-    renderer.create_colorization_view(args.colorization_view,
-        processor.artifacts(), processor.palette(), processor.color_manifest())
-  if args.reuse_view:
-    renderer = view_renderer.ViewRenderer()
-    renderer.create_reuse_view(args.reuse_view, processor.artifacts(),
-        processor.nt_count())
-  if args.nametable_view:
-    renderer = view_renderer.ViewRenderer()
-    renderer.create_nametable_view(args.nametable_view, processor.artifacts())
-  if args.chr_view:
-    renderer = view_renderer.ViewRenderer()
-    renderer.create_chr_view(args.chr_view, processor.chr_data())
-  if args.grid_view:
-    renderer = view_renderer.ViewRenderer()
-    renderer.create_grid_view(args.grid_view, img)
+  application = app.Application()
+  application.run(img, args)
 
 
 if __name__ == '__main__':
