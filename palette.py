@@ -2,14 +2,6 @@ import errors
 import string
 
 
-class PaletteError(StandardError):
-  def __init__(self, msg):
-    self.msg = msg
-
-  def __str__(self):
-    return self.msg
-
-
 class Palette(object):
   def __init__(self):
     self.bg_color = None
@@ -26,7 +18,7 @@ class Palette(object):
 
   def add(self, p):
     if not self.bg_color in p:
-      raise PaletteError('Background color not found in PaletteOption')
+      raise errors.PaletteBgcolorError(self.bg_color, p)
     p = [self.bg_color] + [c for c in p if c != self.bg_color]
     self.pals.append(p)
     self.pal_as_sets.append(set(p))

@@ -26,6 +26,28 @@ class PaletteOverflowError(Exception):
       return '@ tile (%dy,%dx)' % (self.tile_y, self.tile_x)
 
 
+class PaletteBgcolorError(Exception):
+  def __init__(self, bg_color, poption):
+    self.bg_color = bg_color
+    self.poption = poption
+
+  def __str__(self):
+    return 'Bgcolor "%s" not found in PaletteOption %s' % (
+      self.bg_color, '-'.join(['%02x' % p for p in self.poption]))
+
+
+class PaletteParseError(Exception):
+  def __init__(self, input, i, msg):
+    self.input = input
+    self.i = i
+    self.msg = msg
+
+  def __str__(self):
+    text = (self.msg + (' at position %d\n"' % self.i) +
+            self.input + '"\n ' + (' ' * self.i) + '^')
+    return text
+
+
 class ColorNotAllowedError(Exception):
   def __init__(self, pixel, tile_y, tile_x, y, x):
     self.pixel = pixel
@@ -86,15 +108,3 @@ class ErrorCollector(object):
     if include_dups:
       return self.e + self.dup
     return self.e
-
-
-class PaletteParseError(Exception):
-  def __init__(self, input, i, msg):
-    self.input = input
-    self.i = i
-    self.msg = msg
-
-  def __str__(self):
-    text = (self.msg + (' at position %d\n"' % self.i) +
-            self.input + '"\n ' + (' ' * self.i) + '^')
-    return text
