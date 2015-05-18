@@ -19,11 +19,11 @@ class Application(object):
         renderer = view_renderer.ViewRenderer()
         renderer.create_error_view(args.error_outfile, img, errs)
       return
-    self.create_views(processor, args)
+    self.create_views(processor, args, img)
     self.create_output(processor, args)
     self.show_stats(processor, args)
 
-  def create_views(self, processor, args):
+  def create_views(self, processor, args, img):
     if args.palette_view:
       renderer = view_renderer.ViewRenderer()
       renderer.create_palette_view(args.palette_view, processor.palette())

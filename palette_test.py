@@ -37,6 +37,11 @@ class PaletteTests(unittest.TestCase):
     self.assertTrue('Expected: "/"' in cm.exception.msg)
     self.assertTrue((' ' * 13 + '^') in str(cm.exception))
 
+  def test_parser_zero_is_valid(self):
+    parser = palette.PaletteParser()
+    pal = parser.parse('P/0f-00/')
+    self.assertEqual(str(pal), 'P/0f-00/')
+
 
 if __name__ == '__main__':
   unittest.main()

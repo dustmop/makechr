@@ -55,7 +55,7 @@ class PaletteParser(object):
         if not self.fetch_literal('-'):
           break
         val = self.fetch_hex()
-        if not val:
+        if val is None:
           self.die('Invalid hex value')
         row.append(val)
       self.fetch_literal('/') or self.die('Expected: "/"')
