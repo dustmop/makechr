@@ -176,15 +176,18 @@ class ViewRenderer(object):
   # Create an image that shows which palette is used for each block.
   #
   # outfile: Filename to output the view to.
+  # ppu_memory: Ppu memory containing block_palette and palette.
   # artifacts: Artifacts created by the image processor.
-  # palette: The palette for the image.
-  def create_colorization_view(self, outfile, artifacts, palette, cmanifest):
+  # cmanifest: The color id_manifest.
+  def create_colorization_view(self, outfile, ppu_memory, artifacts, cmanifest):
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.create_file(outfile, width, height)
+    palette = ppu_memory.palette
+    block_palette = ppu_memory.block_palette
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
-        pid = artifacts[y * 2][x * 2][ARTIFACT_PID]
+        pid = block_palette[y][x]
         poption = palette.get(pid)
         if self.is_empty_block(y, x, artifacts, cmanifest, poption[0]):
           self.draw_empty_block(y, x)
@@ -198,19 +201,20 @@ class ViewRenderer(object):
   # times they appear.
   #
   # outfile: Filename to output the view to.
-  # artifacts: Artifacts created by the image processor.
+  # ppu_memory: Ppu memory containing nametable.
   # nt_count: Dict mapping nametable values to number of times.
-  def create_reuse_view(self, outfile, artifacts, nt_count):
+  def create_reuse_view(self, outfile, ppu_memory, nt_count):
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.create_file(outfile, width, height)
+    nametable = ppu_memory.nametable
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
         for i in range(2):
           for j in range(2):
             y = block_y * 2 + i
             x = block_x * 2 + j
-            nt = artifacts[y][x][ARTIFACT_NT]
+            nt = nametable[y][x]
             self.draw_square(y, x, nt_count[nt])
     self.save_file()
 
@@ -219,9 +223,10 @@ class ViewRenderer(object):
   # Create an image that shows the palette.
   #
   # outfile: Filename to output the palette to.
-  # palette: The palette to show.
-  def create_palette_view(self, outfile, palette):
+  # ppu_memory: Ppu memory containing palette.
+  def create_palette_view(self, outfile, ppu_memory):
     self.create_file(outfile, 168, 24)
+    palette = ppu_memory.palette
     for i in xrange(4):
       poption = palette.get(i)
       self.draw_poption(i, poption)
@@ -232,19 +237,20 @@ class ViewRenderer(object):
   # Create an image that shows nametable values for each tile.
   #
   # outfile: Filename to output the view to.
-  # artifacts: Artifacts created by the image processor.
-  def create_nametable_view(self, outfile, artifacts):
+  # ppu_memory: Ppu memory containing nametable.
+  def create_nametable_view(self, outfile, ppu_memory):
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.load_nt_font()
     self.create_file(outfile, width, height, (255, 255, 255))
+    nametable = ppu_memory.nametable
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
         for i in range(2):
           for j in range(2):
             y = block_y * 2 + i
             x = block_x * 2 + j
-            nt = artifacts[y][x][ARTIFACT_NT]
+            nt = nametable[y][x]
             if nt != 0:
               self.draw_nt_value(y, x, nt)
     self.draw_grid(width, height)
@@ -257,10 +263,11 @@ class ViewRenderer(object):
   # border between each tile.
   #
   # outfile: Filename to output the view to.
-  # chr_data: List of chr tiles.
-  def create_chr_view(self, outfile, chr_data):
+  # ppu_memory: Ppu memory containing chr.
+  def create_chr_view(self, outfile, ppu_memory):
     self.scale = SCALE_FACTOR
     s = self.scale * 8
+    chr_data = ppu_memory.chr_data
     rows = int(math.ceil(len(chr_data) / 16.0))
     width, height = (16 * (s + 1) - 1, rows * (s + 1) - 1)
     self.create_file(outfile, width, height, (255, 255, 255))

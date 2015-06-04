@@ -35,7 +35,7 @@ class AppTests(unittest.TestCase):
     processor.process_image(img, None, None)
     self.args = MockArgs()
     a = app.Application()
-    a.create_views(processor, self.args, img)
+    a.create_views(processor.ppu_memory(), processor, self.args, img)
     self.assert_file_eq(self.args.palette_view, self.golden('pal', 'png'))
     self.assert_file_eq(self.args.colorization_view,
                         self.golden('color', 'png'))
@@ -50,7 +50,7 @@ class AppTests(unittest.TestCase):
     processor.process_image(img, None, None)
     self.args = MockArgs()
     a = app.Application()
-    a.create_output(processor, self.args)
+    a.create_output(processor.ppu_memory(), self.args)
     self.assert_output_result('chr')
     self.assert_output_result('nametable')
     self.assert_output_result('palette')
@@ -63,7 +63,7 @@ class AppTests(unittest.TestCase):
     self.args = MockArgs()
     self.args.error_outfile = self.args.tmppng('error')
     a = app.Application()
-    a.create_output(processor, self.args)
+    a.create_output(processor.ppu_memory(), self.args)
     self.assertTrue(processor.err().has())
     errs = processor.err().get()
     expect_errors = ['PaletteOverflowError @ block (1y,3x)',

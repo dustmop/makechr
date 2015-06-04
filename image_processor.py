@@ -3,25 +3,22 @@ import errors
 import guess_best_palette
 import id_manifest
 import palette
+import ppu_memory
 import rgb
 from constants import *
-
-
-# TODO: Try different image libraries
 
 
 class ImageProcessor(object):
 
   def __init__(self):
+    self._ppu_memory = ppu_memory.PpuMemory()
     self._nt_count = {}
     self._nametable_cache = {}
-    self._chr_data = []
     self._color_manifest = id_manifest.IdManifest()
     self._dot_manifest = id_manifest.IdManifest()
     self._block_color_manifest = id_manifest.IdManifest()
     self._artifacts = [row[:] for row in
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
-    self._palette = None
     self._err = errors.ErrorCollector()
 
   def load_image(self, img):
@@ -31,8 +28,8 @@ class ImageProcessor(object):
   def artifacts(self):
     return self._artifacts
 
-  def palette(self):
-    return self._palette
+  def ppu_memory(self):
+    return self._ppu_memory
 
   def nt_count(self):
     return self._nt_count
@@ -45,9 +42,6 @@ class ImageProcessor(object):
 
   def dot_manifest(self):
     return self._dot_manifest
-
-  def chr_data(self):
-    return self._chr_data
 
   # components_to_nescolor
   #
@@ -107,12 +101,12 @@ class ImageProcessor(object):
   def collect_error(self, e, block_y, block_x, i, j, is_block=False):
     self._err.add(e)
     if is_block:
-      self._artifacts[block_y * 2 + 0][block_x * 2 + 0] = [0, 0, 0, 0]
-      self._artifacts[block_y * 2 + 0][block_x * 2 + 1] = [0, 0, 0, 0]
-      self._artifacts[block_y * 2 + 1][block_x * 2 + 0] = [0, 0, 0, 0]
-      self._artifacts[block_y * 2 + 1][block_x * 2 + 1] = [0, 0, 0, 0]
+      self._artifacts[block_y * 2 + 0][block_x * 2 + 0] = [0, 0, 0]
+      self._artifacts[block_y * 2 + 0][block_x * 2 + 1] = [0, 0, 0]
+      self._artifacts[block_y * 2 + 1][block_x * 2 + 0] = [0, 0, 0]
+      self._artifacts[block_y * 2 + 1][block_x * 2 + 1] = [0, 0, 0]
     else:
-      self._artifacts[block_y * 2 + i][block_x * 2 + j] = [0, 0, 0, 0]
+      self._artifacts[block_y * 2 + i][block_x * 2 + j] = [0, 0, 0]
 
   # process_tile
   #
@@ -177,7 +171,7 @@ class ImageProcessor(object):
           continue
         cid = self._color_manifest.id(color_needs)
         did = self._dot_manifest.id(dot_profile)
-        self._artifacts[y + i][x + j] = [cid, did, None, None]
+        self._artifacts[y + i][x + j] = [cid, did, None]
         block_color_needs |= set(color_needs)
     block_color_needs = block_color_needs - set([None])
     if len(block_color_needs) > PALETTE_SIZE:
@@ -208,8 +202,8 @@ class ImageProcessor(object):
           i = row * 8 + col
           val = xlat[dot_profile[i]]
           tile.set(row, col, val)
-      nt_num = len(self._chr_data)
-      self._chr_data.append(tile)
+      nt_num = len(self._ppu_memory.chr_data)
+      self._ppu_memory.chr_data.append(tile)
       self._nt_count[nt_num] = 0
       self._nametable_cache[key] = nt_num
     nt_num = self._nametable_cache[key]
@@ -231,7 +225,7 @@ class ImageProcessor(object):
     if palette_text:
       try:
         parser = palette.PaletteParser()
-        self._palette = parser.parse(palette_text)
+        self._ppu_memory.palette = parser.parse(palette_text)
       except errors.PaletteParseError as e:
         self._err.add(e)
         return
@@ -239,7 +233,8 @@ class ImageProcessor(object):
       # Make the palette from the color needs.
       guesser = guess_best_palette.GuessBestPalette()
       try:
-        self._palette = guesser.make_palette(self._block_color_manifest.elems())
+        self._ppu_memory.palette = guesser.make_palette(
+          self._block_color_manifest.elems())
       except errors.TooManyPalettesError as e:
         self._err.add(e)
         return
@@ -248,27 +243,24 @@ class ImageProcessor(object):
       for block_x in xrange(NUM_BLOCKS_X):
         y = block_y * 2
         x = block_x * 2
-        (cid, did, bcid, unused) = self._artifacts[y][x]
+        (cid, did, bcid) = self._artifacts[y][x]
         block_color_needs = self._block_color_manifest.get(bcid)
-        (pid, palette_option) = self._palette.select(block_color_needs)
-        # TODO: Maybe better to get palette per block instead of assigning it
-        # to each tile?
-        self._artifacts[y][x][ARTIFACT_PID] = pid
-        self._artifacts[y][x+1][ARTIFACT_PID] = pid
-        self._artifacts[y+1][x][ARTIFACT_PID] = pid
-        self._artifacts[y+1][x+1][ARTIFACT_PID] = pid
+        (pid, palette_option) = self._ppu_memory.palette.select(
+          block_color_needs)
+        self._ppu_memory.block_palette[block_y][block_x] = pid
     # For each tile in the artifact table, create the chr and nametable.
     for y in xrange(NUM_BLOCKS_Y * 2):
       for x in xrange(NUM_BLOCKS_X * 2):
-        (cid, did, pid, unused) = self._artifacts[y][x]
-        palette_option = self._palette.get(pid)
+        (cid, did, bcid) = self._artifacts[y][x]
+        pid = self._ppu_memory.block_palette[y / 2][x / 2]
+        palette_option = self._ppu_memory.palette.get(pid)
         color_needs = self._color_manifest.get(cid)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
         # If there was an error in the tile, the dot_xlat will be empty. So
         # skip this entry.
         if dot_xlat:
           nt_num = self.get_nametable_num(dot_xlat, did)
-          self._artifacts[y][x][ARTIFACT_NT] = nt_num
+          self._ppu_memory.nametable[y][x] = nt_num
     # Fail if there were any errors.
     if self._err.has():
       return
