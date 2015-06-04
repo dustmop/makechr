@@ -6,6 +6,7 @@ import image_processor
 import os
 from PIL import Image
 import tempfile
+import view_renderer
 
 
 class MockArgs(object):
@@ -55,6 +56,27 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_error(self):
+    img = Image.open('testdata/full-image-with-error.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, None)
+    self.args = MockArgs()
+    self.args.error_outfile = self.args.tmppng('error')
+    a = app.Application()
+    a.create_output(processor, self.args)
+    self.assertTrue(processor.err().has())
+    errs = processor.err().get()
+    expect_errors = ['PaletteOverflowError @ block (1y,3x)',
+                     'PaletteOverflowError @ tile (2y,10x)',
+                     ('ColorNotAllowedError @ tile (4y,1x) and ' +
+                      'pixel (1y,2x) - "ff,ff,00"')]
+    actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
+    self.assertEqual(actual_errors, expect_errors)
+    renderer = view_renderer.ViewRenderer()
+    renderer.create_error_view(self.args.error_outfile, img, errs)
+    self.assert_file_eq(self.args.error_outfile,
+                        'testdata/errors-full-image.png')
+
   def assert_output_result(self, name):
     actual_file = self.args.output % name
     expect_file = self.golden(name, 'dat')
@@ -64,7 +86,9 @@ class AppTests(unittest.TestCase):
     return 'testdata/full-image-%s.%s' % (name, ext)
 
   def assert_file_eq(self, actual_file, expect_file):
-    self.assertTrue(filecmp.cmp(actual_file, expect_file, shallow=False))
+    self.assertTrue(filecmp.cmp(actual_file, expect_file, shallow=False),
+                    "Files did not match actual:%s expect:%s" % (
+        actual_file, expect_file))
 
 
 if __name__ == '__main__':
