@@ -7,49 +7,58 @@ from constants import *
 
 class GuessBestPalette(object):
 
-  # to_color_set
-  #
-  # Given a string, often from a hash table key, parse it to make a sorted
-  # color set, without any None elements. The order is descending, making it
-  # easy to do subset comparisions later.
-  #
-  # text: A text representation of a color set. Example: '[45, 15, 8, None]'
-  def to_color_set(self, color_needs):
+  def to_ordered_colors(self, color_needs):
+    """Convert color needs array or set to an ordered list.
+
+    Given color needs array or set, parse it to make a sorted color list,
+    without any None elements. The order is descending, making it easy to do
+    subset comparisions later.
+
+    color_needs: A list or set of color needs.
+    """
     return sorted([e for e in color_needs if not e is None], reverse=True)
 
-  # is_color_subset
-  #
-  # Return whether subject is a strict subset of target.
-  #
-  # subject: A color set.
-  # target: A color set.
-  def is_color_subset(self, subject, target):
+  def is_subset(self, subject, target):
+    """Return whether subject is a strict subset of target."""
     return set(subject) <= set(target)
 
-  # get_uniq_color_sets
-  #
-  # Given a color manifest, remove duplicates and sort.
-  #
-  # color_manifest: A dict of color sets.
   def get_uniq_color_sets(self, color_manifest):
+    """Get unique color sets, by removing duplicates and sorting.
+
+    color_manifest: A dict of color sets.
+    """
     seen = {}
     for color_needs in color_manifest:
-      color_set = self.to_color_set(color_needs)
-      name = '-'.join(['%02x' % e for e in color_set])
-      seen[name] = color_set
+      ordered_colors = self.to_ordered_colors(color_needs)
+      name = '-'.join(['%02x' % e for e in ordered_colors])
+      seen[name] = ordered_colors
     return sorted(seen.values())
 
   def get_minimal_colors(self, uniq_color_sets):
+    """Merge color sets and return the minimal set of needed color sets.
+
+    uniq_color_sets: List of ordered color sets.
+    """
     minimized = []
     for i, color_set in enumerate(uniq_color_sets):
       for j, target in enumerate(uniq_color_sets[i + 1:]):
-        if self.is_color_subset(color_set, target):
+        if self.is_subset(color_set, target):
           break
       else:
         minimized.append(color_set)
     return minimized
 
   def merge_color_sets(self, color_set_collection, merge_strategy):
+    """Merge some elements of collection, and return a list of sets.
+
+    Given a collection of sets, pick elements according to the strategy to
+    return a collection of merged sets. For example, if color_set_collection
+    is [A, B, C, D] where A through D are sets, and merge_strategy is
+    [set([0, 2]), set([1, 3])] the return value is [merge(A|C), merge(B|D)].
+
+    color_set_collection: Potentional color sets to be merged.
+    merge_strategy: List of sets, where each set represents what to merge.
+    """
     result = []
     for choices in merge_strategy:
       merged = set()
@@ -60,13 +69,14 @@ class GuessBestPalette(object):
       result.append(merged)
     return result
 
-  # get_background_color
-  #
-  # Given a list of colors, return the best background color. Prefer
-  # black if possible, otherwise, use the smallest numerical value.
-  #
-  # combined_colors: List of color needs.
   def get_background_color(self, combined_colors):
+    """Determine the global background color.
+
+    Given a list of colors, return the best background color. Prefer
+    black if possible, otherwise, use the smallest numerical value.
+
+    combined_colors: List of color needs.
+    """
     possibilities = set(combined_colors[0])
     for color_set in combined_colors[1:]:
       possibilities = possibilities & set(color_set)
@@ -76,15 +86,16 @@ class GuessBestPalette(object):
       return min(possibilities)
     return None
 
-  # get_valid_combinations
-  #
-  # Some of the color_sets are finalized (full PaletteOptions) the others
-  # remaining need to be merged. Try all possible combinations, and for each
-  # one determine the background color. Return all possibilities, at least 1.
-  #
-  # finalized: Full color sets.
-  # remaining: Color sets that need to be merged.
   def get_valid_combinations(self, finalized, remaining):
+    """Calculate all valid combinations of the palette.
+
+    Some of the color_sets are finalized (full PaletteOptions) the others
+    remaining need to be merged. Try all possible combinations, and for each
+    one determine the background color. Return all possibilities, at least 1.
+
+    finalized: Full color sets.
+    remaining: Color sets that need to be merged.
+    """
     merged_color_possibilities = []
     num_available = NUM_ALLOWED_PALETTES - len(finalized)
     for merge_strategy in partitions.partitions(len(remaining)):
@@ -103,6 +114,10 @@ class GuessBestPalette(object):
     return merged_color_possibilities
 
   def get_merged_color_possibilities(self, minimal_colors):
+    """Get all possible merged sets of colors.
+
+    minimal_colors: Set of minimal needed colors.
+    """
     finalized = []
     remaining = []
     # We know from earlier steps that minimal_colors is a set of color_sets
@@ -126,12 +141,13 @@ class GuessBestPalette(object):
       bg_color = self.get_background_color(finalized)
       return [[bg_color, finalized]]
 
-  # get_palette
-  #
-  # Given list of possible palettes, just pick and build the first one.
-  #
-  # possibilities: List of possible palettes, must have at least one element.
   def get_palette(self, possibilities):
+    """Pick a single palette.
+
+    Given list of possible palettes, just pick and build the first one.
+
+    possibilities: List of possible palettes, must have at least one element.
+    """
     (bg_color, color_set_collection) = possibilities[0]
     pal = palette.Palette()
     pal.set_bg_color(bg_color)

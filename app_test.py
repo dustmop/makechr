@@ -32,7 +32,7 @@ class AppTests(unittest.TestCase):
   def test_views(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None)
+    processor.process_image(img, None)
     self.args = MockArgs()
     a = app.Application()
     a.create_views(processor.ppu_memory(), processor, self.args, img)
@@ -47,7 +47,7 @@ class AppTests(unittest.TestCase):
   def test_output(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None)
+    processor.process_image(img, None)
     self.args = MockArgs()
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -59,7 +59,7 @@ class AppTests(unittest.TestCase):
   def test_error(self):
     img = Image.open('testdata/full-image-with-error.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None)
+    processor.process_image(img, None)
     self.args = MockArgs()
     self.args.error_outfile = self.args.tmppng('error')
     a = app.Application()

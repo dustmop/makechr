@@ -2,6 +2,10 @@ from constants import *
 
 
 class PpuMemory(object):
+  """PpuMemory
+
+  Data structure representing the components of graphics in PPU memory.
+  """
   def __init__(self):
     self.block_palette = [row[:] for row in
                           [[None]*(NUM_BLOCKS_X)]*(NUM_BLOCKS_Y)]
@@ -11,6 +15,10 @@ class PpuMemory(object):
     self.chr_data = []
 
   def save(self, tmpl):
+    """Save binary files representing the ppu memory.
+
+    tmpl: String representing a filename template to save files to.
+    """
     self.save_nametable(self.nametable, tmpl)
     self.save_chr(self.chr_data, tmpl)
     self.save_palette(self.palette, tmpl)

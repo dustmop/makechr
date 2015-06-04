@@ -171,15 +171,14 @@ class ViewRenderer(object):
     for row in xrange(1, 15):
       self.draw.line([0, row*2*s, width, row*2*s], block_grid_color)
 
-  # create_colorization_view
-  #
-  # Create an image that shows which palette is used for each block.
-  #
-  # outfile: Filename to output the view to.
-  # ppu_memory: Ppu memory containing block_palette and palette.
-  # artifacts: Artifacts created by the image processor.
-  # cmanifest: The color id_manifest.
   def create_colorization_view(self, outfile, ppu_memory, artifacts, cmanifest):
+    """Create an image that shows which palette is used for each block.
+
+    outfile: Filename to output the view to.
+    ppu_memory: Ppu memory containing block_palette and palette.
+    artifacts: Artifacts created by the image processor.
+    cmanifest: The color id_manifest.
+    """
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.create_file(outfile, width, height)
@@ -195,15 +194,16 @@ class ViewRenderer(object):
         self.draw_block(y, x, poption)
     self.save_file()
 
-  # create_resuse_view
-  #
-  # Create an image that shows which tiles are reused, color coded by how many
-  # times they appear.
-  #
-  # outfile: Filename to output the view to.
-  # ppu_memory: Ppu memory containing nametable.
-  # nt_count: Dict mapping nametable values to number of times.
   def create_reuse_view(self, outfile, ppu_memory, nt_count):
+    """Create an image that shows tile reuse.
+
+    Create an image that shows which tiles are reused, color coded by how many
+    times they appear.
+
+    outfile: Filename to output the view to.
+    ppu_memory: Ppu memory containing nametable.
+    nt_count: Dict mapping nametable values to number of times.
+    """
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.create_file(outfile, width, height)
@@ -218,13 +218,12 @@ class ViewRenderer(object):
             self.draw_square(y, x, nt_count[nt])
     self.save_file()
 
-  # create_palette_view
-  #
-  # Create an image that shows the palette.
-  #
-  # outfile: Filename to output the palette to.
-  # ppu_memory: Ppu memory containing palette.
   def create_palette_view(self, outfile, ppu_memory):
+    """Create an image that shows the palette.
+
+    outfile: Filename to output the palette to.
+    ppu_memory: Ppu memory containing palette.
+    """
     self.create_file(outfile, 168, 24)
     palette = ppu_memory.palette
     for i in xrange(4):
@@ -232,13 +231,12 @@ class ViewRenderer(object):
       self.draw_poption(i, poption)
     self.save_file()
 
-  # create_nametable_view
-  #
-  # Create an image that shows nametable values for each tile.
-  #
-  # outfile: Filename to output the view to.
-  # ppu_memory: Ppu memory containing nametable.
   def create_nametable_view(self, outfile, ppu_memory):
+    """Create an image that shows nametable values for each tile.
+
+    outfile: Filename to output the view to.
+    ppu_memory: Ppu memory containing nametable.
+    """
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.load_nt_font()
@@ -256,15 +254,16 @@ class ViewRenderer(object):
     self.draw_grid(width, height)
     self.save_file()
 
-  # create_chr_view
-  #
-  # Create an image that shows chr tiles in a 16x16 grid layout. Has an
-  # abnormal size, which is the size of a chr tile, times 16, plus a 1-pixel
-  # border between each tile.
-  #
-  # outfile: Filename to output the view to.
-  # ppu_memory: Ppu memory containing chr.
   def create_chr_view(self, outfile, ppu_memory):
+    """Create an image that shows chr tiles.
+
+    Create an image that shows chr tiles in a 16x16 grid layout. Has an
+    abnormal size, which is the size of a chr tile, times 16, plus a 1-pixel
+    border between each tile.
+
+    outfile: Filename to output the view to.
+    ppu_memory: Ppu memory containing chr.
+    """
     self.scale = SCALE_FACTOR
     s = self.scale * 8
     chr_data = ppu_memory.chr_data
@@ -277,14 +276,13 @@ class ViewRenderer(object):
       self.draw_chr(tile, tile_y, tile_x)
     self.save_file()
 
-  # create_error_view
-  #
-  # Create an image that shows the errors.
-  #
-  # outfile: Filename to output the error display to.
-  # img: Input pixel art image.
-  # errs: List of errors created by processor.
   def create_error_view(self, outfile, img, errs):
+    """Create an image that shows the errors.
+
+    outfile: Filename to output the error display to.
+    img: Input pixel art image.
+    errs: List of errors created by processor.
+    """
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.img = img.resize((width, height), Image.NEAREST).convert('RGB')
@@ -304,13 +302,12 @@ class ViewRenderer(object):
         self.draw_error(y, x, s * 2)
     self.save_file()
 
-  # create_grid_view
-  #
-  # Create an image that shows the blocks and tiles.
-  #
-  # outfile: Filename to output the grid view to.
-  # img: Input pixel art image.
   def create_grid_view(self, outfile, img):
+    """Create an image that shows the blocks and tiles.
+
+    outfile: Filename to output the grid view to.
+    img: Input pixel art image.
+    """
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.img = img.resize((width, height), Image.NEAREST).convert('RGB')

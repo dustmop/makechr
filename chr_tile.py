@@ -4,12 +4,19 @@ class ChrTile(object):
     self.hi = [0] * 8
 
   def set(self, y, x, val):
+    """Set the pixel at y,x to have value val.
+
+    y: Y position
+    x: X position
+    val: A pixel value, 0..3
+    """
     low_bit = val & 1
     hi_bit = val >> 1 & 1
     self.set_low(low_bit, y, x)
     self.set_hi(hi_bit, y, x)
 
   def get(self, y, x):
+    """Get the pixel value at y,x."""
     mask = 1 << (7 - x)
     low_bit = 1 if self.low[y] & mask else 0
     hi_bit = 1 if self.hi[y] & mask else 0
@@ -22,6 +29,7 @@ class ChrTile(object):
     self.hi[index] |= (bit << (7 - offset))
 
   def write(self, fp):
+    """Write chr image to an output stream."""
     for b in self.low:
       fp.write(chr(b))
     for b in self.hi:

@@ -43,17 +43,18 @@ class ImageProcessor(object):
   def dot_manifest(self):
     return self._dot_manifest
 
-  # components_to_nescolor
-  #
-  # Given the color components of a pixel from PIL/pillow, find the
-  # corresponding index in the NES system palette that most closely matches
-  # that color. Save the result in RGB_XLAT so future accesses will be fast.
-  # If the color cannot be converted, return -1.
-  #
-  # r: The red value of the pixel.
-  # g: The green value of the pixel.
-  # b: The blue value of the pixel.
   def components_to_nescolor(self, r, g, b):
+    """Convert RGB color components to an index into the NES system palette.
+
+    Given the color components of a pixel from PIL/pillow, find the
+    corresponding index in the NES system palette that most closely matches
+    that color. Save the result in RGB_XLAT so future accesses will be fast.
+    If the color cannot be converted, return -1.
+
+    r: The red value of the pixel.
+    g: The green value of the pixel.
+    b: The blue value of the pixel.
+    """
     found_nc = -1
     found_diff = float('infinity')
     colors = rgb.RGB_COLORS
@@ -71,14 +72,15 @@ class ImageProcessor(object):
     rgb.RGB_XLAT[color_val] = found_nc
     return found_nc
 
-  # add_nescolor_to_needs
-  #
-  # Add a nescolor to a list of needed nescolors. The needs array must be
-  # at least length 4, with unused entries set to None.
-  #
-  # nc: A nescolor index, integer 0..63.
-  # needs: An array of at least length 4, with unused entries set to None.
   def add_nescolor_to_needs(self, nc, needs):
+    """Add value to a color needs.
+
+    Add a nescolor to a list of needed nescolors. The needs array must be
+    at least length 4, with unused entries set to None.
+
+    nc: A nescolor index, integer 0..63.
+    needs: An array of at least length 4, with unused entries set to None.
+    """
     for i in xrange(4):
       if needs[i] == nc:
         return i
@@ -88,17 +90,16 @@ class ImageProcessor(object):
     needs.append(nc)
     return len(needs) - 1
 
-  # collect_errors
-  #
-  # Add the exception to the error exception and clear the artifacts entry.
-  #
-  # e: The exception that got caught.
-  # block_y: The y of the block.
-  # block_x: The x of the block.
-  # i: Y offset of the tile within the block.
-  # j: X offset of the tile within the block.
-  # is_block: Whether the error is at the block level, or tile level.
   def collect_error(self, e, block_y, block_x, i, j, is_block=False):
+    """Add the exception to the error exception and clear the artifacts entry.
+
+    e: The exception that got caught.
+    block_y: The y of the block.
+    block_x: The x of the block.
+    i: Y offset of the tile within the block.
+    j: X offset of the tile within the block.
+    is_block: Whether the error is at the block level, or tile level.
+    """
     self._err.add(e)
     if is_block:
       self._artifacts[block_y * 2 + 0][block_x * 2 + 0] = [0, 0, 0]
@@ -108,18 +109,18 @@ class ImageProcessor(object):
     else:
       self._artifacts[block_y * 2 + i][block_x * 2 + j] = [0, 0, 0]
 
-  # process_tile
-  #
-  # Process the tile to obtain its color needs and dot profile, verifying that
-  # the tile contains colors that match the system palette, and does not contain
-  # too many colors. This method is called many times for an image, so it
-  # performs a lot of micro-optimizations. The image should have already been
-  # loaded using self.load_image.
-  #
-  # tile_y: The y position of the tile, 0..31.
-  # tile_x: The x position of the tile, 0..29.
-  # Returns the color_needs and dot_profile.
   def process_tile(self, tile_y, tile_x):
+    """Process the tile and save artifact information.
+
+    Process the tile to obtain its color needs and dot profile, verifying that
+    the tile contains colors that match the system palette, and does not contain
+    too many colors. This method is called many times for an image, so it
+    performs a lot of micro-optimizations. The image should have already been
+    loaded using self.load_image. Return the color_needs and dot_profile.
+
+    tile_y: The y position of the tile, 0..31.
+    tile_x: The x position of the tile, 0..29.
+    """
     pixel_y = tile_y * TILE_SIZE
     pixel_x = tile_x * TILE_SIZE
     color_needs = [None] * 4
@@ -152,13 +153,12 @@ class ImageProcessor(object):
       raise errors.PaletteOverflowError(tile_y, tile_x)
     return color_needs, dot_profile
 
-  # process_block
-  #
-  # Process the individual tiles in the block.
-  #
-  # block_y: The y position of the block, 0..15.
-  # block_x: The x position of the block, 0..14.
   def process_block(self, block_y, block_x):
+    """Process the individual tiles in the block.
+
+    block_y: The y position of the block, 0..15.
+    block_x: The x position of the block, 0..14.
+    """
     block_color_needs = set([])
     y = block_y * 2
     x = block_x * 2
@@ -180,6 +180,11 @@ class ImageProcessor(object):
     self._artifacts[y][x][ARTIFACT_BCID] = bcid
 
   def get_dot_xlat(self, color_needs, palette_option):
+    """Create an xlat object to convert the color_needs to the palette.
+
+    color_needs: The color_needs to convert.
+    palette_option: The palette to target.
+    """
     dot_xlat = []
     for c in color_needs:
       if c is None:
@@ -193,6 +198,11 @@ class ImageProcessor(object):
     return dot_xlat
 
   def get_nametable_num(self, xlat, did):
+    """Get the dot_profile, xlat its dots making a nametable tile, and save it.
+
+    xlat: Dot translator.
+    did: Id for the dot_profile.
+    """
     key = str([did] + xlat)
     if not key in self._nametable_cache:
       dot_profile = self._dot_manifest.get(did)
@@ -210,7 +220,12 @@ class ImageProcessor(object):
     self._nt_count[nt_num] += 1
     return nt_num
 
-  def process_image(self, img, palette_text, want_errors):
+  def process_image(self, img, palette_text):
+    """Process an image, creating the ppu_memory necessary to display it.
+
+    img: Pixel art image.
+    palette_text: Optional string representing a palette to be parsed.
+    """
     self.load_image(img)
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.

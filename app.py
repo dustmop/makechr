@@ -7,7 +7,7 @@ import view_renderer
 class Application(object):
   def run(self, img, args):
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, args.palette, args.error_outfile)
+    processor.process_image(img, args.palette)
     if processor.err().has():
       es = processor.err().get()
       print('Found {0} error{1}:'.format(len(es), 's'[len(es) == 1:]))
