@@ -57,4 +57,4 @@ class Application(object):
   def show_stats(self, ppu_memory, processor, args):
     print('Number of dot-profiles: {0}'.format(processor.dot_manifest().size()))
     print('Number of tiles: {0}'.format(len(ppu_memory.chr_data)))
-    print('Palette: {0}'.format(ppu_memory.palette))
+    print('Palette: {0}'.format(ppu_memory.palette_nt))

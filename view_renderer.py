@@ -182,8 +182,9 @@ class ViewRenderer(object):
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.create_file(outfile, width, height)
-    palette = ppu_memory.palette
-    block_palette = ppu_memory.block_palette
+    palette = ppu_memory.palette_nt
+    # TODO: Support both graphics pages.
+    block_palette = ppu_memory.gfx_1.block_palette
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
         pid = block_palette[y][x]
@@ -207,7 +208,8 @@ class ViewRenderer(object):
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.create_file(outfile, width, height)
-    nametable = ppu_memory.nametable
+    # TODO: Support both graphics pages.
+    nametable = ppu_memory.gfx_1.nametable
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
         for i in range(2):
@@ -225,7 +227,8 @@ class ViewRenderer(object):
     ppu_memory: Ppu memory containing palette.
     """
     self.create_file(outfile, 168, 24)
-    palette = ppu_memory.palette
+    # TODO: Support sprite palettes.
+    palette = ppu_memory.palette_nt
     for i in xrange(4):
       poption = palette.get(i)
       self.draw_poption(i, poption)
@@ -241,7 +244,8 @@ class ViewRenderer(object):
     width, height = (256 * self.scale, 240 * self.scale)
     self.load_nt_font()
     self.create_file(outfile, width, height, (255, 255, 255))
-    nametable = ppu_memory.nametable
+    # TODO: Support both graphics pages.
+    nametable = ppu_memory.gfx_1.nametable
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
         for i in range(2):

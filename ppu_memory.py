@@ -1,17 +1,24 @@
 from constants import *
 
 
+class GraphicsPage(object):
+  def __init__(self):
+    self.nametable = [row[:] for row in
+                      [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+    self.block_palette = [row[:] for row in
+                          [[None]*(NUM_BLOCKS_X)]*(NUM_BLOCKS_Y)]
+
+
 class PpuMemory(object):
   """PpuMemory
 
   Data structure representing the components of graphics in PPU memory.
   """
   def __init__(self):
-    self.block_palette = [row[:] for row in
-                          [[None]*(NUM_BLOCKS_X)]*(NUM_BLOCKS_Y)]
-    self.nametable = [row[:] for row in
-                      [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
-    self.palette = None
+    self.gfx_1 = GraphicsPage()
+    self.gfx_2 = GraphicsPage() # unused
+    self.palette_nt = None
+    self.palette_spr = None
     self.chr_data = []
     self._tmpl = None
 
@@ -21,10 +28,10 @@ class PpuMemory(object):
     tmpl: String representing a filename template to save files to.
     """
     self._tmpl = tmpl
-    self.save_nametable(self.nametable)
+    self.save_nametable(self.gfx_1.nametable)
     self.save_chr(self.chr_data)
-    self.save_palette(self.palette)
-    self.save_attribute(self.block_palette)
+    self.save_palette(self.palette_nt, self.palette_spr)
+    self.save_attribute(self.gfx_1.block_palette)
 
   def pad(self, fout, num, byte_value=0):
     fout.write(chr(byte_value) * num)
@@ -41,26 +48,19 @@ class PpuMemory(object):
     fout.close()
 
   def save_chr(self, chr_data):
+    # TODO: Respect is_sprite and page_org.
     fout = open(self.fill_template('chr'), 'wb')
     for d in chr_data:
       d.write(fout)
-    padding = 8192 - (len(chr_data) * 16)
+    padding = 0x2000 - (len(chr_data) * 16)
     self.pad(fout, padding)
     fout.close()
 
-  def save_palette(self, palette):
+  def save_palette(self, palette_1, palette_2):
     fout = open(self.fill_template('palette'), 'wb')
-    bg_color = palette.bg_color
-    for i in xrange(4):
-      palette_option = palette.get(i)
-      if palette_option is None:
-        palette_option = [bg_color] * 4
-      for j in xrange(4):
-        if j < len(palette_option):
-          fout.write(chr(palette_option[j]))
-        else:
-          fout.write(chr(bg_color))
-    self.pad(fout, 16, bg_color)
+    bg_color = self._get_bg_color(palette_1, palette_2)
+    self._write_single_palette(fout, palette_1, bg_color)
+    self._write_single_palette(fout, palette_2, bg_color)
     fout.close()
 
   def save_attribute(self, block_palette):
@@ -77,3 +77,28 @@ class PpuMemory(object):
         fout.write(chr(attr))
     self.pad(fout, 8)
     fout.close()
+
+  def _get_bg_color(self, palette_1, palette_2):
+    bg_color = None
+    if palette_1:
+      bg_color = palette_1.bg_color
+    if palette_2:
+      if bg_color and bg_color != palette_2.bg_color:
+        raise RuntimeError('Background colors don\'t match %s <> %s' % (
+            bg_color, palette_2.bg_color))
+      bg_color = palette_2.bg_color
+    return bg_color
+
+  def _write_single_palette(self, fout, palette, bg_color):
+    if not palette:
+      fout.write(chr(bg_color) * 16)
+      return
+    for i in xrange(4):
+      palette_option = palette.get(i)
+      if palette_option is None:
+        palette_option = [bg_color] * 4
+      for j in xrange(4):
+        if j < len(palette_option):
+          fout.write(chr(palette_option[j]))
+        else:
+          fout.write(chr(bg_color))
