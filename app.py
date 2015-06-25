@@ -52,7 +52,7 @@ class Application(object):
     ppu_memory.save(out_tmpl)
     if args.compile:
       builder = rom_builder.RomBuilder()
-      builder.build(output, args.compile)
+      builder.build(ppu_memory, args.compile)
 
   def show_stats(self, ppu_memory, processor, args):
     print('Number of dot-profiles: {0}'.format(processor.dot_manifest().size()))

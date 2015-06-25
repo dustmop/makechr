@@ -13,41 +13,43 @@ class PpuMemory(object):
                       [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     self.palette = None
     self.chr_data = []
+    self._tmpl = None
 
   def save(self, tmpl):
     """Save binary files representing the ppu memory.
 
     tmpl: String representing a filename template to save files to.
     """
-    self.save_nametable(self.nametable, tmpl)
-    self.save_chr(self.chr_data, tmpl)
-    self.save_palette(self.palette, tmpl)
-    self.save_attribute(self.block_palette, tmpl)
+    self._tmpl = tmpl
+    self.save_nametable(self.nametable)
+    self.save_chr(self.chr_data)
+    self.save_palette(self.palette)
+    self.save_attribute(self.block_palette)
 
   def pad(self, fout, num, byte_value=0):
     fout.write(chr(byte_value) * num)
 
-  def fill_template(self, tmpl, replace):
-    return tmpl.replace('%s', replace)
+  def fill_template(self, replace):
+    return self._tmpl.replace('%s', replace)
 
-  def save_nametable(self, nametable, tmpl):
-    fout = open(self.fill_template(tmpl, 'nametable'), 'wb')
+  def save_nametable(self, nametable):
+    fout = open(self.fill_template('nametable'), 'wb')
     for y in xrange(NUM_BLOCKS_Y * 2):
       for x in xrange(NUM_BLOCKS_X * 2):
         nt = nametable[y][x]
         fout.write(chr(nt))
     fout.close()
 
-  def save_chr(self, chr_data, tmpl):
-    fout = open(self.fill_template(tmpl, 'chr'), 'wb')
+  def save_chr(self, chr_data):
+    fout = open(self.fill_template('chr'), 'wb')
     for d in chr_data:
       d.write(fout)
     padding = 8192 - (len(chr_data) * 16)
     self.pad(fout, padding)
     fout.close()
 
-  def save_palette(self, palette, tmpl):
-    fout = open(self.fill_template(tmpl, 'palette'), 'wb')
+  def save_palette(self, palette):
+    fout = open(self.fill_template('palette'), 'wb')
     bg_color = palette.bg_color
     for i in xrange(4):
       palette_option = palette.get(i)
@@ -61,8 +63,8 @@ class PpuMemory(object):
     self.pad(fout, 16, bg_color)
     fout.close()
 
-  def save_attribute(self, block_palette, tmpl):
-    fout = open(self.fill_template(tmpl, 'attribute'), 'wb')
+  def save_attribute(self, block_palette):
+    fout = open(self.fill_template('attribute'), 'wb')
     for attr_y in xrange(NUM_BLOCKS_Y / 2):
       for attr_x in xrange(NUM_BLOCKS_X / 2):
         y = attr_y * 2
