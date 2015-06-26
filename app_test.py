@@ -56,6 +56,18 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_output_for_bottom_attributes(self):
+    img = Image.open('testdata/full-image-bottom-attr.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None)
+    self.args = MockArgs()
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable', golden_suffix='-bottom-attr')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute', golden_suffix='-bottom-attr')
+
   def test_error(self):
     img = Image.open('testdata/full-image-with-error.png')
     processor = image_processor.ImageProcessor()
@@ -77,9 +89,9 @@ class AppTests(unittest.TestCase):
     self.assert_file_eq(self.args.error_outfile,
                         'testdata/errors-full-image.png')
 
-  def assert_output_result(self, name):
+  def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name
-    expect_file = self.golden(name, 'dat')
+    expect_file = self.golden(name + golden_suffix, 'dat')
     self.assert_file_eq(actual_file, expect_file)
 
   def golden(self, name, ext):

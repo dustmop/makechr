@@ -65,17 +65,16 @@ class PpuMemory(object):
 
   def save_attribute(self, block_palette):
     fout = open(self.fill_template('attribute'), 'wb')
-    for attr_y in xrange(NUM_BLOCKS_Y / 2):
+    for attr_y in xrange(NUM_BLOCKS_Y / 2 + 1):
       for attr_x in xrange(NUM_BLOCKS_X / 2):
         y = attr_y * 2
         x = attr_x * 2
         p0 = block_palette[y + 0][x + 0]
         p1 = block_palette[y + 0][x + 1]
-        p2 = block_palette[y + 1][x + 0]
-        p3 = block_palette[y + 1][x + 1]
+        p2 = block_palette[y + 1][x + 0] if y + 1 < NUM_BLOCKS_Y else 0
+        p3 = block_palette[y + 1][x + 1] if y + 1 < NUM_BLOCKS_Y else 0
         attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
         fout.write(chr(attr))
-    self.pad(fout, 8)
     fout.close()
 
   def _get_bg_color(self, palette_1, palette_2):
