@@ -7,12 +7,15 @@ import sys
 def run():
   parser = argparse.ArgumentParser(description='Make chr data files and ' +
                                    'other NES graphics files')
-  parser.add_argument('input', type=str, help='filename for pixel art image')
+  parser.add_argument('input', type=str, nargs='?',
+                      help='filename for pixel art image')
   parser.add_argument('-X', dest='experimental', action='store_true',
                       required=True,
                       help='enable experimental features (required)')
   parser.add_argument('-c', dest='compile', metavar='rom filename',
                       help='filename for compiled NES rom')
+  parser.add_argument('-m', dest='memimport', metavar='memory import filename',
+                      help='filename for memory import input')
   parser.add_argument('-e', dest='error_outfile', metavar='image filename',
                       help='filename for error image')
   parser.add_argument('-p', dest='palette', metavar='palette',
@@ -38,13 +41,16 @@ def run():
                       metavar='image fileanme',
                       help='filename for grid view')
   args = parser.parse_args()
-  try:
-    img = Image.open(args.input)
-  except IOError:
-    sys.stderr.write('Input file not found: "%s"\n' % args.input)
-    sys.exit(1)
   application = app.Application()
-  application.run(img, args)
+  if args.memimport:
+    application.read_memory(args.memimport, args)
+  else:
+    try:
+      img = Image.open(args.input)
+    except IOError:
+      sys.stderr.write('Input file not found: "%s"\n' % args.input)
+      sys.exit(1)
+    application.run(img, args)
 
 
 if __name__ == '__main__':

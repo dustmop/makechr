@@ -28,6 +28,13 @@ class ChrTile(object):
   def set_hi(self, bit, index, offset):
     self.hi[index] |= (bit << (7 - offset))
 
+  @staticmethod
+  def from_binary(bytes):
+    make = ChrTile()
+    make.low = [ord(b) for b in bytes[0:8]]
+    make.hi = [ord(b) for b in bytes[8:16]]
+    return make
+
   def write(self, fp):
     """Write chr image to an output stream."""
     for b in self.low:

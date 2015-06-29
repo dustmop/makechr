@@ -1,4 +1,5 @@
 import image_processor
+import memory_importer
 import ppu_memory
 import rom_builder
 import view_renderer
@@ -22,6 +23,15 @@ class Application(object):
     self.create_views(processor.ppu_memory(), processor, args, img)
     self.create_output(processor.ppu_memory(), args)
     self.show_stats(processor.ppu_memory(), processor, args)
+
+  def read_memory(self, filename, args):
+    importer = memory_importer.MemoryImporter()
+    mem = importer.read(filename)
+    out_tmpl = args.output or '%s.dat'
+    mem.save(out_tmpl)
+    if args.compile:
+      builder = rom_builder.RomBuilder()
+      builder.build(mem, args.compile)
 
   def create_views(self, ppu_memory, processor, args, img):
     if args.palette_view:
