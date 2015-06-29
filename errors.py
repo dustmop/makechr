@@ -26,14 +26,9 @@ class PaletteOverflowError(Exception):
       return '@ tile (%dy,%dx)' % (self.tile_y, self.tile_x)
 
 
-class PaletteBgcolorError(Exception):
-  def __init__(self, bg_color, poption):
-    self.bg_color = bg_color
-    self.poption = poption
-
+class PaletteBgcolorMissingError(Exception):
   def __str__(self):
-    return 'Bgcolor "%s" not found in PaletteOption %s' % (
-      self.bg_color, '-'.join(['%02x' % p for p in self.poption]))
+    return 'Bgcolor not set on palette'
 
 
 class PaletteParseError(Exception):

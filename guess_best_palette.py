@@ -152,7 +152,7 @@ class GuessBestPalette(object):
     pal = palette.Palette()
     pal.set_bg_color(bg_color)
     for color_set in color_set_collection:
-      pal.add(color_set)
+      pal.add([bg_color] + [c for c in color_set if c != bg_color])
     return pal
 
   def make_palette(self, color_needs_list):

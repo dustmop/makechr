@@ -51,8 +51,6 @@ class MemoryImporter(object):
         opt = [ord(p) for p in fp.read(4)]
         if bg_color is None:
           bg_color = opt[0]
-        else:
-          opt[0] = bg_color
         pal.set_bg_color(bg_color)
         pal.add(opt)
     return mem
