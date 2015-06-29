@@ -8,8 +8,9 @@ class MemoryImporter(object):
   def read(self, filename):
     # Check file size
     fp = open(filename, 'rb')
-    if os.fstat(fp.fileno()).st_size != 0x4000:
-      raise RuntimeError('Ppu memory file is not $4000.')
+    file_size = os.fstat(fp.fileno()).st_size
+    if file_size != 0x4000:
+      raise errors.FileFormatError(file_size, size=0x4000)
     mem = ppu_memory.PpuMemory()
     # Read CHR from $0000-$2000
     for k in xrange(512):

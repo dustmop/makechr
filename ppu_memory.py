@@ -83,8 +83,7 @@ class PpuMemory(object):
       bg_color = palette_1.bg_color
     if palette_2:
       if bg_color and bg_color != palette_2.bg_color:
-        raise RuntimeError('Background colors don\'t match %s <> %s' % (
-            bg_color, palette_2.bg_color))
+        raise errors.PaletteInconsistentError(bg_color, palette_2.bg_color)
       bg_color = palette_2.bg_color
     return bg_color
 

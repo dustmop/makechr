@@ -18,7 +18,7 @@ class Palette(object):
 
   def add(self, p):
     if not self.bg_color:
-      raise errors.PaletteBgcolorMissingError()
+      raise errors.PaletteBackgroundColorMissingError()
     p = [self.bg_color] + p[1:]
     self.pals.append(p)
     self.pal_as_sets.append(set(p))

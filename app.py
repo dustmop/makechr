@@ -1,3 +1,4 @@
+import errors
 import image_processor
 import memory_importer
 import ppu_memory
@@ -27,44 +28,39 @@ class Application(object):
   def read_memory(self, filename, args):
     importer = memory_importer.MemoryImporter()
     mem = importer.read(filename)
+    self.create_output(mem, args)
+
+  def create_views(self, mem, processor, args, img):
+    if args.palette_view:
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_palette_view(args.palette_view, mem)
+    if args.colorization_view:
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_colorization_view(args.colorization_view,
+          mem, processor.artifacts(), processor.color_manifest())
+    if args.reuse_view:
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_reuse_view(args.reuse_view, mem, processor.nt_count())
+    if args.nametable_view:
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_nametable_view(args.nametable_view, mem)
+    if args.chr_view:
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_chr_view(args.chr_view, mem)
+    if args.grid_view:
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_grid_view(args.grid_view, img)
+
+  def create_output(self, mem, args):
     out_tmpl = args.output or '%s.dat'
+    if not '%s' in out_tmpl:
+      raise errors.CommandLineArgError('output needs "%s" in its template')
     mem.save(out_tmpl)
     if args.compile:
       builder = rom_builder.RomBuilder()
       builder.build(mem, args.compile)
 
-  def create_views(self, ppu_memory, processor, args, img):
-    if args.palette_view:
-      renderer = view_renderer.ViewRenderer()
-      renderer.create_palette_view(args.palette_view, ppu_memory)
-    if args.colorization_view:
-      renderer = view_renderer.ViewRenderer()
-      renderer.create_colorization_view(args.colorization_view,
-          ppu_memory, processor.artifacts(), processor.color_manifest())
-    if args.reuse_view:
-      renderer = view_renderer.ViewRenderer()
-      renderer.create_reuse_view(args.reuse_view, ppu_memory,
-          processor.nt_count())
-    if args.nametable_view:
-      renderer = view_renderer.ViewRenderer()
-      renderer.create_nametable_view(args.nametable_view, ppu_memory)
-    if args.chr_view:
-      renderer = view_renderer.ViewRenderer()
-      renderer.create_chr_view(args.chr_view, ppu_memory)
-    if args.grid_view:
-      renderer = view_renderer.ViewRenderer()
-      renderer.create_grid_view(args.grid_view, img)
-
-  def create_output(self, ppu_memory, args):
-    out_tmpl = args.output or '%s.dat'
-    if not '%s' in out_tmpl:
-      raise CommandLineArgError('output needs "%s" in its template')
-    ppu_memory.save(out_tmpl)
-    if args.compile:
-      builder = rom_builder.RomBuilder()
-      builder.build(ppu_memory, args.compile)
-
-  def show_stats(self, ppu_memory, processor, args):
+  def show_stats(self, mem, processor, args):
     print('Number of dot-profiles: {0}'.format(processor.dot_manifest().size()))
-    print('Number of tiles: {0}'.format(len(ppu_memory.chr_data)))
-    print('Palette: {0}'.format(ppu_memory.palette_nt))
+    print('Number of tiles: {0}'.format(len(mem.chr_data)))
+    print('Palette: {0}'.format(mem.palette_nt))

@@ -26,9 +26,19 @@ class PaletteOverflowError(Exception):
       return '@ tile (%dy,%dx)' % (self.tile_y, self.tile_x)
 
 
-class PaletteBgcolorMissingError(Exception):
+class PaletteBackgroundColorMissingError(Exception):
   def __str__(self):
-    return 'Bgcolor not set on palette'
+    return 'Background color not set on palette'
+
+
+class PaletteInconsistentError(Exception):
+  def __init__(self, color_1, color_2):
+    self.color_1 = color_1
+    self.color_2 = color_2
+
+  def __str__(self):
+    return 'Background colors don\'t match %s <> %s' % (
+      self.color_1, self.color_2)
 
 
 class PaletteParseError(Exception):
@@ -77,6 +87,19 @@ class TooManyPalettesError(Exception):
     if self.to_merge:
       text = text + ',MERGE={' + self.to_text(self.to_merge) + '}'
     return text
+
+
+class FileFormatError(Exception):
+  def __init__(self, actual, size):
+    self.actual = actual
+    self.size = size
+
+  def __str__(self):
+    if self.size:
+      return 'FileFormatError: Expected size %d but got %d' % (
+        self.size, self.actual)
+    else:
+      return 'FileFormatError'
 
 
 class ErrorCollector(object):
