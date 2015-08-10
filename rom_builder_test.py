@@ -29,7 +29,7 @@ class RomBuilderTests(unittest.TestCase):
   def test_output(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None)
+    processor.process_image(img, None, False)
     args = MockArgs()
     a = app.Application()
     a.create_output(processor.ppu_memory(), args)

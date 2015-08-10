@@ -197,14 +197,18 @@ class ImageProcessor(object):
         raise IndexError
     return dot_xlat
 
-  def get_nametable_num(self, xlat, did):
+  def get_nametable_num(self, xlat, did, is_locked_tiles):
     """Get the dot_profile, xlat its dots making a nametable tile, and save it.
 
     xlat: Dot translator.
     did: Id for the dot_profile.
     """
+    if is_locked_tiles and len(self._ppu_memory.chr_data) == 0x100:
+      return 0
     key = str([did] + xlat)
-    if not key in self._nametable_cache:
+    if key in self._nametable_cache:
+      nt_num = self._nametable_cache[key]
+    else:
       dot_profile = self._dot_manifest.get(did)
       tile = chr_tile.ChrTile()
       for row in xrange(8):
@@ -215,12 +219,12 @@ class ImageProcessor(object):
       nt_num = len(self._ppu_memory.chr_data)
       self._ppu_memory.chr_data.append(tile)
       self._nt_count[nt_num] = 0
-      self._nametable_cache[key] = nt_num
-    nt_num = self._nametable_cache[key]
+      if not is_locked_tiles:
+        self._nametable_cache[key] = nt_num
     self._nt_count[nt_num] += 1
     return nt_num
 
-  def process_image(self, img, palette_text):
+  def process_image(self, img, palette_text, is_locked_tiles):
     """Process an image, creating the ppu_memory necessary to display it.
 
     img: Pixel art image.
@@ -274,7 +278,7 @@ class ImageProcessor(object):
         # If there was an error in the tile, the dot_xlat will be empty. So
         # skip this entry.
         if dot_xlat:
-          nt_num = self.get_nametable_num(dot_xlat, did)
+          nt_num = self.get_nametable_num(dot_xlat, did, is_locked_tiles)
           self._ppu_memory.gfx_1.nametable[y][x] = nt_num
     # Fail if there were any errors.
     if self._err.has():

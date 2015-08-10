@@ -22,6 +22,8 @@ def run():
                       help='palette for the pixel art image')
   parser.add_argument('-o', dest='output', metavar='output',
                       help='template for naming output files')
+  parser.add_argument('-l', dest='is_locked_tiles', action='store_true',
+                      help='lock tiles into their given positions')
   parser.add_argument('--palette-view', dest='palette_view',
                       metavar='image filename',
                       help='filename for palette view')

@@ -32,7 +32,7 @@ class AppTests(unittest.TestCase):
   def test_views(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None)
+    processor.process_image(img, None, False)
     self.args = MockArgs()
     a = app.Application()
     a.create_views(processor.ppu_memory(), processor, self.args, img)
@@ -47,7 +47,7 @@ class AppTests(unittest.TestCase):
   def test_output(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None)
+    processor.process_image(img, None, False)
     self.args = MockArgs()
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -59,7 +59,7 @@ class AppTests(unittest.TestCase):
   def test_output_for_bottom_attributes(self):
     img = Image.open('testdata/full-image-bottom-attr.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None)
+    processor.process_image(img, None, False)
     self.args = MockArgs()
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -68,10 +68,22 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute', golden_suffix='-bottom-attr')
 
+  def test_output_for_locked_tiles(self):
+    img = Image.open('testdata/full-image.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, True)
+    self.args = MockArgs()
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_output_result('chr',       golden_suffix='-locked-tiles')
+    self.assert_output_result('nametable', golden_suffix='-locked-tiles')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_error(self):
     img = Image.open('testdata/full-image-with-error.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None)
+    processor.process_image(img, None, False)
     self.args = MockArgs()
     self.args.error_outfile = self.args.tmppng('error')
     a = app.Application()
