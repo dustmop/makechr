@@ -14,14 +14,14 @@ def run():
                       help='enable experimental features (required)')
   parser.add_argument('-c', dest='compile', metavar='rom filename',
                       help='filename for compiled NES rom')
-  parser.add_argument('-m', dest='memimport', metavar='memory import filename',
-                      help='filename for memory import input')
   parser.add_argument('-e', dest='error_outfile', metavar='image filename',
                       help='filename for error image')
   parser.add_argument('-p', dest='palette', metavar='palette',
                       help='palette for the pixel art image')
   parser.add_argument('-o', dest='output', metavar='output',
                       help='template for naming output files')
+  parser.add_argument('-m', dest='memimport', metavar='memory import filename',
+                      help='filename for memory import input')
   parser.add_argument('-l', dest='is_locked_tiles', action='store_true',
                       help='lock tiles into their given positions')
   parser.add_argument('--palette-view', dest='palette_view',

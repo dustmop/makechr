@@ -80,6 +80,16 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_output_from_memory_dump(self):
+    self.args = MockArgs()
+    memfile = 'testdata/full-image-mem.bin'
+    a = app.Application()
+    a.read_memory(memfile, self.args)
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_output_as_valiant(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
