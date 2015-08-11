@@ -1,0 +1,48 @@
+package valiant;
+
+// MAGIC_NUM = 7210303610482106886
+
+message ObjectFile {
+  optional int32 magic1 = 5;   // MAGIC_NUM / 100
+  optional fixed64 magic2 = 8; // MAGIC_NUM % 100
+  optional ObjectHeader header = 13;
+  optional ObjectData data = 14;
+}
+
+message ObjectHeader {
+  optional string module = 1;
+}
+
+message ObjectData {
+  repeated DirectBinary binaries = 1;
+  optional GfxSettings settings = 2;
+  repeated GfxComponent components = 3;
+}
+
+enum DataRole {
+  NONE = 0;
+  CHR = 1;
+  NAMETABLE = 2;
+  ATTRIBUTE = 3;
+  PALETTE = 4;
+}
+
+///////////////////////////////////////////////////
+
+message GfxSettings {
+  optional int32 bg_color = 1;
+}
+
+message GfxComponent {
+  optional DataRole role = 1;
+  optional int32 binary_index = 2;
+}
+
+///////////////////////////////////////////////////
+
+message DirectBinary {
+  optional bytes bin = 1;
+  optional int32 padding = 2;
+  optional int32 pre_pad = 3;
+  optional int32 null_value = 4;
+}

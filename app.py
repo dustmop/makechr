@@ -52,10 +52,13 @@ class Application(object):
       renderer.create_grid_view(args.grid_view, img)
 
   def create_output(self, mem, args):
-    out_tmpl = args.output or '%s.dat'
-    if not '%s' in out_tmpl:
-      raise errors.CommandLineArgError('output needs "%s" in its template')
-    mem.save(out_tmpl)
+    if args.output and args.output.endswith('.o'):
+      mem.save_valiant(args.output)
+    else:
+      out_tmpl = args.output or '%s.dat'
+      if not '%s' in out_tmpl:
+        raise errors.CommandLineArgError('output needs "%s" in its template')
+      mem.save_template(out_tmpl)
     if args.compile:
       builder = rom_builder.RomBuilder()
       builder.build(mem, args.compile)

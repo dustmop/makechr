@@ -37,6 +37,18 @@ class RomBuilderTests(unittest.TestCase):
     expect_file = 'testdata/full-image-rom.nes'
     self.assert_file_eq(actual_file, expect_file)
 
+  def test_output_using_valiant(self):
+    img = Image.open('testdata/full-image.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, False)
+    args = MockArgs()
+    args.output = args.tmpfile('full-image.o')
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), args)
+    actual_file = args.compile
+    expect_file = 'testdata/full-image-rom.nes'
+    self.assert_file_eq(actual_file, expect_file)
+
   def assert_file_eq(self, actual_file, expect_file):
     self.assertTrue(filecmp.cmp(actual_file, expect_file, shallow=False),
                     "Files did not match actual:%s expect:%s" % (

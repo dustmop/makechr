@@ -80,6 +80,16 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_output_as_valiant(self):
+    img = Image.open('testdata/full-image.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, False)
+    self.args = MockArgs()
+    self.args.output = self.args.tmpfile('full-image.o')
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_file_eq(self.args.output, self.golden('valiant', 'o'))
+
   def test_error(self):
     img = Image.open('testdata/full-image-with-error.png')
     processor = image_processor.ImageProcessor()
