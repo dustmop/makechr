@@ -229,12 +229,21 @@ class ImageProcessor(object):
 
     img: Pixel art image.
     palette_text: Optional string representing a palette to be parsed.
+    is_locked_tiles: Whether tiles are locked into place. If so, do not
+        merge duplicates, and only handle first 256 tiles.
     """
     self.load_image(img)
+    num_blocks_y = NUM_BLOCKS_Y
+    num_blocks_x = NUM_BLOCKS_X
+    # If image is exactly 128x128 and uses locked tiles, treat it as though it
+    # represents CHR memory.
+    if self.image_x == self.image_y == SMALL_SQUARE and is_locked_tiles:
+      num_blocks_y = NUM_BLOCKS_SMALL_SQUARE
+      num_blocks_x = NUM_BLOCKS_SMALL_SQUARE
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.
-    for block_y in xrange(NUM_BLOCKS_Y):
-      for block_x in xrange(NUM_BLOCKS_X):
+    for block_y in xrange(num_blocks_y):
+      for block_x in xrange(num_blocks_x):
         try:
           self.process_block(block_y, block_x)
         except errors.PaletteOverflowError as e:
@@ -258,8 +267,8 @@ class ImageProcessor(object):
         self._err.add(e)
         return
     # For each block, get the attribute aka the palette.
-    for block_y in xrange(NUM_BLOCKS_Y):
-      for block_x in xrange(NUM_BLOCKS_X):
+    for block_y in xrange(num_blocks_y):
+      for block_x in xrange(num_blocks_x):
         y = block_y * 2
         x = block_x * 2
         (cid, did, bcid) = self._artifacts[y][x]
@@ -268,8 +277,8 @@ class ImageProcessor(object):
           block_color_needs)
         self._ppu_memory.gfx_1.block_palette[block_y][block_x] = pid
     # For each tile in the artifact table, create the chr and nametable.
-    for y in xrange(NUM_BLOCKS_Y * 2):
-      for x in xrange(NUM_BLOCKS_X * 2):
+    for y in xrange(num_blocks_y * 2):
+      for x in xrange(num_blocks_x * 2):
         (cid, did, bcid) = self._artifacts[y][x]
         pid = self._ppu_memory.gfx_1.block_palette[y / 2][x / 2]
         palette_option = self._ppu_memory.palette_nt.get(pid)

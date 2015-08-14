@@ -6,9 +6,9 @@ import os
 class GraphicsPage(object):
   def __init__(self):
     self.nametable = [row[:] for row in
-                      [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+                      [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     self.block_palette = [row[:] for row in
-                          [[None]*(NUM_BLOCKS_X)]*(NUM_BLOCKS_Y)]
+                          [[0]*(NUM_BLOCKS_X)]*(NUM_BLOCKS_Y)]
 
 
 class PpuMemory(object):

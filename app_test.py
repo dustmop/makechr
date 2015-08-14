@@ -80,6 +80,18 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_output_for_locked_tiles_small_square(self):
+    img = Image.open('testdata/full-image-small-square.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, True)
+    self.args = MockArgs()
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_output_result('chr',       golden_suffix='-small-square')
+    self.assert_output_result('nametable', golden_suffix='-small-square')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_output_from_memory_dump(self):
     self.args = MockArgs()
     memfile = 'testdata/full-image-mem.bin'
