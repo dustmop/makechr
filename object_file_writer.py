@@ -42,13 +42,23 @@ class ObjectFileWriter(object):
     return bin
 
   def write_module(self, module_name):
-    """Write the module name."""
+    """Write the module name to the valiant object."""
     self.file_obj.header.module = module_name
 
   def write_bg_color(self, bg_color):
-    """Write the bg_color metadata."""
+    """Write the bg_color metadata to the valiant object."""
     settings = self.obj_data.settings
     settings.bg_color = bg_color
+
+  def write_chr_info(self, chr_data):
+    """Write size of chr data. Also, sort the chr data and write the
+       indexes to the valiant object."""
+    decorated = [(c.low + c.hi,i) for i,c in enumerate(chr_data)]
+    decorated.sort()
+    settings = self.obj_data.settings
+    settings.chr_size = len(chr_data)
+    for c,i in decorated:
+      settings.sorted_chr_idx.append(i)
 
   def write_nametable(self, buffer):
     self._write_single_component(valiant.NAMETABLE, buffer.getvalue(), 0, 0)

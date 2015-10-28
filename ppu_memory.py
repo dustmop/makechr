@@ -72,6 +72,7 @@ class PpuMemory(object):
     module_name = os.path.splitext(os.path.basename(output_filename))[0]
     self._writer.write_module(module_name)
     self._writer.write_bg_color(bg_color)
+    self._writer.write_chr_info(self.chr_data)
     self._writer.save(output_filename)
 
   def pad(self, fout, num, byte_value=0):
