@@ -1,6 +1,7 @@
 from constants import *
-import object_file_writer
 import os
+
+object_file_writer = None
 
 
 class GraphicsPage(object):
@@ -50,6 +51,9 @@ class PpuMemory(object):
 
     output_filename: String representing a filename for the object file.
     """
+    global object_file_writer
+    if object_file_writer is None:
+      import object_file_writer
     self._writer = object_file_writer.ObjectFileWriter()
     # nametable
     fout = self._writer.get_writable()

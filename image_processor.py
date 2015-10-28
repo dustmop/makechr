@@ -72,24 +72,6 @@ class ImageProcessor(object):
     rgb.RGB_XLAT[color_val] = found_nc
     return found_nc
 
-  def add_nescolor_to_needs(self, nc, needs):
-    """Add value to a color needs.
-
-    Add a nescolor to a list of needed nescolors. The needs array must be
-    at least length 4, with unused entries set to None.
-
-    nc: A nescolor index, integer 0..63.
-    needs: An array of at least length 4, with unused entries set to None.
-    """
-    for i in xrange(4):
-      if needs[i] == nc:
-        return i
-      if needs[i] is None:
-        needs[i] = nc
-        return i
-    needs.append(nc)
-    return len(needs) - 1
-
   def collect_error(self, e, block_y, block_x, i, j, is_block=False):
     """Add the exception to the error exception and clear the artifacts entry.
 
@@ -115,7 +97,7 @@ class ImageProcessor(object):
     Process the tile to obtain its color needs and dot profile, verifying that
     the tile contains colors that match the system palette, and does not contain
     too many colors. This method is called many times for an image, so it
-    performs a lot of micro-optimizations. The image should have already been
+    contains a lot of micro-optimizations. The image should have already been
     loaded using self.load_image. Return the color_needs and dot_profile.
 
     tile_y: The y position of the tile, 0..31.
@@ -123,32 +105,41 @@ class ImageProcessor(object):
     """
     pixel_y = tile_y * TILE_SIZE
     pixel_x = tile_x * TILE_SIZE
-    color_needs = [None] * 4
-    dot_profile = [0] * (TILE_SIZE * TILE_SIZE)
+    color_needs = bytearray([0xff, 0xff, 0xff, 0xff])
+    dot_profile = bytearray(TILE_SIZE * TILE_SIZE)
     # Check if this tile overruns the image.
     if pixel_y + TILE_SIZE > self.image_y or pixel_x + TILE_SIZE > self.image_x:
       return color_needs, dot_profile
     # Get local variables for frequently accessed data. This improves
-    # performance.
+    # performance. 'xlat' is mutated whenever 'components_to_nescolor_func' is
+    # called.
     ps = self.pixels
     xlat = rgb.RGB_XLAT
-    add_func = self.add_nescolor_to_needs
+    components_to_nescolor_func = self.components_to_nescolor
     for i in xrange(TILE_SIZE):
+      row = i * TILE_SIZE
       for j in xrange(TILE_SIZE):
-        y = pixel_y + i
-        x = pixel_x + j
-        p = ps[x, y]
-        # Note: If we convert to python3, use the (r, g, b, *unused) syntax.
-        (r, g, b) = (p[0], p[1], p[2])
-        color_val = r * 256 * 256 + g * 256 + b
+        # Get the current pixel value 'p', convert it to a nescolor 'nc'.
+        p = ps[pixel_x + j, pixel_y + i]
+        color_val = (p[0] << 16) + (p[1] << 8) + p[2]
         if color_val in xlat:
           nc = xlat[color_val]
         else:
-          nc = self.components_to_nescolor(r, g, b)
+          nc = components_to_nescolor_func(p[0], p[1], p[2])
           if nc == -1:
             raise errors.ColorNotAllowedError(p, tile_y, tile_x, i, j)
-        idx = add_func(nc, color_needs)
-        dot_profile[i * TILE_SIZE + j] = idx
+        # Add the nescolor 'nc' to the 'color_needs'. Insert it into the first
+        # position that is equal to 0xff, otherwise append it to the end.
+        for idx in xrange(4):
+          if color_needs[idx] == nc:
+            break
+          if color_needs[idx] == 0xff:
+            color_needs[idx] = nc
+            break
+        else:
+          color_needs.append(nc)
+          idx = len(color_needs) - 1
+        dot_profile[row + j] = idx
     if len(color_needs) > PALETTE_SIZE:
       raise errors.PaletteOverflowError(tile_y, tile_x)
     return color_needs, dot_profile
@@ -162,10 +153,11 @@ class ImageProcessor(object):
     block_color_needs = set([])
     y = block_y * 2
     x = block_x * 2
+    process_tile_func = self.process_tile
     for i in xrange(2):
       for j in xrange(2):
         try:
-          (color_needs, dot_profile) = self.process_tile(y + i, x + j)
+          (color_needs, dot_profile) = process_tile_func(y + i, x + j)
         except (errors.PaletteOverflowError, errors.ColorNotAllowedError) as e:
           self.collect_error(e, block_y, block_x, i, j)
           continue
@@ -173,7 +165,7 @@ class ImageProcessor(object):
         did = self._dot_manifest.id(dot_profile)
         self._artifacts[y + i][x + j] = [cid, did, None]
         block_color_needs |= set(color_needs)
-    block_color_needs = block_color_needs - set([None])
+    block_color_needs = block_color_needs - set([0xff])
     if len(block_color_needs) > PALETTE_SIZE:
       raise errors.PaletteOverflowError(block_y, block_x, is_block=True)
     bcid = self._block_color_manifest.id(block_color_needs)
@@ -187,7 +179,7 @@ class ImageProcessor(object):
     """
     dot_xlat = []
     for c in color_needs:
-      if c is None:
+      if c is 0xff:
         continue
       for i,p in enumerate(palette_option):
         if c == p:
