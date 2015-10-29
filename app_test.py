@@ -133,6 +133,28 @@ class AppTests(unittest.TestCase):
     self.assert_file_eq(self.args.error_outfile,
                         'testdata/errors-full-image.png')
 
+  def test_output_valiant_for_offset_image(self):
+    img = Image.open('testdata/offset-image.png')
+    palette_text = 'P/30-30-30-30/30-01-38-16/'
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, palette_text, False)
+    self.args = MockArgs()
+    self.args.output = self.args.tmpfile('offset-image.o')
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_file_eq(self.args.output, self.golden_offset('normal', 'o'))
+
+  def test_output_valiant_for_offset_image_locked(self):
+    img = Image.open('testdata/offset-image.png')
+    palette_text = 'P/30-30-30-30/30-01-38-16/'
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, palette_text, True)
+    self.args = MockArgs()
+    self.args.output = self.args.tmpfile('offset-image.o')
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_file_eq(self.args.output, self.golden_offset('locked', 'o'))
+
   def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name
     expect_file = self.golden(name + golden_suffix, 'dat')
@@ -140,6 +162,9 @@ class AppTests(unittest.TestCase):
 
   def golden(self, name, ext):
     return 'testdata/full-image-%s.%s' % (name, ext)
+
+  def golden_offset(self, name, ext):
+    return 'testdata/offset-image-%s.%s' % (name, ext)
 
   def assert_file_eq(self, actual_file, expect_file):
     self.assertTrue(filecmp.cmp(actual_file, expect_file, shallow=False),
