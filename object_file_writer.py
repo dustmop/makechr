@@ -87,8 +87,12 @@ class ObjectFileWriter(object):
     decorated.sort()
     settings = self.obj_data.settings
     settings.chr_size = len(chr_data)
+    last = None
     for c,i in decorated:
+      if c == last:
+        continue
       settings.sorted_chr_idx.append(i)
+      last = c
 
   def add_component(self, name, bytes, align, pad_size, null_value):
     if not pad_size is None:
