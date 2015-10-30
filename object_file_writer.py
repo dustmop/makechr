@@ -94,6 +94,13 @@ class ObjectFileWriter(object):
       settings.sorted_chr_idx.append(i)
       last = c
 
+  def write_extra_settings(self, is_locked_tiles):
+    """Write extra settings to the valiant object."""
+    if not is_locked_tiles:
+      return
+    settings = self.obj_data.settings
+    settings.is_locked_tiles = is_locked_tiles
+
   def add_component(self, name, bytes, align, pad_size, null_value):
     if not pad_size is None:
       pad_size = pad_size - len(bytes)

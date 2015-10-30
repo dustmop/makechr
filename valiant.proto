@@ -33,6 +33,7 @@ message GfxSettings {
   optional int32 bg_color = 1;
   repeated int32 sorted_chr_idx = 2;
   optional int32 chr_size = 3;
+  optional int32 is_locked_tiles = 4;
 }
 
 message GfxComponent {

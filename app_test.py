@@ -18,6 +18,7 @@ class MockArgs(object):
     self.nametable_view = self.tmppng('nt')
     self.chr_view = self.tmppng('chr')
     self.grid_view = self.tmppng('grid')
+    self.is_locked_tiles = False
     self.compile = None
     self.output = self.tmpfile('full-image-%s.dat')
 
@@ -29,11 +30,13 @@ class MockArgs(object):
 
 
 class AppTests(unittest.TestCase):
+  def setUp(self):
+    self.args = MockArgs()
+
   def test_views(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
     processor.process_image(img, None, False)
-    self.args = MockArgs()
     a = app.Application()
     a.create_views(processor.ppu_memory(), processor, self.args, img)
     self.assert_file_eq(self.args.palette_view, self.golden('pal', 'png'))
@@ -48,7 +51,6 @@ class AppTests(unittest.TestCase):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
     processor.process_image(img, None, False)
-    self.args = MockArgs()
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_output_result('chr')
@@ -60,7 +62,6 @@ class AppTests(unittest.TestCase):
     img = Image.open('testdata/full-image-bottom-attr.png')
     processor = image_processor.ImageProcessor()
     processor.process_image(img, None, False)
-    self.args = MockArgs()
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_output_result('chr')
@@ -71,29 +72,28 @@ class AppTests(unittest.TestCase):
   def test_output_for_locked_tiles(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, True)
-    self.args = MockArgs()
+    self.args.is_locked_tiles = True
+    processor.process_image(img, None, self.args.is_locked_tiles)
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
-    self.assert_output_result('chr',       golden_suffix='-locked-tiles')
-    self.assert_output_result('nametable', golden_suffix='-locked-tiles')
+    self.assert_output_result('chr', golden_suffix='-locked-tiles')
+    self.assert_not_exist('nametable')
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
   def test_output_for_locked_tiles_small_square(self):
     img = Image.open('testdata/full-image-small-square.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, True)
-    self.args = MockArgs()
+    self.args.is_locked_tiles = True
+    processor.process_image(img, None, self.args.is_locked_tiles)
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
-    self.assert_output_result('chr',       golden_suffix='-small-square')
-    self.assert_output_result('nametable', golden_suffix='-small-square')
+    self.assert_output_result('chr', golden_suffix='-small-square')
+    self.assert_not_exist('nametable')
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
   def test_output_from_memory_dump(self):
-    self.args = MockArgs()
     memfile = 'testdata/full-image-mem.bin'
     a = app.Application()
     a.read_memory(memfile, self.args)
@@ -106,7 +106,6 @@ class AppTests(unittest.TestCase):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
     processor.process_image(img, None, False)
-    self.args = MockArgs()
     self.args.output = self.args.tmpfile('full-image.o')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -116,7 +115,6 @@ class AppTests(unittest.TestCase):
     img = Image.open('testdata/full-image-with-error.png')
     processor = image_processor.ImageProcessor()
     processor.process_image(img, None, False)
-    self.args = MockArgs()
     self.args.error_outfile = self.args.tmppng('error')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -138,7 +136,6 @@ class AppTests(unittest.TestCase):
     palette_text = 'P/30-30-30-30/30-01-38-16/'
     processor = image_processor.ImageProcessor()
     processor.process_image(img, palette_text, False)
-    self.args = MockArgs()
     self.args.output = self.args.tmpfile('offset-image.o')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -148,8 +145,8 @@ class AppTests(unittest.TestCase):
     img = Image.open('testdata/offset-image.png')
     palette_text = 'P/30-30-30-30/30-01-38-16/'
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, palette_text, True)
-    self.args = MockArgs()
+    self.args.is_locked_tiles = True
+    processor.process_image(img, palette_text, self.args.is_locked_tiles)
     self.args.output = self.args.tmpfile('offset-image.o')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -159,6 +156,10 @@ class AppTests(unittest.TestCase):
     actual_file = self.args.output % name
     expect_file = self.golden(name + golden_suffix, 'dat')
     self.assert_file_eq(actual_file, expect_file)
+
+  def assert_not_exist(self, name):
+    missing_file = self.args.output % name
+    self.assertFalse(os.path.exists(missing_file))
 
   def golden(self, name, ext):
     return 'testdata/full-image-%s.%s' % (name, ext)

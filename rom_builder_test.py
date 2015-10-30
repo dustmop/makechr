@@ -18,6 +18,7 @@ class MockArgs(object):
     self.nametable_view = None
     self.chr_view = None
     self.grid_view = None
+    self.is_locked_tiles = False
     self.compile = self.tmpfile('rom.nes')
     self.output = self.tmpfile('full-image-%s.dat')
 

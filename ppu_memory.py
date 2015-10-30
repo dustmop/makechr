@@ -30,15 +30,15 @@ class PpuMemory(object):
   def get_writer(self):
     return self._writer
 
-  def save_template(self, tmpl):
+  def save_template(self, tmpl, is_locked_tiles):
     """Save binary files representing the ppu memory.
 
     tmpl: String representing a filename template to save files to.
     """
     self._writer = binary_file_writer.BinaryFileWriter(tmpl)
-    self._save_components()
+    self._save_components(is_locked_tiles)
 
-  def save_valiant(self, output_filename):
+  def save_valiant(self, output_filename, is_locked_tiles):
     """Save the ppu memory as a protocal buffer based object file.
 
     The format of an object file is specific by valiant.proto.
@@ -49,16 +49,18 @@ class PpuMemory(object):
     if object_file_writer is None:
       import object_file_writer
     self._writer = object_file_writer.ObjectFileWriter()
-    self._save_components()
+    self._save_components(is_locked_tiles)
     module_name = os.path.splitext(os.path.basename(output_filename))[0]
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
     self._writer.write_chr_info(self.chr_data)
+    self._writer.write_extra_settings(is_locked_tiles)
     self._writer.save(output_filename)
 
-  def _save_components(self):
-    fout = self._writer.get_writable('nametable')
-    self._save_nametable(fout, self.gfx_1.nametable)
+  def _save_components(self, skip_nametable):
+    if not skip_nametable:
+      fout = self._writer.get_writable('nametable')
+      self._save_nametable(fout, self.gfx_1.nametable)
     fout = self._writer.get_writable('chr')
     self._save_chr(fout, self.chr_data)
     self._writer.pad(0x2000)
