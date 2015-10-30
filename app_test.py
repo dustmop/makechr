@@ -102,7 +102,7 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
-  def test_output_as_valiant(self):
+  def test_output_valiant(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
     processor.process_image(img, None, False)

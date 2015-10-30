@@ -61,7 +61,7 @@ class Application(object):
       mem.save_template(out_tmpl)
     if args.compile:
       builder = rom_builder.RomBuilder()
-      builder.build(mem, args.compile)
+      builder.build(mem.get_writer(), args.compile)
 
   def show_stats(self, mem, processor, args):
     print('Number of dot-profiles: {0}'.format(processor.dot_manifest().size()))
