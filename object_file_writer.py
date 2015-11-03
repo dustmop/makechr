@@ -13,6 +13,7 @@ class DataInfo(object):
     self.name = None
     self.align = None
     self.size = None
+    self.order = None
     self.null_value = None
 
   def empty(self):
@@ -51,7 +52,7 @@ class ObjectFileWriter(object):
 
   def pad(self, size, order, align, extract):
     self.info.size = size
-    _ = order
+    self.info.order = order
     self.info.align = align
     self.component_req[self.info.name] = extract
 
@@ -95,20 +96,25 @@ class ObjectFileWriter(object):
     decorated = [(c.low + c.hi,i) for i,c in enumerate(chr_data)]
     decorated.sort()
     settings = self.obj_data.settings
-    settings.chr_size = len(chr_data)
+    chr_metadata = self._get_chr_metaata(settings)
+    chr_metadata.size = len(chr_data)
     last = None
     for c,i in decorated:
       if c == last:
         continue
-      settings.sorted_chr_idx.append(i)
+      chr_metadata.sorted_idx.append(i)
       last = c
 
-  def write_extra_settings(self, is_locked_tiles):
+  def write_extra_settings(self, order, is_locked_tiles):
     """Write extra settings to the valiant object."""
-    if not is_locked_tiles:
+    if not order and not is_locked_tiles:
       return
     settings = self.obj_data.settings
-    settings.is_locked_tiles = is_locked_tiles
+    chr_metadata = self._get_chr_metaata(settings)
+    if order:
+      chr_metadata.order = order
+    if is_locked_tiles:
+      chr_metadata.is_locked_tiles = is_locked_tiles
 
   def add_component(self, bytes, info):
     pad_size = info.size - len(bytes) if (not info.size is None) else None
@@ -151,6 +157,12 @@ class ObjectFileWriter(object):
     if not last_width:
       last_width = None
     return (first_width, last_width, bytes)
+
+  def _get_chr_metaata(self, settings):
+    if len(settings.chr_metadata) > 0:
+      return settings.chr_metadata[0]
+    else:
+      return settings.chr_metadata.add()
 
   def save(self, filename):
     serialized = self.file_obj.SerializeToString()

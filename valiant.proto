@@ -31,15 +31,20 @@ enum DataRole {
 
 message GfxSettings {
   optional int32 bg_color = 1;
-  repeated int32 sorted_chr_idx = 2;
-  optional int32 chr_size = 3;
-  optional int32 is_locked_tiles = 4;
+  repeated ChrMetadata chr_metadata = 5;
 }
 
 message GfxComponent {
   optional DataRole role = 1;
   optional int32 binary_index = 2;
   optional string name = 3;
+}
+
+message ChrMetadata {
+  optional int32 order = 1;
+  repeated int32 sorted_idx = 2;
+  optional int32 size = 3;
+  optional int32 is_locked_tiles = 4;
 }
 
 ///////////////////////////////////////////////////

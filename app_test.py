@@ -19,6 +19,7 @@ class MockArgs(object):
     self.chr_view = self.tmppng('chr')
     self.grid_view = self.tmppng('grid')
     self.is_locked_tiles = False
+    self.order = None
     self.compile = None
     self.output = self.tmpfile('full-image-%s.dat')
 
@@ -102,6 +103,18 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_output_order1(self):
+    img = Image.open('testdata/full-image.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, False)
+    self.args.order = 1
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_output_result('chr', golden_suffix='-order1')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_output_valiant(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
@@ -151,6 +164,16 @@ class AppTests(unittest.TestCase):
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_file_eq(self.args.output, self.golden_offset('locked', 'o'))
+
+  def test_output_valiant_order1(self):
+    img = Image.open('testdata/full-image.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, False)
+    self.args.order = 1
+    self.args.output = self.args.tmpfile('full-image.o')
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_file_eq(self.args.output, self.golden('valiant-order1', 'o'))
 
   def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name

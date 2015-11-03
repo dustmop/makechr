@@ -5,7 +5,7 @@ import sys
 
 
 def run():
-  parser = argparse.ArgumentParser(description='Make chr data files and ' +
+  parser = argparse.ArgumentParser(description='Make chr data files and '
                                    'other NES graphics files')
   parser.add_argument('input', type=str, nargs='?',
                       help='filename for pixel art image')
@@ -23,8 +23,10 @@ def run():
   parser.add_argument('-m', dest='memimport', metavar='memory import filename',
                       help='filename for memory import input')
   parser.add_argument('-l', dest='is_locked_tiles', action='store_true',
-                      help=('lock tiles into their given positions, if image ' +
+                      help=('lock tiles into their given positions, if image '
                             'is 128px by 128px will only process 8x8 blocks'))
+  parser.add_argument('-r', dest='order', metavar='chr order',
+                      help='order that chr appears within all chr data')
   parser.add_argument('--palette-view', dest='palette_view',
                       metavar='image filename',
                       help='filename for palette view')

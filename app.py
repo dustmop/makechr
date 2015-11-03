@@ -53,12 +53,12 @@ class Application(object):
 
   def create_output(self, mem, args):
     if args.output and args.output.endswith('.o'):
-      mem.save_valiant(args.output, args.is_locked_tiles)
+      mem.save_valiant(args.output, args.order, args.is_locked_tiles)
     else:
       out_tmpl = args.output or '%s.dat'
       if not '%s' in out_tmpl:
         raise errors.CommandLineArgError('output needs "%s" in its template')
-      mem.save_template(out_tmpl, args.is_locked_tiles)
+      mem.save_template(out_tmpl, args.order, args.is_locked_tiles)
     if args.compile:
       builder = rom_builder.RomBuilder()
       builder.build(mem.get_writer(), args.compile)
