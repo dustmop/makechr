@@ -19,7 +19,7 @@ class MemoryImporter(object):
     # TODO: Handle chr order (background / sprite at $0000 / $1000).
     # For each graphics page, read nametable & attribute.
     for loop_num in xrange(2):
-      gfx = mem.gfx_1 if not loop_num else mem.gfx_2
+      gfx = mem.gfx_0 if not loop_num else mem.gfx_1
       if loop_num == 1:
         # Skip $2400-$2c00
         fp.read(0x800)

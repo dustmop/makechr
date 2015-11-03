@@ -19,8 +19,8 @@ class PpuMemory(object):
   Data structure representing the components of graphics in PPU memory.
   """
   def __init__(self):
-    self.gfx_1 = GraphicsPage()
-    self.gfx_2 = GraphicsPage() # unused
+    self.gfx_0 = GraphicsPage()
+    self.gfx_1 = GraphicsPage() # unused
     self.palette_nt = None
     self.palette_spr = None
     self.chr_data = []
@@ -60,7 +60,7 @@ class PpuMemory(object):
   def _save_components(self, skip_nametable):
     if not skip_nametable:
       fout = self._writer.get_writable('nametable')
-      self._save_nametable(fout, self.gfx_1.nametable)
+      self._save_nametable(fout, self.gfx_0.nametable)
     fout = self._writer.get_writable('chr')
     self._save_chr(fout, self.chr_data)
     self._writer.pad(0x2000)
@@ -69,7 +69,7 @@ class PpuMemory(object):
     self._save_palette(fout, self.palette_nt, self.palette_spr)
     self._writer.set_null_value(self._bg_color)
     fout = self._writer.get_writable('attribute')
-    self._save_attribute(fout, self.gfx_1.block_palette)
+    self._save_attribute(fout, self.gfx_0.block_palette)
     self._writer.close()
 
   def _save_nametable(self, fout, nametable):

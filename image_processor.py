@@ -267,12 +267,12 @@ class ImageProcessor(object):
         block_color_needs = self._block_color_manifest.get(bcid)
         (pid, palette_option) = self._ppu_memory.palette_nt.select(
           block_color_needs)
-        self._ppu_memory.gfx_1.block_palette[block_y][block_x] = pid
+        self._ppu_memory.gfx_0.block_palette[block_y][block_x] = pid
     # For each tile in the artifact table, create the chr and nametable.
     for y in xrange(num_blocks_y * 2):
       for x in xrange(num_blocks_x * 2):
         (cid, did, bcid) = self._artifacts[y][x]
-        pid = self._ppu_memory.gfx_1.block_palette[y / 2][x / 2]
+        pid = self._ppu_memory.gfx_0.block_palette[y / 2][x / 2]
         palette_option = self._ppu_memory.palette_nt.get(pid)
         color_needs = self._color_manifest.get(cid)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
@@ -280,7 +280,7 @@ class ImageProcessor(object):
         # skip this entry.
         if dot_xlat:
           nt_num = self.get_nametable_num(dot_xlat, did, is_locked_tiles)
-          self._ppu_memory.gfx_1.nametable[y][x] = nt_num
+          self._ppu_memory.gfx_0.nametable[y][x] = nt_num
     # Fail if there were any errors.
     if self._err.has():
       return
