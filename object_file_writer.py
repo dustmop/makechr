@@ -5,6 +5,20 @@ import StringIO
 MAGIC_NUM = 7210303610482106886
 
 
+class DataInfo(object):
+  def __init__(self):
+    self.clear()
+
+  def clear(self):
+    self.name = None
+    self.align = None
+    self.size = None
+    self.null_value = None
+
+  def empty(self):
+    return self.name is None
+
+
 class ObjectFileWriter(object):
   """Creates a valiant object file from ppu memory.
 
@@ -18,39 +32,31 @@ class ObjectFileWriter(object):
     self.file_obj.magic1 = MAGIC_NUM % 100
     self.file_obj.magic2 = MAGIC_NUM / 100
     self.obj_data = self.file_obj.data
-    self.curr_buffer = None
-    self.curr_name = None
-    self.curr_align = None
-    self.curr_pad_size = None
-    self.curr_null_value = None
+    self.buffer = None
+    self.info = DataInfo()
+    self.component_req = {}
 
   def get_writable(self, name):
-    if self.curr_name:
-      self.add_component(self.curr_name, self.curr_buffer.getvalue(),
-                         self.curr_align, self.curr_pad_size,
-                         self.curr_null_value)
-    self.curr_buffer = StringIO.StringIO()
-    self.curr_name = name
-    self.curr_align = None
-    self.curr_pad_size = None
-    self.curr_null_value = None
-    return self.curr_buffer
+    if not self.info.empty():
+      self.add_component(self.buffer.getvalue(), self.info)
+    self.buffer = StringIO.StringIO()
+    self.info.clear()
+    self.info.name = name
+    return self.buffer
 
   def close(self):
-    if self.curr_name:
-      self.add_component(self.curr_name, self.curr_buffer.getvalue(),
-                         self.curr_align, self.curr_pad_size,
-                         self.curr_null_value)
-      self.curr_name = None
+    if not self.info.empty():
+      self.add_component(self.buffer.getvalue(), self.info)
+      self.info.clear()
 
-  def align(self, at):
-    self.curr_align = at
-
-  def pad(self, num):
-    self.curr_pad_size = num
+  def pad(self, size, order, align, extract):
+    self.info.size = size
+    _ = order
+    self.info.align = align
+    self.component_req[self.info.name] = extract
 
   def set_null_value(self, val):
-    self.curr_null_value = val
+    self.info.null_value = val
 
   def get_bytes(self, name):
     """Get bytes written to the component with name."""
@@ -63,13 +69,16 @@ class ObjectFileWriter(object):
     if binary_index is None:
       raise ValueError('Did not find component "%s"' % (name,))
     binary = self.obj_data.binaries[binary_index]
-    bin = binary.bin
+    content = binary.bin
     null_value = chr(binary.null_value or 0)
     if binary.padding:
-      bin = bin + (null_value * binary.padding)
+      content = content + (null_value * binary.padding)
     if binary.pre_pad:
-      bin = (null_value * binary.padding) + bin
-    return bin
+      content = (null_value * binary.padding) + content
+    extract = self.component_req.get(name)
+    if extract and len(content) < extract:
+      content = content + (null_value * (extract - len(content)))
+    return content
 
   def write_module(self, module_name):
     """Write the module name to the valiant object."""
@@ -101,16 +110,15 @@ class ObjectFileWriter(object):
     settings = self.obj_data.settings
     settings.is_locked_tiles = is_locked_tiles
 
-  def add_component(self, name, bytes, align, pad_size, null_value):
-    if not pad_size is None:
-      pad_size = pad_size - len(bytes)
-    pre_pad, padding, bytes = self._condense(bytes, align, pad_size)
-    role = valiant.DataRole.Value(name.upper())
+  def add_component(self, bytes, info):
+    pad_size = info.size - len(bytes) if (not info.size is None) else None
+    pre_pad, padding, bytes = self._condense(bytes, info.align, pad_size)
+    role = valiant.DataRole.Value(info.name.upper())
     idx = len(self.obj_data.binaries)
     binary = self.obj_data.binaries.add()
     binary.bin = bytes
-    if not null_value is None:
-      binary.null_value = null_value
+    if not info.null_value is None:
+      binary.null_value = info.null_value
     if not pre_pad is None:
       binary.pre_pad = pre_pad
     if not padding is None:
