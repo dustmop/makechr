@@ -27,6 +27,8 @@ def run():
                             'is 128px by 128px will only process 8x8 blocks'))
   parser.add_argument('-r', dest='order', metavar='chr order',
                       help='order that chr appears within all chr data')
+  parser.add_argument('-b', dest='bg_color', metavar='background color',
+                      help='background color for the palette')
   parser.add_argument('--palette-view', dest='palette_view',
                       metavar='image filename',
                       help='filename for palette view')

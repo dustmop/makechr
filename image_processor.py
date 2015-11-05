@@ -216,7 +216,7 @@ class ImageProcessor(object):
     self._nt_count[nt_num] += 1
     return nt_num
 
-  def process_image(self, img, palette_text, is_locked_tiles):
+  def process_image(self, img, palette_text, bg_color, is_locked_tiles):
     """Process an image, creating the ppu_memory necessary to display it.
 
     img: Pixel art image.
@@ -249,9 +249,17 @@ class ImageProcessor(object):
       except errors.PaletteParseError as e:
         self._err.add(e)
         return
+      if not bg_color is None:
+        pal_bg = self._ppu_memory.palette_nt.bg_color
+        if pal_bg != bg_color:
+          self._err.add(errors.PaletteBackgroundColorConflictError(
+            pal_bg, bg_color))
+          return
     else:
       # Make the palette from the color needs.
       guesser = guess_best_palette.GuessBestPalette()
+      if not bg_color is None:
+        guesser.set_bg_color(bg_color)
       try:
         self._ppu_memory.palette_nt = guesser.make_palette(
           self._block_color_manifest.elems())

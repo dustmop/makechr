@@ -38,7 +38,7 @@ class AppTests(unittest.TestCase):
   def test_views(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     a = app.Application()
     a.create_views(processor.ppu_memory(), processor, self.args, img)
     self.assert_file_eq(self.args.palette_view, self.golden('pal', 'png'))
@@ -52,7 +52,7 @@ class AppTests(unittest.TestCase):
   def test_output(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_output_result('chr')
@@ -63,7 +63,7 @@ class AppTests(unittest.TestCase):
   def test_output_for_bottom_attributes(self):
     img = Image.open('testdata/full-image-bottom-attr.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_output_result('chr')
@@ -74,7 +74,7 @@ class AppTests(unittest.TestCase):
   def test_output_implied_bg_color(self):
     img = Image.open('testdata/implied-bg-color.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.golden_file_prefix = 'implied-bg-color'
@@ -87,7 +87,7 @@ class AppTests(unittest.TestCase):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
     self.args.is_locked_tiles = True
-    processor.process_image(img, None, self.args.is_locked_tiles)
+    processor.process_image(img, None, None, self.args.is_locked_tiles)
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_output_result('chr', golden_suffix='-locked-tiles')
@@ -99,7 +99,7 @@ class AppTests(unittest.TestCase):
     img = Image.open('testdata/full-image-small-square.png')
     processor = image_processor.ImageProcessor()
     self.args.is_locked_tiles = True
-    processor.process_image(img, None, self.args.is_locked_tiles)
+    processor.process_image(img, None, None, self.args.is_locked_tiles)
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_output_result('chr', golden_suffix='-small-square')
@@ -119,7 +119,7 @@ class AppTests(unittest.TestCase):
   def test_output_order1(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     self.args.order = 1
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -128,10 +128,45 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_output_palette(self):
+    img = Image.open('testdata/full-image.png')
+    palette_text = 'P/30-38-16-01/30-19-01-01/'
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, palette_text, None, False)
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette', golden_suffix='-explicit-text')
+    self.assert_output_result('attribute')
+
+  def test_output_background_color(self):
+    img = Image.open('testdata/full-image.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, 1, False)
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_output_result('chr', golden_suffix='-bg-color')
+    self.assert_output_result('nametable', golden_suffix='-bg-color')
+    self.assert_output_result('palette', golden_suffix='-bg-color')
+    self.assert_output_result('attribute')
+
+  def test_output_background_color_conflict(self):
+    img = Image.open('testdata/full-image.png')
+    palette_text = 'P/30-38-16-01/30-19-01-01/'
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, palette_text, 1, False)
+    self.assertTrue(processor.err().has())
+    es = processor.err().get()
+    for e in es:
+      msg = '{0} {1}'.format(type(e).__name__, e)
+      self.assertEqual(msg, ('PaletteBackgroundColorConflictError between '
+                             'palette /30/ <> bg color /1/'))
+
   def test_output_valiant(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     self.args.output = self.args.tmpfile('full-image.o')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -140,7 +175,7 @@ class AppTests(unittest.TestCase):
   def test_error(self):
     img = Image.open('testdata/full-image-with-error.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     self.args.error_outfile = self.args.tmppng('error')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -161,7 +196,7 @@ class AppTests(unittest.TestCase):
     img = Image.open('testdata/offset-image.png')
     palette_text = 'P/30-30-30-30/30-01-38-16/'
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, palette_text, False)
+    processor.process_image(img, palette_text, None, False)
     self.args.output = self.args.tmpfile('offset-image.o')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -173,7 +208,7 @@ class AppTests(unittest.TestCase):
     palette_text = 'P/30-30-30-30/30-01-38-16/'
     processor = image_processor.ImageProcessor()
     self.args.is_locked_tiles = True
-    processor.process_image(img, palette_text, self.args.is_locked_tiles)
+    processor.process_image(img, palette_text, None, self.args.is_locked_tiles)
     self.args.output = self.args.tmpfile('offset-image.o')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
@@ -183,7 +218,7 @@ class AppTests(unittest.TestCase):
   def test_output_valiant_order1(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     self.args.order = 1
     self.args.output = self.args.tmpfile('full-image.o')
     a = app.Application()

@@ -31,6 +31,16 @@ class PaletteBackgroundColorMissingError(Exception):
     return 'Background color not set on palette'
 
 
+class PaletteBackgroundColorConflictError(Exception):
+  def __init__(self, pal_color, bg_color):
+    self.pal_color = pal_color
+    self.bg_color = bg_color
+
+  def __str__(self):
+    return 'between palette /%x/ <> bg color /%x/' % (
+      self.pal_color, self.bg_color)
+
+
 class PaletteInconsistentError(Exception):
   def __init__(self, color_1, color_2):
     self.color_1 = color_1

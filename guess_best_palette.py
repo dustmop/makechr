@@ -7,6 +7,12 @@ from constants import *
 
 class GuessBestPalette(object):
 
+  def __init__(self):
+    self._bg_color = None
+
+  def set_bg_color(self, bg_color):
+    self._bg_color = bg_color
+
   def to_ordered_colors(self, color_needs):
     """Convert color needs array or set to an ordered list.
 
@@ -77,6 +83,8 @@ class GuessBestPalette(object):
 
     combined_colors: List of color needs.
     """
+    if not self._bg_color is None:
+      return self._bg_color
     possibilities = set(combined_colors[0])
     recommendations = set(possibilities)
     for color_set in combined_colors[1:]:

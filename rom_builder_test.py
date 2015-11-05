@@ -31,7 +31,7 @@ class RomBuilderTests(unittest.TestCase):
   def test_output(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     args = MockArgs()
     a = app.Application()
     a.create_output(processor.ppu_memory(), args)
@@ -42,7 +42,7 @@ class RomBuilderTests(unittest.TestCase):
   def test_output_using_valiant(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, False)
+    processor.process_image(img, None, None, False)
     args = MockArgs()
     args.output = args.tmpfile('full-image.o')
     a = app.Application()

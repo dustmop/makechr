@@ -82,7 +82,7 @@ class PpuMemory(object):
         fout.write(chr(nt))
 
   def _save_chr(self, fout, chr_data):
-    # TODO: Respect is_sprite and page_org.
+    # TODO: Respect is_sprite.
     for d in chr_data:
       d.write(fout)
 
