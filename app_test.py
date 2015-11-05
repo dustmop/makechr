@@ -33,6 +33,7 @@ class MockArgs(object):
 class AppTests(unittest.TestCase):
   def setUp(self):
     self.args = MockArgs()
+    self.golden_file_prefix = 'full-image'
 
   def test_views(self):
     img = Image.open('testdata/full-image.png')
@@ -69,6 +70,18 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('nametable', golden_suffix='-bottom-attr')
     self.assert_output_result('palette')
     self.assert_output_result('attribute', golden_suffix='-bottom-attr')
+
+  def test_output_implied_bg_color(self):
+    img = Image.open('testdata/implied-bg-color.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, False)
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.golden_file_prefix = 'implied-bg-color'
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
 
   def test_output_for_locked_tiles(self):
     img = Image.open('testdata/full-image.png')
@@ -152,7 +165,8 @@ class AppTests(unittest.TestCase):
     self.args.output = self.args.tmpfile('offset-image.o')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
-    self.assert_file_eq(self.args.output, self.golden_offset('normal', 'o'))
+    self.golden_file_prefix = 'offset-image'
+    self.assert_file_eq(self.args.output, self.golden('normal', 'o'))
 
   def test_output_valiant_for_offset_image_locked(self):
     img = Image.open('testdata/offset-image.png')
@@ -163,7 +177,8 @@ class AppTests(unittest.TestCase):
     self.args.output = self.args.tmpfile('offset-image.o')
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
-    self.assert_file_eq(self.args.output, self.golden_offset('locked', 'o'))
+    self.golden_file_prefix = 'offset-image'
+    self.assert_file_eq(self.args.output, self.golden('locked', 'o'))
 
   def test_output_valiant_order1(self):
     img = Image.open('testdata/full-image.png')
@@ -185,10 +200,7 @@ class AppTests(unittest.TestCase):
     self.assertFalse(os.path.exists(missing_file))
 
   def golden(self, name, ext):
-    return 'testdata/full-image-%s.%s' % (name, ext)
-
-  def golden_offset(self, name, ext):
-    return 'testdata/offset-image-%s.%s' % (name, ext)
+    return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)
 
   def assert_file_eq(self, actual_file, expect_file):
     self.assertTrue(filecmp.cmp(actual_file, expect_file, shallow=False),

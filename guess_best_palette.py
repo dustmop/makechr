@@ -78,10 +78,15 @@ class GuessBestPalette(object):
     combined_colors: List of color needs.
     """
     possibilities = set(combined_colors[0])
+    recommendations = set(possibilities)
     for color_set in combined_colors[1:]:
-      possibilities = possibilities & set(color_set)
+      if len(color_set) == 4:
+        possibilities = possibilities & set(color_set)
+      recommendations = recommendations & set(color_set)
     if rgb.BLACK in possibilities:
       return rgb.BLACK
+    if recommendations:
+      return min(recommendations)
     if possibilities:
       return min(possibilities)
     return None
