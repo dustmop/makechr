@@ -289,6 +289,3 @@ class ImageProcessor(object):
         if dot_xlat:
           nt_num = self.get_nametable_num(dot_xlat, did, is_locked_tiles)
           self._ppu_memory.gfx_0.nametable[y][x] = nt_num
-    # Fail if there were any errors.
-    if self._err.has():
-      return

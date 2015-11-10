@@ -34,6 +34,11 @@ class IntegrationTests(unittest.TestCase):
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden('valiant-order1', 'o'))
 
+  def test_bg_color(self):
+    args = ['-X', 'testdata/full-image.png', '-o', self.output_name, '-b', '16']
+    self.makechr(args)
+    self.assert_file_eq(self.output_name, self.golden('valiant-bg-color', 'o'))
+
   def golden(self, name, ext):
     return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)
 

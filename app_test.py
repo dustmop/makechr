@@ -130,7 +130,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_palette(self):
     img = Image.open('testdata/full-image.png')
-    palette_text = 'P/30-38-16-01/30-19-01-01/'
+    palette_text = 'P/30-38-16-01/30-19-16-16/'
     processor = image_processor.ImageProcessor()
     processor.process_image(img, palette_text, None, False)
     a = app.Application()
@@ -143,7 +143,7 @@ class AppTests(unittest.TestCase):
   def test_output_background_color(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, 1, False)
+    processor.process_image(img, None, 0x16, False)
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_output_result('chr', golden_suffix='-bg-color')
@@ -224,6 +224,15 @@ class AppTests(unittest.TestCase):
     a = app.Application()
     a.create_output(processor.ppu_memory(), self.args)
     self.assert_file_eq(self.args.output, self.golden('valiant-order1', 'o'))
+
+  def test_output_valiant_background_color(self):
+    img = Image.open('testdata/full-image.png')
+    processor = image_processor.ImageProcessor()
+    processor.process_image(img, None, 0x16, False)
+    self.args.output = self.args.tmpfile('full-image.o')
+    a = app.Application()
+    a.create_output(processor.ppu_memory(), self.args)
+    self.assert_file_eq(self.args.output, self.golden('valiant-bg-color', 'o'))
 
   def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name
