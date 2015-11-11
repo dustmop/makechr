@@ -151,7 +151,7 @@ class ViewRenderer(object):
     cid_2 = artifacts[y * 2+1][x * 2  ][ARTIFACT_CID]
     cid_3 = artifacts[y * 2+1][x * 2+1][ARTIFACT_CID]
     if cid_0 == cid_1 and cid_1 == cid_2 and cid_2 == cid_3:
-      color_needs = cmanifest.get(cid_0)
+      color_needs = cmanifest.at(cid_0)
       if color_needs == bytearray([bg, 0xff, 0xff, 0xff]):
         return True
     return False

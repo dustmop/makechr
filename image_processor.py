@@ -201,7 +201,7 @@ class ImageProcessor(object):
     if key in self._nametable_cache:
       nt_num = self._nametable_cache[key]
     else:
-      dot_profile = self._dot_manifest.get(did)
+      dot_profile = self._dot_manifest.at(did)
       tile = chr_tile.ChrTile()
       for row in xrange(8):
         for col in xrange(8):
@@ -268,15 +268,15 @@ class ImageProcessor(object):
         self._err.add(e)
         return
     # Find empty tile.
-    empty_did = self._dot_manifest.find(chr(0) * 64)
-    empty_cid = self._color_manifest.find(chr(pal.bg_color) + '\xff\xff\xff')
+    empty_did = self._dot_manifest.get(chr(0) * 64)
+    empty_cid = self._color_manifest.get(chr(pal.bg_color) + '\xff\xff\xff')
     # For each block, get the attribute aka the palette.
     for block_y in xrange(num_blocks_y):
       for block_x in xrange(num_blocks_x):
         y = block_y * 2
         x = block_x * 2
         (cid, did, bcid) = self._artifacts[y][x]
-        block_color_needs = self._block_color_manifest.get(bcid)
+        block_color_needs = self._block_color_manifest.at(bcid)
         (pid, palette_option) = pal.select(block_color_needs)
         self._ppu_memory.gfx_0.block_palette[block_y][block_x] = pid
     # For each tile in the artifact table, create the chr and nametable.
@@ -285,7 +285,7 @@ class ImageProcessor(object):
         (cid, did, bcid) = self._artifacts[y][x]
         pid = self._ppu_memory.gfx_0.block_palette[y / 2][x / 2]
         palette_option = pal.get(pid)
-        color_needs = self._color_manifest.get(cid)
+        color_needs = self._color_manifest.at(cid)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
         # If there was an error in the tile, the dot_xlat will be empty. So
         # skip this entry.

@@ -70,7 +70,7 @@ class Application(object):
       builder.build(mem.get_writer(), args.compile)
 
   def show_stats(self, mem, processor, args):
-    print('Number of dot-profiles: {0}'.format(processor.dot_manifest().size()))
+    print('Number of dot-profiles: {0}'.format(len(processor.dot_manifest())))
     print('Number of tiles: {0}'.format(len(mem.chr_data)))
     pal = mem.palette_spr if args.is_sprite else mem.palette_nt
     print('Palette: {0}'.format(pal))
