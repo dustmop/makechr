@@ -33,17 +33,20 @@ class RomBuilderTests(unittest.TestCase):
   def setUp(self):
     self.args = MockArgs()
 
-  def process_image(self, img, palette_text=None):
+  def process_image(self, img, palette_text=None, traversal=None):
+    if not traversal:
+      traversal = 'horizontal'
     self.processor = image_processor.ImageProcessor()
     self.processor.process_image(img, palette_text, self.args.bg_color,
-                                 self.args.is_sprite, self.args.is_locked_tiles)
+                                 traversal, self.args.is_sprite,
+                                 self.args.is_locked_tiles)
     self.ppu_memory = self.processor.ppu_memory()
 
   def test_output(self):
     img = Image.open('testdata/full-image.png')
     self.process_image(img)
     a = app.Application()
-    a.create_output(self.ppu_memory, self.args)
+    a.create_output(self.ppu_memory, self.args, 'horizontal')
     actual_file = self.args.compile
     expect_file = 'testdata/full-image-rom.nes'
     self.assert_file_eq(actual_file, expect_file)
@@ -53,7 +56,7 @@ class RomBuilderTests(unittest.TestCase):
     self.process_image(img)
     self.args.output = self.args.tmpfile('full-image.o')
     a = app.Application()
-    a.create_output(self.ppu_memory, self.args)
+    a.create_output(self.ppu_memory, self.args, 'horizontal')
     actual_file = self.args.compile
     expect_file = 'testdata/full-image-rom.nes'
     self.assert_file_eq(actual_file, expect_file)

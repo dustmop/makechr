@@ -46,6 +46,7 @@ message ChrMetadata {
   repeated int32 sorted_idx = 2;
   optional int32 size = 3;
   optional int32 is_locked_tiles = 4;
+  optional string traversal = 5;
 }
 
 ///////////////////////////////////////////////////

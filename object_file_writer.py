@@ -105,9 +105,9 @@ class ObjectFileWriter(object):
       chr_metadata.sorted_idx.append(i)
       last = c
 
-  def write_extra_settings(self, order, is_locked_tiles):
+  def write_extra_settings(self, order, traversal, is_locked_tiles):
     """Write extra settings to the valiant object."""
-    if not order and not is_locked_tiles:
+    if traversal == 'horizontal' and not order and not is_locked_tiles:
       return
     settings = self.obj_data.settings
     chr_metadata = self._get_chr_metaata(settings)
@@ -115,6 +115,8 @@ class ObjectFileWriter(object):
       chr_metadata.order = order
     if is_locked_tiles:
       chr_metadata.is_locked_tiles = is_locked_tiles
+    if traversal and traversal != 'horizontal':
+      chr_metadata.traversal = traversal
 
   def add_component(self, bytes, info):
     pad_size = info.size - len(bytes) if (not info.size is None) else None

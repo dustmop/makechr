@@ -8,9 +8,10 @@ import view_renderer
 
 class Application(object):
   def run(self, img, args):
+    traversal = self.get_traversal(args.traversal_strategy)
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, args.palette, args.bg_color, args.is_sprite,
-                            args.is_locked_tiles)
+    processor.process_image(img, args.palette, args.bg_color, traversal,
+                            args.is_sprite, args.is_locked_tiles)
     if processor.err().has():
       es = processor.err().get()
       print('Found {0} error{1}:'.format(len(es), 's'[len(es) == 1:]))
@@ -23,14 +24,22 @@ class Application(object):
         renderer.create_error_view(args.error_outfile, img, errs)
       return
     self.create_views(processor.ppu_memory(), processor, args, img)
-    self.create_output(processor.ppu_memory(), args)
+    self.create_output(processor.ppu_memory(), args, traversal)
     if args.show_stats:
       self.show_stats(processor.ppu_memory(), processor, args)
+
+  def get_traversal(self, strategy):
+    if not strategy or strategy == 'h' or strategy == 'horizontal':
+      return 'horizontal'
+    elif strategy == 'b' or strategy == 'block':
+      return 'block'
+    else:
+      raise errors.UnknownStrategy(strategy)
 
   def read_memory(self, filename, args):
     importer = memory_importer.MemoryImporter()
     mem = importer.read(filename)
-    self.create_output(mem, args)
+    self.create_output(mem, args, self.get_traversal(None))
 
   def create_views(self, mem, processor, args, img):
     if args.palette_view:
@@ -53,13 +62,14 @@ class Application(object):
       renderer = view_renderer.ViewRenderer()
       renderer.create_grid_view(args.grid_view, img)
 
-  def create_output(self, mem, args):
+  def create_output(self, mem, args, traversal):
     if args.order is None and args.is_sprite:
       order = 1
     else:
       order = args.order
     if args.output and args.output.endswith('.o'):
-      mem.save_valiant(args.output, order, args.is_sprite, args.is_locked_tiles)
+      mem.save_valiant(args.output, order, traversal,
+                       args.is_sprite, args.is_locked_tiles)
     else:
       out_tmpl = args.output or '%s.dat'
       if not '%s' in out_tmpl:

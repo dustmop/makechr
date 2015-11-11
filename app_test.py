@@ -36,17 +36,19 @@ class AppTests(unittest.TestCase):
   def setUp(self):
     self.args = MockArgs()
     self.golden_file_prefix = 'full-image'
+    self.traversal = 'horizontal'
 
   def process_image(self, img, palette_text=None):
     self.processor = image_processor.ImageProcessor()
     self.processor.process_image(img, palette_text, self.args.bg_color,
-                                 self.args.is_sprite, self.args.is_locked_tiles)
+                                 self.traversal, self.args.is_sprite,
+                                 self.args.is_locked_tiles)
     self.ppu_memory = self.processor.ppu_memory()
     self.err = self.processor.err()
 
   def create_output(self):
     a = app.Application()
-    a.create_output(self.ppu_memory, self.args)
+    a.create_output(self.ppu_memory, self.args, self.traversal)
 
   def test_views(self):
     img = Image.open('testdata/full-image.png')
@@ -125,6 +127,16 @@ class AppTests(unittest.TestCase):
     self.create_output()
     self.assert_output_result('chr', golden_suffix='-order1')
     self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
+  def test_output_traverse_block(self):
+    img = Image.open('testdata/full-image.png')
+    self.traversal='block'
+    self.process_image(img)
+    self.create_output()
+    self.assert_output_result('chr', golden_suffix='-traverse-block')
+    self.assert_output_result('nametable', golden_suffix='-traverse-block')
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
@@ -224,6 +236,14 @@ class AppTests(unittest.TestCase):
     self.args.output = self.args.tmpfile('full-image.o')
     self.create_output()
     self.assert_file_eq(self.args.output, self.golden('valiant-order1', 'o'))
+
+  def test_output_valiant_traverse_block(self):
+    img = Image.open('testdata/full-image.png')
+    self.traversal='block'
+    self.process_image(img)
+    self.args.output = self.args.tmpfile('full-image.o')
+    self.create_output()
+    self.assert_file_eq(self.args.output, self.golden('traverse-block', 'o'))
 
   def test_output_valiant_background_color(self):
     img = Image.open('testdata/full-image.png')

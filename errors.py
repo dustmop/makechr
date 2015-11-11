@@ -112,6 +112,14 @@ class FileFormatError(Exception):
       return 'FileFormatError'
 
 
+class UnknownStrategy(Exception):
+  def __init__(self, text):
+    self.text = text
+
+  def __str__(self):
+    return 'UnknownStrategy: "%s"' % self.text
+
+
 class ErrorCollector(object):
   def __init__(self):
     self.e = []

@@ -31,7 +31,8 @@ class PpuMemory(object):
   def get_writer(self):
     return self._writer
 
-  def save_template(self, tmpl, chr_order, is_sprite, is_locked_tiles):
+  def save_template(self, tmpl, chr_order, is_sprite,
+                    is_locked_tiles):
     """Save binary files representing the ppu memory.
 
     tmpl: String representing a filename template to save files to.
@@ -43,7 +44,7 @@ class PpuMemory(object):
     self._writer = binary_file_writer.BinaryFileWriter(tmpl)
     self._save_components(components, chr_order)
 
-  def save_valiant(self, output_filename, chr_order, is_sprite,
+  def save_valiant(self, output_filename, chr_order, traversal, is_sprite,
                    is_locked_tiles):
     """Save the ppu memory as a protocal buffer based object file.
 
@@ -51,6 +52,7 @@ class PpuMemory(object):
 
     output_filename: String representing a filename for the object file.
     chr_order: Order of the chr data in memory.
+    traversal: Traversal order, either "horizontal" or "block".
     is_sprite: Whether the image is of sprites.
     is_locked_tiles: Whether tiles are locked in the nametable.
     """
@@ -64,7 +66,7 @@ class PpuMemory(object):
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
     self._writer.write_chr_info(self.chr_data)
-    self._writer.write_extra_settings(chr_order, is_locked_tiles)
+    self._writer.write_extra_settings(chr_order, traversal, is_locked_tiles)
     self._writer.save(output_filename)
 
   def _save_components(self, components, chr_order):

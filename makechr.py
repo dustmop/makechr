@@ -31,6 +31,8 @@ def run():
   parser.add_argument('-l', dest='is_locked_tiles', action='store_true',
                       help=('lock tiles into their given positions, if image '
                             'is 128px by 128px will only process 8x8 blocks'))
+  parser.add_argument('-t', dest='traversal_strategy',
+                      help='traverse nametable according to this strategy')
   parser.add_argument('-r', dest='order', metavar='chr order', type=int,
                       help='order that chr appears within all chr data')
   parser.add_argument('-b', dest='bg_color', metavar='background color',
