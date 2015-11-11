@@ -190,7 +190,7 @@ class AppTests(unittest.TestCase):
     self.process_image(img)
     self.args.output = self.args.tmpfile('full-image.o')
     self.create_output()
-    self.assert_file_eq(self.args.output, self.golden('valiant', 'o'))
+    self.assert_file_eq(self.args.output, self.golden(None, 'o'))
 
   def test_error(self):
     img = Image.open('testdata/full-image-with-error.png')
@@ -235,7 +235,7 @@ class AppTests(unittest.TestCase):
     self.args.order = 1
     self.args.output = self.args.tmpfile('full-image.o')
     self.create_output()
-    self.assert_file_eq(self.args.output, self.golden('valiant-order1', 'o'))
+    self.assert_file_eq(self.args.output, self.golden('order1', 'o'))
 
   def test_output_valiant_traverse_block(self):
     img = Image.open('testdata/full-image.png')
@@ -251,7 +251,7 @@ class AppTests(unittest.TestCase):
     self.process_image(img)
     self.args.output = self.args.tmpfile('full-image.o')
     self.create_output()
-    self.assert_file_eq(self.args.output, self.golden('valiant-bg-color', 'o'))
+    self.assert_file_eq(self.args.output, self.golden('bg-color', 'o'))
 
   def test_output_valiant_sprite(self):
     img = Image.open('testdata/sprite-reticule.png')
@@ -260,8 +260,8 @@ class AppTests(unittest.TestCase):
     self.process_image(img)
     self.args.output = self.args.tmpfile('sprite-reticule.o')
     self.create_output()
-    self.golden_file_prefix = 'sprite'
-    self.assert_file_eq(self.args.output, self.golden('reticule', 'o'))
+    self.golden_file_prefix = 'sprite-reticule'
+    self.assert_file_eq(self.args.output, self.golden(None, 'o'))
 
   def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name
@@ -273,7 +273,10 @@ class AppTests(unittest.TestCase):
     self.assertFalse(os.path.exists(missing_file))
 
   def golden(self, name, ext):
-    return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)
+    if name:
+      return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)
+    else:
+      return 'testdata/%s.%s' % (self.golden_file_prefix, ext)
 
   def assert_file_eq(self, actual_file, expect_file):
     self.assertTrue(filecmp.cmp(actual_file, expect_file, shallow=False),
