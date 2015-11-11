@@ -24,7 +24,8 @@ class Application(object):
       return
     self.create_views(processor.ppu_memory(), processor, args, img)
     self.create_output(processor.ppu_memory(), args)
-    self.show_stats(processor.ppu_memory(), processor, args)
+    if args.show_stats:
+      self.show_stats(processor.ppu_memory(), processor, args)
 
   def read_memory(self, filename, args):
     importer = memory_importer.MemoryImporter()

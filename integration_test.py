@@ -12,12 +12,13 @@ class IntegrationTests(unittest.TestCase):
     self.tmpdir = tempfile.mkdtemp()
     self.output_name = os.path.join(self.tmpdir, 'full-image.o')
     self.golden_file_prefix = 'full-image'
+    self.out = self.err = None
 
   def makechr(self, args):
     cmd = 'python makechr.py ' + ' '.join(args)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
-    p.communicate()[0]
+    (self.out, self.err) = p.communicate()
 
   def test_basic(self):
     args = ['-X', 'testdata/full-image.png', '-o', self.output_name]
@@ -38,6 +39,16 @@ class IntegrationTests(unittest.TestCase):
     args = ['-X', 'testdata/full-image.png', '-o', self.output_name, '-b', '16']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden('valiant-bg-color', 'o'))
+
+  def test_show_stats(self):
+    args = ['-X', 'testdata/full-image.png', '-o', self.output_name, '-z']
+    self.makechr(args)
+    self.assert_file_eq(self.output_name, self.golden('valiant', 'o'))
+    expect = """Number of dot-profiles: 6
+Number of tiles: 6
+Palette: P/30-38-16-01/30-19/
+"""
+    self.assertEqual(self.out, expect)
 
   def golden(self, name, ext):
     return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)

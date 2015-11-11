@@ -35,6 +35,8 @@ def run():
                       help='order that chr appears within all chr data')
   parser.add_argument('-b', dest='bg_color', metavar='background color',
                       type=hex_int, help='background color for the palette')
+  parser.add_argument('-z', dest='show_stats', action='store_true',
+                      help='show statistics')
   parser.add_argument('--palette-view', dest='palette_view',
                       metavar='image filename',
                       help='filename for palette view')
