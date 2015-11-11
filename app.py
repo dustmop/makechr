@@ -9,7 +9,7 @@ import view_renderer
 class Application(object):
   def run(self, img, args):
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, args.palette, args.bg_color,
+    processor.process_image(img, args.palette, args.bg_color, args.is_sprite,
                             args.is_locked_tiles)
     if processor.err().has():
       es = processor.err().get()
@@ -53,13 +53,17 @@ class Application(object):
       renderer.create_grid_view(args.grid_view, img)
 
   def create_output(self, mem, args):
+    if args.order is None and args.is_sprite:
+      order = 1
+    else:
+      order = args.order
     if args.output and args.output.endswith('.o'):
-      mem.save_valiant(args.output, args.order, args.is_locked_tiles)
+      mem.save_valiant(args.output, order, args.is_sprite, args.is_locked_tiles)
     else:
       out_tmpl = args.output or '%s.dat'
       if not '%s' in out_tmpl:
         raise errors.CommandLineArgError('output needs "%s" in its template')
-      mem.save_template(out_tmpl, args.order, args.is_locked_tiles)
+      mem.save_template(out_tmpl, order, args.is_sprite, args.is_locked_tiles)
     if args.compile:
       builder = rom_builder.RomBuilder()
       builder.build(mem.get_writer(), args.compile)
@@ -67,4 +71,5 @@ class Application(object):
   def show_stats(self, mem, processor, args):
     print('Number of dot-profiles: {0}'.format(processor.dot_manifest().size()))
     print('Number of tiles: {0}'.format(len(mem.chr_data)))
-    print('Palette: {0}'.format(mem.palette_nt))
+    pal = mem.palette_spr if args.is_sprite else mem.palette_nt
+    print('Palette: {0}'.format(pal))

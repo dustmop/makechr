@@ -26,34 +26,40 @@ class PpuMemory(object):
     self.chr_data = []
     self._writer = None
     self._bg_color = None
+    self.empty_tile = None
 
   def get_writer(self):
     return self._writer
 
-  def save_template(self, tmpl, chr_order, is_locked_tiles):
+  def save_template(self, tmpl, chr_order, is_sprite, is_locked_tiles):
     """Save binary files representing the ppu memory.
 
     tmpl: String representing a filename template to save files to.
     chr_order: Order of the chr data in memory.
+    is_sprite: Whether the image is of sprites.
     is_locked_tiles: Whether tiles are locked in the nametable.
     """
+    components = self._get_enabled_components(is_sprite, is_locked_tiles)
     self._writer = binary_file_writer.BinaryFileWriter(tmpl)
-    self._save_components(chr_order, is_locked_tiles)
+    self._save_components(components, chr_order)
 
-  def save_valiant(self, output_filename, chr_order, is_locked_tiles):
+  def save_valiant(self, output_filename, chr_order, is_sprite,
+                   is_locked_tiles):
     """Save the ppu memory as a protocal buffer based object file.
 
     The format of an object file is specific by valiant.proto.
 
     output_filename: String representing a filename for the object file.
     chr_order: Order of the chr data in memory.
+    is_sprite: Whether the image is of sprites.
     is_locked_tiles: Whether tiles are locked in the nametable.
     """
     global object_file_writer
     if object_file_writer is None:
       import object_file_writer
+    components = self._get_enabled_components(is_sprite, is_locked_tiles)
     self._writer = object_file_writer.ObjectFileWriter()
-    self._save_components(chr_order, is_locked_tiles)
+    self._save_components(components, chr_order)
     module_name = os.path.splitext(os.path.basename(output_filename))[0]
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
@@ -61,18 +67,25 @@ class PpuMemory(object):
     self._writer.write_extra_settings(chr_order, is_locked_tiles)
     self._writer.save(output_filename)
 
-  def _save_components(self, chr_order, skip_nametable):
-    if not skip_nametable:
+  def _save_components(self, components, chr_order):
+    if 'nametable' in components:
       fout = self._writer.get_writable('nametable')
       self._save_nametable(fout, self.gfx_0.nametable)
-    fout = self._writer.get_writable('chr')
-    self._writer.pad(size=0x1000, order=chr_order, align=0x10, extract=0x2000)
-    self._save_chr(fout, self.chr_data)
-    fout = self._writer.get_writable('palette')
-    self._save_palette(fout, self.palette_nt, self.palette_spr)
-    self._writer.set_null_value(self._bg_color)
-    fout = self._writer.get_writable('attribute')
-    self._save_attribute(fout, self.gfx_0.block_palette)
+    if 'chr' in components:
+      fout = self._writer.get_writable('chr')
+      self._writer.pad(size=0x1000, order=chr_order, align=0x10, extract=0x2000)
+      self._save_chr(fout, self.chr_data)
+    if 'palette' in components:
+      fout = self._writer.get_writable('palette')
+      self._save_palette(fout, self.palette_nt, self.palette_spr)
+      self._writer.set_null_value(self._bg_color)
+    if 'attribute' in components:
+      fout = self._writer.get_writable('attribute')
+      self._save_attribute(fout, self.gfx_0.block_palette)
+    if 'spritelist' in components:
+      fout = self._writer.get_writable('spritelist')
+      self._save_spritelist(fout, self.gfx_0.nametable,
+                            self.gfx_0.block_palette)
     self._writer.close()
 
   def _save_nametable(self, fout, nametable):
@@ -82,7 +95,6 @@ class PpuMemory(object):
         fout.write(chr(nt))
 
   def _save_chr(self, fout, chr_data):
-    # TODO: Respect is_sprite.
     for d in chr_data:
       d.write(fout)
 
@@ -103,6 +115,23 @@ class PpuMemory(object):
         attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
         fout.write(chr(attr))
 
+  def _save_spritelist(self, fout, sprite_positions, sprite_palettes):
+    n = 0
+    for y in xrange(NUM_BLOCKS_Y * 2):
+      for x in xrange(NUM_BLOCKS_X * 2):
+        tile = sprite_positions[y][x]
+        if tile != self.empty_tile:
+          y_pos = y * 8 - 1 if y > 0 else 0
+          x_pos = x * 8
+          attr = sprite_palettes[y / 2][x / 2]
+          fout.write(chr(y_pos))
+          fout.write(chr(tile))
+          fout.write(chr(attr))
+          fout.write(chr(x_pos))
+          n += 1
+    if n < 64:
+      fout.write(chr(0xff))
+
   def _get_bg_color(self, palette_1, palette_2):
     bg_color = None
     if palette_1:
@@ -112,6 +141,18 @@ class PpuMemory(object):
         raise errors.PaletteInconsistentError(bg_color, palette_2.bg_color)
       bg_color = palette_2.bg_color
     return bg_color
+
+  def _get_enabled_components(self, is_sprite, is_locked_tiles):
+    components = set()
+    if not is_sprite and not is_locked_tiles:
+      components.add('nametable')
+    components.add('chr')
+    components.add('palette')
+    if not is_sprite:
+      components.add('attribute')
+    else:
+      components.add('spritelist')
+    return components
 
   def _write_single_palette(self, fout, palette, bg_color):
     if not palette:

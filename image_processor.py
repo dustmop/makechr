@@ -216,11 +216,14 @@ class ImageProcessor(object):
     self._nt_count[nt_num] += 1
     return nt_num
 
-  def process_image(self, img, palette_text, bg_color, is_locked_tiles):
+  def process_image(self, img, palette_text, bg_color, is_sprite,
+                    is_locked_tiles):
     """Process an image, creating the ppu_memory necessary to display it.
 
     img: Pixel art image.
     palette_text: Optional string representing a palette to be parsed.
+    bg_color: Background color of the image.
+    is_sprite: Whether the image is of sprites.
     is_locked_tiles: Whether tiles are locked into place. If so, do not
         merge duplicates, and only handle first 256 tiles.
     """
@@ -242,30 +245,31 @@ class ImageProcessor(object):
           self.collect_error(e, block_y, block_x, 0, 0, is_block=True)
           continue
     # If palette argument was passed, use that palette.
+    pal = None
     if palette_text:
       try:
         parser = palette.PaletteParser()
-        self._ppu_memory.palette_nt = parser.parse(palette_text)
+        pal = parser.parse(palette_text)
       except errors.PaletteParseError as e:
         self._err.add(e)
         return
-      if not bg_color is None:
-        pal_bg = self._ppu_memory.palette_nt.bg_color
-        if pal_bg != bg_color:
-          self._err.add(errors.PaletteBackgroundColorConflictError(
-            pal_bg, bg_color))
-          return
+      if not bg_color is None and pal.bg_color != bg_color:
+        self._err.add(errors.PaletteBackgroundColorConflictError(
+          pal.bg_color, bg_color))
+        return
     else:
       # Make the palette from the color needs.
       guesser = guess_best_palette.GuessBestPalette()
       if not bg_color is None:
         guesser.set_bg_color(bg_color)
       try:
-        self._ppu_memory.palette_nt = guesser.make_palette(
-          self._block_color_manifest.elems())
+        pal = guesser.make_palette(self._block_color_manifest.elems())
       except errors.TooManyPalettesError as e:
         self._err.add(e)
         return
+    # Find empty tile.
+    empty_did = self._dot_manifest.find(chr(0) * 64)
+    empty_cid = self._color_manifest.find(chr(pal.bg_color) + '\xff\xff\xff')
     # For each block, get the attribute aka the palette.
     for block_y in xrange(num_blocks_y):
       for block_x in xrange(num_blocks_x):
@@ -273,15 +277,14 @@ class ImageProcessor(object):
         x = block_x * 2
         (cid, did, bcid) = self._artifacts[y][x]
         block_color_needs = self._block_color_manifest.get(bcid)
-        (pid, palette_option) = self._ppu_memory.palette_nt.select(
-          block_color_needs)
+        (pid, palette_option) = pal.select(block_color_needs)
         self._ppu_memory.gfx_0.block_palette[block_y][block_x] = pid
     # For each tile in the artifact table, create the chr and nametable.
     for y in xrange(num_blocks_y * 2):
       for x in xrange(num_blocks_x * 2):
         (cid, did, bcid) = self._artifacts[y][x]
         pid = self._ppu_memory.gfx_0.block_palette[y / 2][x / 2]
-        palette_option = self._ppu_memory.palette_nt.get(pid)
+        palette_option = pal.get(pid)
         color_needs = self._color_manifest.get(cid)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
         # If there was an error in the tile, the dot_xlat will be empty. So
@@ -289,3 +292,10 @@ class ImageProcessor(object):
         if dot_xlat:
           nt_num = self.get_nametable_num(dot_xlat, did, is_locked_tiles)
           self._ppu_memory.gfx_0.nametable[y][x] = nt_num
+        if empty_cid == cid and empty_did == did:
+          self._ppu_memory.empty_tile = nt_num
+    # Store palette.
+    if not is_sprite:
+      self._ppu_memory.palette_nt = pal
+    else:
+      self._ppu_memory.palette_spr = pal

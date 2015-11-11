@@ -21,3 +21,6 @@ class IdManifest(object):
 
   def size(self):
     return len(self._dict)
+
+  def find(self, obj):
+    return self._dict.get(obj)

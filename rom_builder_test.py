@@ -18,6 +18,7 @@ class MockArgs(object):
     self.nametable_view = None
     self.chr_view = None
     self.grid_view = None
+    self.is_sprite = False
     self.is_locked_tiles = False
     self.order = None
     self.compile = self.tmpfile('rom.nes')
@@ -31,7 +32,7 @@ class RomBuilderTests(unittest.TestCase):
   def test_output(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False)
+    processor.process_image(img, None, None, False, False)
     args = MockArgs()
     a = app.Application()
     a.create_output(processor.ppu_memory(), args)
@@ -42,7 +43,7 @@ class RomBuilderTests(unittest.TestCase):
   def test_output_using_valiant(self):
     img = Image.open('testdata/full-image.png')
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False)
+    processor.process_image(img, None, None, False, False)
     args = MockArgs()
     args.output = args.tmpfile('full-image.o')
     a = app.Application()

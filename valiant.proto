@@ -25,6 +25,7 @@ enum DataRole {
   NAMETABLE = 2;
   ATTRIBUTE = 3;
   PALETTE = 4;
+  SPRITELIST = 5;
 }
 
 ///////////////////////////////////////////////////

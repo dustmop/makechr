@@ -12,6 +12,7 @@ class MockArgs(object):
     self.dir = tempfile.mkdtemp()
     self.output = self.tmpfile('full-image-%s.dat')
     self.order = None
+    self.is_sprite = None
     self.is_locked_tiles = None
     self.compile = None
 

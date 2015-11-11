@@ -26,6 +26,8 @@ def run():
                       help='template for naming output files')
   parser.add_argument('-m', dest='memimport', metavar='memory import filename',
                       help='filename for memory import input')
+  parser.add_argument('-s', dest='is_sprite', action='store_true',
+                      help='sprite mode')
   parser.add_argument('-l', dest='is_locked_tiles', action='store_true',
                       help=('lock tiles into their given positions, if image '
                             'is 128px by 128px will only process 8x8 blocks'))
