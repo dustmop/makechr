@@ -18,6 +18,7 @@ class MockArgs(object):
     self.nametable_view = self.tmppng('nt')
     self.chr_view = self.tmppng('chr')
     self.grid_view = self.tmppng('grid')
+    self.bg_color = None
     self.is_sprite = False
     self.is_locked_tiles = False
     self.order = None
@@ -36,12 +37,22 @@ class AppTests(unittest.TestCase):
     self.args = MockArgs()
     self.golden_file_prefix = 'full-image'
 
+  def process_image(self, img, palette_text=None):
+    self.processor = image_processor.ImageProcessor()
+    self.processor.process_image(img, palette_text, self.args.bg_color,
+                                 self.args.is_sprite, self.args.is_locked_tiles)
+    self.ppu_memory = self.processor.ppu_memory()
+    self.err = self.processor.err()
+
+  def create_output(self):
+    a = app.Application()
+    a.create_output(self.ppu_memory, self.args)
+
   def test_views(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
+    self.process_image(img)
     a = app.Application()
-    a.create_views(processor.ppu_memory(), processor, self.args, img)
+    a.create_views(self.ppu_memory, self.processor, self.args, img)
     self.assert_file_eq(self.args.palette_view, self.golden('pal', 'png'))
     self.assert_file_eq(self.args.colorization_view,
                         self.golden('color', 'png'))
@@ -52,10 +63,8 @@ class AppTests(unittest.TestCase):
 
   def test_output(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.process_image(img)
+    self.create_output()
     self.assert_output_result('chr')
     self.assert_output_result('nametable')
     self.assert_output_result('palette')
@@ -63,10 +72,8 @@ class AppTests(unittest.TestCase):
 
   def test_output_for_bottom_attributes(self):
     img = Image.open('testdata/full-image-bottom-attr.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.process_image(img)
+    self.create_output()
     self.assert_output_result('chr')
     self.assert_output_result('nametable', golden_suffix='-bottom-attr')
     self.assert_output_result('palette')
@@ -74,10 +81,8 @@ class AppTests(unittest.TestCase):
 
   def test_output_implied_bg_color(self):
     img = Image.open('testdata/implied-bg-color.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.process_image(img)
+    self.create_output()
     self.golden_file_prefix = 'implied-bg-color'
     self.assert_output_result('chr')
     self.assert_output_result('nametable')
@@ -86,11 +91,9 @@ class AppTests(unittest.TestCase):
 
   def test_output_for_locked_tiles(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
     self.args.is_locked_tiles = True
-    processor.process_image(img, None, None, False, self.args.is_locked_tiles)
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.process_image(img)
+    self.create_output()
     self.assert_output_result('chr', golden_suffix='-locked-tiles')
     self.assert_not_exist('nametable')
     self.assert_output_result('palette')
@@ -98,11 +101,9 @@ class AppTests(unittest.TestCase):
 
   def test_output_for_locked_tiles_small_square(self):
     img = Image.open('testdata/full-image-small-square.png')
-    processor = image_processor.ImageProcessor()
     self.args.is_locked_tiles = True
-    processor.process_image(img, None, None, False, self.args.is_locked_tiles)
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.process_image(img)
+    self.create_output()
     self.assert_output_result('chr', golden_suffix='-small-square')
     self.assert_not_exist('nametable')
     self.assert_output_result('palette')
@@ -119,11 +120,9 @@ class AppTests(unittest.TestCase):
 
   def test_output_order1(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
     self.args.order = 1
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.process_image(img)
+    self.create_output()
     self.assert_output_result('chr', golden_suffix='-order1')
     self.assert_output_result('nametable')
     self.assert_output_result('palette')
@@ -132,10 +131,8 @@ class AppTests(unittest.TestCase):
   def test_output_palette(self):
     img = Image.open('testdata/full-image.png')
     palette_text = 'P/30-38-16-01/30-19-16-16/'
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, palette_text, None, False, False)
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.process_image(img, palette_text=palette_text)
+    self.create_output()
     self.assert_output_result('chr')
     self.assert_output_result('nametable')
     self.assert_output_result('palette', golden_suffix='-explicit-text')
@@ -143,10 +140,9 @@ class AppTests(unittest.TestCase):
 
   def test_output_background_color(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, 0x16, False, False)
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.args.bg_color = 0x16
+    self.process_image(img)
+    self.create_output()
     self.assert_output_result('chr', golden_suffix='-bg-color')
     self.assert_output_result('nametable', golden_suffix='-bg-color')
     self.assert_output_result('palette', golden_suffix='-bg-color')
@@ -155,10 +151,10 @@ class AppTests(unittest.TestCase):
   def test_output_background_color_conflict(self):
     img = Image.open('testdata/full-image.png')
     palette_text = 'P/30-38-16-01/30-19-01-01/'
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, palette_text, 1, False, False)
-    self.assertTrue(processor.err().has())
-    es = processor.err().get()
+    self.args.bg_color = 1
+    self.process_image(img, palette_text=palette_text)
+    self.assertTrue(self.err.has())
+    es = self.err.get()
     for e in es:
       msg = '{0} {1}'.format(type(e).__name__, e)
       self.assertEqual(msg, ('PaletteBackgroundColorConflictError between '
@@ -166,12 +162,10 @@ class AppTests(unittest.TestCase):
 
   def test_output_sprite(self):
     img = Image.open('testdata/sprite-reticule.png')
-    processor = image_processor.ImageProcessor()
     self.args.bg_color = 0x30
     self.args.is_sprite = True
-    processor.process_image(img, None, 0x30, self.args.is_sprite, False)
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.process_image(img)
+    self.create_output()
     self.golden_file_prefix = 'sprite-reticule'
     self.assert_output_result('chr')
     self.assert_not_exist('nametable')
@@ -181,22 +175,18 @@ class AppTests(unittest.TestCase):
 
   def test_output_valiant(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
+    self.process_image(img)
     self.args.output = self.args.tmpfile('full-image.o')
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.create_output()
     self.assert_file_eq(self.args.output, self.golden('valiant', 'o'))
 
   def test_error(self):
     img = Image.open('testdata/full-image-with-error.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
+    self.process_image(img)
     self.args.error_outfile = self.args.tmppng('error')
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
-    self.assertTrue(processor.err().has())
-    errs = processor.err().get()
+    self.create_output()
+    self.assertTrue(self.err.has())
+    errs = self.err.get()
     expect_errors = ['PaletteOverflowError @ block (1y,3x)',
                      'PaletteOverflowError @ tile (2y,10x)',
                      ('ColorNotAllowedError @ tile (4y,1x) and ' +
@@ -211,55 +201,45 @@ class AppTests(unittest.TestCase):
   def test_output_valiant_for_offset_image(self):
     img = Image.open('testdata/offset-image.png')
     palette_text = 'P/30-30-30-30/30-01-38-16/'
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, palette_text, None, False, False)
+    self.process_image(img, palette_text=palette_text)
     self.args.output = self.args.tmpfile('offset-image.o')
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.create_output()
     self.golden_file_prefix = 'offset-image'
     self.assert_file_eq(self.args.output, self.golden('normal', 'o'))
 
   def test_output_valiant_for_offset_image_locked(self):
     img = Image.open('testdata/offset-image.png')
     palette_text = 'P/30-30-30-30/30-01-38-16/'
-    processor = image_processor.ImageProcessor()
     self.args.is_locked_tiles = True
-    processor.process_image(img, palette_text, None, False,
-                            self.args.is_locked_tiles)
+    self.process_image(img, palette_text=palette_text)
     self.args.output = self.args.tmpfile('offset-image.o')
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.create_output()
     self.golden_file_prefix = 'offset-image'
     self.assert_file_eq(self.args.output, self.golden('locked', 'o'))
 
   def test_output_valiant_order1(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
+    self.process_image(img)
     self.args.order = 1
     self.args.output = self.args.tmpfile('full-image.o')
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.create_output()
     self.assert_file_eq(self.args.output, self.golden('valiant-order1', 'o'))
 
   def test_output_valiant_background_color(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, 0x16, False, False)
+    self.args.bg_color = 0x16
+    self.process_image(img)
     self.args.output = self.args.tmpfile('full-image.o')
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.create_output()
     self.assert_file_eq(self.args.output, self.golden('valiant-bg-color', 'o'))
 
   def test_output_valiant_sprite(self):
     img = Image.open('testdata/sprite-reticule.png')
-    processor = image_processor.ImageProcessor()
     self.args.bg_color = 0x30
     self.args.is_sprite = True
-    processor.process_image(img, None, 0x30, self.args.is_sprite, False)
+    self.process_image(img)
     self.args.output = self.args.tmpfile('sprite-reticule.o')
-    a = app.Application()
-    a.create_output(processor.ppu_memory(), self.args)
+    self.create_output()
     self.golden_file_prefix = 'sprite'
     self.assert_file_eq(self.args.output, self.golden('reticule', 'o'))
 

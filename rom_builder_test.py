@@ -18,6 +18,7 @@ class MockArgs(object):
     self.nametable_view = None
     self.chr_view = None
     self.grid_view = None
+    self.bg_color = None
     self.is_sprite = False
     self.is_locked_tiles = False
     self.order = None
@@ -29,26 +30,31 @@ class MockArgs(object):
 
 
 class RomBuilderTests(unittest.TestCase):
+  def setUp(self):
+    self.args = MockArgs()
+
+  def process_image(self, img, palette_text=None):
+    self.processor = image_processor.ImageProcessor()
+    self.processor.process_image(img, palette_text, self.args.bg_color,
+                                 self.args.is_sprite, self.args.is_locked_tiles)
+    self.ppu_memory = self.processor.ppu_memory()
+
   def test_output(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
-    args = MockArgs()
+    self.process_image(img)
     a = app.Application()
-    a.create_output(processor.ppu_memory(), args)
-    actual_file = args.compile
+    a.create_output(self.ppu_memory, self.args)
+    actual_file = self.args.compile
     expect_file = 'testdata/full-image-rom.nes'
     self.assert_file_eq(actual_file, expect_file)
 
   def test_output_using_valiant(self):
     img = Image.open('testdata/full-image.png')
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, None, None, False, False)
-    args = MockArgs()
-    args.output = args.tmpfile('full-image.o')
+    self.process_image(img)
+    self.args.output = self.args.tmpfile('full-image.o')
     a = app.Application()
-    a.create_output(processor.ppu_memory(), args)
-    actual_file = args.compile
+    a.create_output(self.ppu_memory, self.args)
+    actual_file = self.args.compile
     expect_file = 'testdata/full-image-rom.nes'
     self.assert_file_eq(actual_file, expect_file)
 
