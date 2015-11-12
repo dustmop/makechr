@@ -21,27 +21,27 @@ class IntegrationTests(unittest.TestCase):
     (self.out, self.err) = p.communicate()
 
   def test_basic(self):
-    args = ['-X', 'testdata/full-image.png', '-o', self.output_name]
+    args = ['testdata/full-image.png', '-o', self.output_name]
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden(None, 'o'))
 
   def test_order(self):
     # Order 0.
-    args = ['-X', 'testdata/full-image.png', '-o', self.output_name, '-r', '0']
+    args = ['testdata/full-image.png', '-o', self.output_name, '-r', '0']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden(None, 'o'))
     # Order 1.
-    args = ['-X', 'testdata/full-image.png', '-o', self.output_name, '-r', '1']
+    args = ['testdata/full-image.png', '-o', self.output_name, '-r', '1']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden('order1', 'o'))
 
   def test_bg_color(self):
-    args = ['-X', 'testdata/full-image.png', '-o', self.output_name, '-b', '16']
+    args = ['testdata/full-image.png', '-o', self.output_name, '-b', '16']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden('bg-color', 'o'))
 
   def test_show_stats(self):
-    args = ['-X', 'testdata/full-image.png', '-o', self.output_name, '-z']
+    args = ['testdata/full-image.png', '-o', self.output_name, '-z']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden(None, 'o'))
     expect = """Number of dot-profiles: 6

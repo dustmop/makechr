@@ -1,8 +1,8 @@
 # makechr
 
-makechr is a tool for generating NES graphics. Its primary operation is to take pixel art images and split it into four components: chr, nametable, palette, and attributes.
+makechr is a tool for generating NES graphics. Its primary operation is to take pixel art images and split it into components: chr, nametable, palette, attributes, and spritelist.
 
-The goals of makechr are to be portable (written in python), fast (can process a busy image with 256 tiles and 4 full palettes in about 400ms), powerful, easy to understand, and usable in command-line based builds.
+The goals of makechr are to be portable (written in python), fast (can process a busy image with 256 tiles and 4 full palettes in <300ms), powerful, easy to understand, and usable in command-line based builds.
 
 Input images should be 256px wide and 240px high, representing a full nametable, and must follow NES attribute and palette restrictions. An RGB palette is hard-coded in rgb.py, other palettes are not yet supported.
 
@@ -10,9 +10,9 @@ Alternatively, if an input image is exactly 128px by 128px, representing a page 
 
 # Example usage
 
-    python makechr.py -X image.png
+    python makechr.py image.png
 
-This will output four files: chr.dat, nametable.dat, palette.dat, attribute.dat. The -X command-line argument enables experimental features, and is required because all of makechr is experimental at the moment. The future plan is to finalize the command-line API, then remove the requirement for this argument.
+This will output four files: chr.dat, nametable.dat, palette.dat, attribute.dat.
 
 # Dependencies
 
@@ -23,9 +23,11 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
 
 # Command-line options
 
-    -X               Enable experimental features. Required.
+    -o [output]      Either an output template or the name of the output object.
+                     A template needs to have "%s" in it. An object needs to
+                     end in ".o". See valiant.proto for the format of objects.
 
-    -c [rom_file]    Create an NES rom file that just displays the image.
+    -c [rom]         Create an NES rom file that just displays the image.
 
     -e [error_file]  Output errors to an image file.
 
@@ -33,12 +35,18 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
                      will attempt to automatically derive a palette. See below
                      for the palette syntax.
 
-    -o [output]      Either an output template or the name of the output object.
-                     A template needs to have "%s" in it. An object needs to
-                     end in ".o".
+    -b [background_color]
+                     Background color for the palette. If the palette is not
+                     provided, the derived palette will used this color. If the
+                     palette is provided, it's background color must match.
+                     Color must be in hexadecimal.
 
-    -m [mem_file]    A ppu memory dump, representing the state of ppu ram. Used
-                     instead of a pixel art image as a graphics source.
+    -s               Sprite mode. Will prevent nametable and attribute
+                     components from being output. Output spritelist component,
+                     which is a list of 4-tuples containing sprite data, in the
+                     order (y, tile, attribute, x). Write the palette as a
+                     sprite palette by using address 0x10 instead of 0x00.
+                     Default the chr order to 0x1000 instead of 0x0000.
 
     -l               Lock tiles. Won't remove duplicates, leaving all tiles in
                      the same position they appear in in the pixel art input.
@@ -46,36 +54,55 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
                      image is only 128px by 128px, then only 8 blocks square
                      will be processed.
 
-    --palette-view      [view_file]  Output the palette to an image file.
+    -t [strategy]    Strategy for traversing tile during CHR and nametable
+                     generation. Can be "horizontal" or "block". Horizontal
+                     will traverse tiles left to right, top to bottom. Block
+                     will traverse blocks at a top, top-left to top-right to
+                     bottom-left to bottom-right. (default is horizontal)
 
-    --colorization-view [view_file]  Output an image file with the palette for
-                                     each blocks according to attributes.
+    -r [chr_order]   Order that the CHR data appears in memory relative to
+                     other CHR data. Can be 0 or 1. If 0, then the CHR data
+                     appears at 0x0000. If 1, then the CHR data appears at
+                     0x1000. (default is 0, -s can override this)
 
-    --reuse-view        [view_file]  Output an image file showing how many times
-                                     each tile was reused according to the
-                                     following key:
-                                     1: black (unique tile)
-                                     2: dark green
-                                     3: light green
-                                     4: cyan
-                                     5: blue
-                                     6: dark purple
-                                     7: light purple
-                                     8: red
-                                     9: orange
-                                     10: yellow
-                                     11+: white (common tile)
+    -z               Whether to show statistics at the end of processing.
+                     Displays number of dot-profiles, number of tiles, and
+                     the palette.
 
-    --nametable-view    [view_file]  Output an image file showing the nametable
-                                     value for each position, in hexidecimal.
-                                     Positions that have value 0 do not output
-                                     anything.
+    -m [mem_file]    A ppu memory dump, representing the state of ppu ram. Used
+                     instead of a pixel art image as a graphics source. Can
+                     be obtained by dumping the memory of an NES emulator.
 
-    --chr-view          [view_file]  Output an image file showing the entire
-                                     page of chr.
+    --palette-view      [image]  Output the palette to an image file.
 
-    --grid-view         [view_file]  Output an image file showing the input
-                                     pixel art with the grid applied.
+    --colorization-view [image]  Output an image file with the palette for
+                                 each blocks according to attributes.
+
+    --reuse-view        [image]  Output an image file showing how many times
+                                 each tile was reused according to the
+                                 following key:
+                                 1: black (unique tile)
+                                 2: dark green
+                                 3: light green
+                                 4: cyan
+                                 5: blue
+                                 6: dark purple
+                                 7: light purple
+                                 8: red
+                                 9: orange
+                                 10: yellow
+                                 11+: white (common tile)
+
+    --nametable-view    [image]  Output an image file showing the nametable
+                                 value for each position, in hexidecimal.
+                                 Positions that have value 0 do not output
+                                 anything.
+
+    --chr-view          [image]  Output an image file showing the entire
+                                 page of chr.
+
+    --grid-view         [image]  Output an image file showing the input
+                                 pixel art with the grid applied.
 
 # Palette syntax
 

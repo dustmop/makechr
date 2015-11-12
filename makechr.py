@@ -9,65 +9,118 @@ def hex_int(txt):
 
 
 def run():
-  parser = argparse.ArgumentParser(description='Make chr data files and '
-                                   'other NES graphics files')
+  usage = ''
+  parser = argparse.ArgumentParser(
+    description='Make CHR data files and other NES graphics components.',
+    epilog=('Example: python makechr.py image.png -o build/image.%s.dat '
+            '-p P/30-2c-01/'))
   parser.add_argument('input', type=str, nargs='?',
-                      help='filename for pixel art image')
-  parser.add_argument('-X', dest='experimental', action='store_true',
-                      required=True,
-                      help='enable experimental features (required)')
-  parser.add_argument('-c', dest='compile', metavar='rom filename',
-                      help='filename for compiled NES rom')
-  parser.add_argument('-e', dest='error_outfile', metavar='image filename',
-                      help='filename for error image')
-  parser.add_argument('-p', dest='palette', metavar='palette',
-                      help='palette for the pixel art image')
+                      help='Filename for pixel art image. Should by 256x240.')
+
+  # Output.
   parser.add_argument('-o', dest='output', metavar='output',
-                      help='template for naming output files')
-  parser.add_argument('-m', dest='memimport', metavar='memory import filename',
-                      help='filename for memory import input')
+                      help=('Template for naming output files if outputting '
+                            'raw binary, or name of object file. Template must '
+                            'contain "%%s". Object file must end in ".o"'))
+  parser.add_argument('-c', dest='compile', metavar='rom',
+                      help=('Output filename for compiled NES rom. The rom '
+                            'just displays the original image when run in '
+                            'an emulator.'))
+  parser.add_argument('-e', dest='error_outfile', metavar='image',
+                      help=('Output filename for image if there are any '
+                            'errors.'))
+
+  # Graphics.
+  parser.add_argument('-p', dest='palette', metavar='palette',
+                      help=('Palette for the pixel art image. Syntax looks '
+                            'like this: "P/30-16-1c-02/30-2a/". Each value '
+                            'is in hexadecimal.'))
+  parser.add_argument('-b', dest='bg_color', metavar='background_color',
+                      type=hex_int,
+                      help=('Background color for the palette, in '
+                            'hexadecimal. If palette is provided with -p, '
+                            'this must match the palette background color, '
+                            'otherwise it is an error.'))
   parser.add_argument('-s', dest='is_sprite', action='store_true',
-                      help='sprite mode')
+                      help=('Sprite mode, has 3 effects. 1) Nametable and '
+                            'attribute components are not output but '
+                            'spritelist component is. 2) The palette is '
+                            'stored at 0x10-0x1f instead of 0x00-0x0f. 3) The '
+                            'default chr_order is set to 0x1000 instead of '
+                            '0x000; can be overriden with the -r flag.'))
+
+  # Flags.
   parser.add_argument('-l', dest='is_locked_tiles', action='store_true',
-                      help=('lock tiles into their given positions, if image '
-                            'is 128px by 128px will only process 8x8 blocks'))
-  parser.add_argument('-t', dest='traversal_strategy',
-                      help='traverse nametable according to this strategy')
-  parser.add_argument('-r', dest='order', metavar='chr order', type=int,
-                      help='order that chr appears within all chr data')
-  parser.add_argument('-b', dest='bg_color', metavar='background color',
-                      type=hex_int, help='background color for the palette')
+                      help=('Lock tiles in the pixel art so that they appear '
+                            'in CHR at the same position. Useful for tiles '
+                            'whose index have some meaningful semantic value. '
+                            'Duplicates are not removed. Only first 256 tiles '
+                            'in the image are processed. Nametable would '
+                            'simply be monotonically increasing, so it is '
+                            'not output at all. If image is 128x128 then '
+                            'only 8x8 blocks are processed.'))
+  parser.add_argument('-t', dest='traversal_strategy', metavar='strategy',
+                      help=('Traverse image, when generating CHR and '
+                            'nametable, according to this strategy. If '
+                            '"horizontal" then traverse left to right, top to '
+                            'bottom. If "block" then traverse a block at a '
+                            'time, in a zig-zag.'))
+  parser.add_argument('-r', dest='order', metavar='chr_order', type=int,
+                      help=('Order that the CHR data appears in memory, '
+                            'relative to other CHR data. Must be 0 or 1. '
+                            'If 0 then CHR data appears at 0x0000, if 1 then '
+                            'CHR data appears at 0x1000.'))
   parser.add_argument('-z', dest='show_stats', action='store_true',
-                      help='show statistics')
+                      help='Whether to show statistics before exiting.')
+
+  # Input
+  parser.add_argument('-m', dest='memimport', metavar='memory_dump',
+                      help=('Filename for memory dump to import, instead of '
+                            'using pixel art image.'))
+
+  # Views.
   parser.add_argument('--palette-view', dest='palette_view',
-                      metavar='image filename',
-                      help='filename for palette view')
+                      metavar='image',
+                      help=('Output filename for palette view. Will show the '
+                            'palette used for output.'))
   parser.add_argument('--colorization-view', dest='colorization_view',
-                      metavar='image fileanme',
-                      help='filename for colorization view')
+                      metavar='image',
+                      help=('Output filename for colorization view. Will show '
+                            'palette used for each block according to the '
+                            'attributes.'))
   parser.add_argument('--reuse-view', dest='reuse_view',
-                      metavar='image fileanme',
-                      help='filename for reuse view')
+                      metavar='image',
+                      help=('Output filename for reuse view. Will show color '
+                            'for each tile based upon how many times the '
+                            'tile is used. See README.md for the legend.'))
   parser.add_argument('--nametable-view', dest='nametable_view',
-                      metavar='image fileanme',
-                      help='filename for nametable view')
+                      metavar='image',
+                      help=('Output filename for nametable view to output. '
+                            'Will show, for each position in the nametable, '
+                            'the tile number in hexadecimal, or blank if 0.'))
   parser.add_argument('--chr-view', dest='chr_view',
-                      metavar='image fileanme',
-                      help='filename for nametable view')
+                      metavar='image',
+                      help=('Output filename for CHR view to output. Will show '
+                            'the raw CHR, without color, in the order that '
+                            'they appear in memory.'))
   parser.add_argument('--grid-view', dest='grid_view',
-                      metavar='image fileanme',
-                      help='filename for grid view')
+                      metavar='image',
+                      help=('Output filename for grid view to output. Is the '
+                            'input image at x2 resolution with a grid, light '
+                            'green for blocks, dark green for tiles.'))
   args = parser.parse_args()
   application = app.Application()
   if args.memimport:
     application.read_memory(args.memimport, args)
-  else:
+  elif args.input:
     try:
       img = Image.open(args.input)
     except IOError:
       sys.stderr.write('Input file not found: "%s"\n' % args.input)
       sys.exit(1)
     application.run(img, args)
+  else:
+    parser.print_usage()
 
 
 if __name__ == '__main__':
