@@ -71,21 +71,21 @@ class PpuMemory(object):
 
   def _save_components(self, components, chr_order):
     if 'nametable' in components:
-      fout = self._writer.get_writable('nametable')
+      fout = self._writer.get_writable('nametable', False)
       self._save_nametable(fout, self.gfx_0.nametable)
     if 'chr' in components:
-      fout = self._writer.get_writable('chr')
+      fout = self._writer.get_writable('chr', True)
       self._writer.pad(size=0x1000, order=chr_order, align=0x10, extract=0x2000)
       self._save_chr(fout, self.chr_data)
     if 'palette' in components:
-      fout = self._writer.get_writable('palette')
+      fout = self._writer.get_writable('palette', True)
       self._save_palette(fout, self.palette_nt, self.palette_spr)
       self._writer.set_null_value(self._bg_color)
     if 'attribute' in components:
-      fout = self._writer.get_writable('attribute')
+      fout = self._writer.get_writable('attribute', False)
       self._save_attribute(fout, self.gfx_0.block_palette)
     if 'spritelist' in components:
-      fout = self._writer.get_writable('spritelist')
+      fout = self._writer.get_writable('spritelist', False)
       self._save_spritelist(fout, self.gfx_0.nametable,
                             self.gfx_0.block_palette)
     self._writer.close()

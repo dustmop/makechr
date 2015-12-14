@@ -53,7 +53,17 @@ message ChrMetadata {
 
 message DirectBinary {
   optional bytes bin = 1;
+  // Padding and pre_pad are used when bytes at the beginning and end,
+  // respectively, of a binary blob do have have important semantic value.
+  // An intelligent agent may modify the binary blob by overwriting the padded
+  // portion with other bytes, and this should not affect the meaning of the
+  // central data. Padding is not simply compression, and it is not appropriate
+  // to use if the binary blob needs to explicitly retain null values to retain
+  // its meaning. For example, unused chr banks may use padding. However,
+  // nametables that want to have blank portions must not use padding.
   optional int32 padding = 2;
   optional int32 pre_pad = 3;
+  // When padded data is expanded, the null value if it exists should be used
+  // for the expansion.
   optional int32 null_value = 4;
 }

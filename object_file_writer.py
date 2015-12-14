@@ -15,6 +15,7 @@ class DataInfo(object):
     self.size = None
     self.order = None
     self.null_value = None
+    self.is_condensable = False
 
   def empty(self):
     return self.name is None
@@ -37,12 +38,13 @@ class ObjectFileWriter(object):
     self.info = DataInfo()
     self.component_req = {}
 
-  def get_writable(self, name):
+  def get_writable(self, name, is_condensable):
     if not self.info.empty():
       self.add_component(self.buffer.getvalue(), self.info)
     self.buffer = StringIO.StringIO()
     self.info.clear()
     self.info.name = name
+    self.info.is_condensable = is_condensable
     return self.buffer
 
   def close(self):
@@ -120,7 +122,10 @@ class ObjectFileWriter(object):
 
   def add_component(self, bytes, info):
     pad_size = info.size - len(bytes) if (not info.size is None) else None
-    pre_pad, padding, bytes = self._condense(bytes, info.align, pad_size)
+    if info.is_condensable:
+      pre_pad, padding, bytes = self._condense(bytes, info.align, pad_size)
+    else:
+      pre_pad = padding = 0
     role = valiant.DataRole.Value(info.name.upper())
     idx = len(self.obj_data.binaries)
     binary = self.obj_data.binaries.add()

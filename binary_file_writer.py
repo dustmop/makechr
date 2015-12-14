@@ -12,7 +12,7 @@ class BinaryFileWriter(object):
   def _fill_template(self, replace):
     return self._tmpl.replace('%s', replace)
 
-  def get_writable(self, name):
+  def get_writable(self, name, unused_is_condensable):
     if self._fout:
       self.close()
     self._name = name
