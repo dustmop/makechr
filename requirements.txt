@@ -1,0 +1,2 @@
+Pillow == 2.7.0
+protobuf == 2.6.1
