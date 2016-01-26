@@ -271,6 +271,8 @@ class ImageProcessor(object):
           self.collect_error(e, block_y, block_x, 0, 0, is_block=True)
           continue
     pal = self.make_palette(palette_text, bg_color)
+    if not pal:
+      return
     # Find empty tile.
     empty_did = self._dot_manifest.get(chr(0) * 64)
     empty_cid = self._color_manifest.get(chr(pal.bg_color) + '\xff\xff\xff')

@@ -17,7 +17,7 @@ class Palette(object):
     self.bg_color = bg_color
 
   def add(self, p):
-    if not self.bg_color:
+    if self.bg_color is None:
       raise errors.PaletteBackgroundColorMissingError()
     p = [self.bg_color] + p[1:]
     self.pals.append(p)
@@ -47,7 +47,7 @@ class PaletteParser(object):
     for n in xrange(4):
       row = []
       val = self.fetch_hex()
-      if not val:
+      if val is None:
         break
       row.append(val)
       pal.set_bg_color(val)
