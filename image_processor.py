@@ -256,11 +256,15 @@ class ImageProcessor(object):
     self.load_image(img)
     num_blocks_y = NUM_BLOCKS_Y
     num_blocks_x = NUM_BLOCKS_X
+    # Assign flags.
+    self._ppu_memory.is_locked_tiles = is_locked_tiles
+    self._ppu_memory.nt_width = NUM_BLOCKS_X * 2
     # If image is exactly 128x128 and uses locked tiles, treat it as though it
     # represents CHR memory.
     if self.image_x == self.image_y == SMALL_SQUARE and is_locked_tiles:
       num_blocks_y = NUM_BLOCKS_SMALL_SQUARE
       num_blocks_x = NUM_BLOCKS_SMALL_SQUARE
+      self._ppu_memory.nt_width = NUM_BLOCKS_SMALL_SQUARE * 2
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.
     for block_y in xrange(num_blocks_y):

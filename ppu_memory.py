@@ -27,25 +27,25 @@ class PpuMemory(object):
     self._writer = None
     self._bg_color = None
     self.empty_tile = None
+    self.is_locked_tiles = False
+    self.nt_width = None
 
   def get_writer(self):
     return self._writer
 
-  def save_template(self, tmpl, chr_order, is_sprite,
-                    is_locked_tiles):
+  def save_template(self, tmpl, chr_order, is_sprite):
     """Save binary files representing the ppu memory.
 
     tmpl: String representing a filename template to save files to.
     chr_order: Order of the chr data in memory.
     is_sprite: Whether the image is of sprites.
-    is_locked_tiles: Whether tiles are locked in the nametable.
     """
-    components = self._get_enabled_components(is_sprite, is_locked_tiles)
-    self._writer = binary_file_writer.BinaryFileWriter(tmpl)
+    components = self._get_enabled_components(is_sprite)
+    self._writer = binary_file_writer.BinaryFileWriter(tmpl,
+        self.is_locked_tiles, self.nt_width)
     self._save_components(components, chr_order)
 
-  def save_valiant(self, output_filename, chr_order, traversal, is_sprite,
-                   is_locked_tiles):
+  def save_valiant(self, output_filename, chr_order, traversal, is_sprite):
     """Save the ppu memory as a protocal buffer based object file.
 
     The format of an object file is specific by valiant.proto.
@@ -54,19 +54,19 @@ class PpuMemory(object):
     chr_order: Order of the chr data in memory.
     traversal: Traversal order, either "horizontal" or "block".
     is_sprite: Whether the image is of sprites.
-    is_locked_tiles: Whether tiles are locked in the nametable.
     """
     global object_file_writer
     if object_file_writer is None:
       import object_file_writer
-    components = self._get_enabled_components(is_sprite, is_locked_tiles)
+    components = self._get_enabled_components(is_sprite)
     self._writer = object_file_writer.ObjectFileWriter()
     self._save_components(components, chr_order)
     module_name = os.path.splitext(os.path.basename(output_filename))[0]
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
     self._writer.write_chr_info(self.chr_data)
-    self._writer.write_extra_settings(chr_order, traversal, is_locked_tiles)
+    self._writer.write_extra_settings(chr_order, traversal,
+                                      self.is_locked_tiles)
     self._writer.save(output_filename)
 
   def _save_components(self, components, chr_order):
@@ -144,9 +144,9 @@ class PpuMemory(object):
       bg_color = palette_2.bg_color
     return bg_color
 
-  def _get_enabled_components(self, is_sprite, is_locked_tiles):
+  def _get_enabled_components(self, is_sprite):
     components = set()
-    if not is_sprite and not is_locked_tiles:
+    if not is_sprite and not self.is_locked_tiles:
       components.add('nametable')
     components.add('chr')
     components.add('palette')

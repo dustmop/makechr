@@ -68,13 +68,12 @@ class Application(object):
     else:
       order = args.order
     if args.output and args.output.endswith('.o'):
-      mem.save_valiant(args.output, order, traversal,
-                       args.is_sprite, args.is_locked_tiles)
+      mem.save_valiant(args.output, order, traversal, args.is_sprite)
     else:
       out_tmpl = args.output or '%s.dat'
       if not '%s' in out_tmpl:
         raise errors.CommandLineArgError('output needs "%s" in its template')
-      mem.save_template(out_tmpl, order, args.is_sprite, args.is_locked_tiles)
+      mem.save_template(out_tmpl, order, args.is_sprite)
     if args.compile:
       builder = rom_builder.RomBuilder()
       builder.build(mem.get_writer(), args.compile)

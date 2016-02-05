@@ -61,6 +61,26 @@ class RomBuilderTests(unittest.TestCase):
     expect_file = 'testdata/full-image-rom.nes'
     self.assert_file_eq(actual_file, expect_file)
 
+  def test_output_with_locked_tiles(self):
+    img = Image.open('testdata/full-image.png')
+    self.args.is_locked_tiles = True
+    self.process_image(img)
+    a = app.Application()
+    a.create_output(self.ppu_memory, self.args, 'horizontal')
+    actual_file = self.args.compile
+    expect_file = 'testdata/full-image-rom-locked-tiles.nes'
+    self.assert_file_eq(actual_file, expect_file)
+
+  def test_output_square_small_with_locked_tiles(self):
+    img = Image.open('testdata/full-image-small-square.png')
+    self.args.is_locked_tiles = True
+    self.process_image(img)
+    a = app.Application()
+    a.create_output(self.ppu_memory, self.args, 'horizontal')
+    actual_file = self.args.compile
+    expect_file = 'testdata/full-image-rom-small-square-locked-tiles.nes'
+    self.assert_file_eq(actual_file, expect_file)
+
   def assert_file_eq(self, actual_file, expect_file):
     self.assertTrue(filecmp.cmp(actual_file, expect_file, shallow=False),
                     "Files did not match actual:%s expect:%s" % (
