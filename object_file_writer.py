@@ -98,21 +98,24 @@ class ObjectFileWriter(object):
     decorated = [(c.low + c.hi,i) for i,c in enumerate(chr_data)]
     decorated.sort()
     settings = self.obj_data.settings
-    chr_metadata = self._get_chr_metaata(settings)
-    chr_metadata.size = len(chr_data)
+    chr_metadata = self._get_chr_metadata(settings)
+    max = 0
     last = None
     for c,i in decorated:
       if c == last:
         continue
       chr_metadata.sorted_idx.append(i)
       last = c
+      if i > max:
+        max = i
+    chr_metadata.size = max + 1
 
   def write_extra_settings(self, order, traversal, is_locked_tiles):
     """Write extra settings to the valiant object."""
     if traversal == 'horizontal' and not order and not is_locked_tiles:
       return
     settings = self.obj_data.settings
-    chr_metadata = self._get_chr_metaata(settings)
+    chr_metadata = self._get_chr_metadata(settings)
     if order:
       chr_metadata.order = order
     if is_locked_tiles:
@@ -165,7 +168,7 @@ class ObjectFileWriter(object):
       last_width = None
     return (first_width, last_width, bytes)
 
-  def _get_chr_metaata(self, settings):
+  def _get_chr_metadata(self, settings):
     if len(settings.chr_metadata) > 0:
       return settings.chr_metadata[0]
     else:
