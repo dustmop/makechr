@@ -9,8 +9,8 @@ class GraphicsPage(object):
   def __init__(self):
     self.nametable = [row[:] for row in
                       [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
-    self.block_palette = [row[:] for row in
-                          [[0]*(NUM_BLOCKS_X)]*(NUM_BLOCKS_Y)]
+    self.position_palette = [row[:] for row in
+                             [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
 
 
 class PpuMemory(object):
@@ -83,11 +83,11 @@ class PpuMemory(object):
       self._writer.set_null_value(self._bg_color)
     if 'attribute' in components:
       fout = self._writer.get_writable('attribute', False)
-      self._save_attribute(fout, self.gfx_0.block_palette)
+      self._save_attribute(fout, self.gfx_0.position_palette)
     if 'spritelist' in components:
       fout = self._writer.get_writable('spritelist', False)
       self._save_spritelist(fout, self.gfx_0.nametable,
-                            self.gfx_0.block_palette)
+                            self.gfx_0.position_palette)
     self._writer.close()
 
   def _save_nametable(self, fout, nametable):
@@ -105,15 +105,17 @@ class PpuMemory(object):
     self._write_single_palette(fout, palette_1, self._bg_color)
     self._write_single_palette(fout, palette_2, self._bg_color)
 
-  def _save_attribute(self, fout, block_palette):
+  def _save_attribute(self, fout, position_palette):
     for attr_y in xrange(NUM_BLOCKS_Y / 2 + 1):
       for attr_x in xrange(NUM_BLOCKS_X / 2):
-        y = attr_y * 2
-        x = attr_x * 2
-        p0 = block_palette[y + 0][x + 0]
-        p1 = block_palette[y + 0][x + 1]
-        p2 = block_palette[y + 1][x + 0] if y + 1 < NUM_BLOCKS_Y else 0
-        p3 = block_palette[y + 1][x + 1] if y + 1 < NUM_BLOCKS_Y else 0
+        block_y = attr_y * 2
+        block_x = attr_x * 2
+        y = block_y * 2
+        x = block_x * 2
+        p0 = position_palette[y + 0][x + 0]
+        p1 = position_palette[y + 0][x + 2]
+        p2 = position_palette[y + 2][x + 0] if block_y + 1 < NUM_BLOCKS_Y else 0
+        p3 = position_palette[y + 2][x + 2] if block_y + 1 < NUM_BLOCKS_Y else 0
         attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
         fout.write(chr(attr))
 

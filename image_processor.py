@@ -288,7 +288,7 @@ class ImageProcessor(object):
         (cid, did, bcid) = self._artifacts[y][x]
         block_color_needs = self._block_color_manifest.at(bcid)
         (pid, palette_option) = pal.select(block_color_needs)
-        self._ppu_memory.gfx_0.block_palette[block_y][block_x] = pid
+        self._ppu_memory.gfx_0.position_palette[block_y*2][block_x*2] = pid
     # Traverse tiles in the artifact table, creating the chr and nametable.
     if traversal == 'horizontal':
       rows = num_blocks_y * 2
@@ -300,7 +300,7 @@ class ImageProcessor(object):
                    j in xrange(2))
     for (y,x) in generator:
       (cid, did, bcid) = self._artifacts[y][x]
-      pid = self._ppu_memory.gfx_0.block_palette[y / 2][x / 2]
+      pid = self._ppu_memory.gfx_0.position_palette[(y / 2)*2][(x / 2)*2]
       palette_option = pal.get(pid)
       color_needs = self._color_manifest.at(cid)
       dot_xlat = self.get_dot_xlat(color_needs, palette_option)

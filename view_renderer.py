@@ -175,7 +175,7 @@ class ViewRenderer(object):
     """Create an image that shows which palette is used for each block.
 
     outfile: Filename to output the view to.
-    ppu_memory: Ppu memory containing block_palette and palette.
+    ppu_memory: Ppu memory containing position_palette and palette.
     artifacts: Artifacts created by the image processor.
     cmanifest: The color id_manifest.
     """
@@ -184,10 +184,10 @@ class ViewRenderer(object):
     self.create_file(outfile, width, height)
     palette = ppu_memory.palette_nt
     # TODO: Support both graphics pages.
-    block_palette = ppu_memory.gfx_0.block_palette
+    position_palette = ppu_memory.gfx_0.position_palette
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
-        pid = block_palette[y][x]
+        pid = position_palette[y*2][x*2]
         poption = palette.get(pid)
         if self.is_empty_block(y, x, artifacts, cmanifest, poption[0]):
           self.draw_empty_block(y, x)
