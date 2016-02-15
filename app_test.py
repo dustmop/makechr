@@ -173,12 +173,12 @@ class AppTests(unittest.TestCase):
                              'palette /30/ <> bg color /1/'))
 
   def test_output_sprite(self):
-    img = Image.open('testdata/sprite-reticule.png')
+    img = Image.open('testdata/reticule.png')
     self.args.bg_color = 0x30
     self.args.is_sprite = True
     self.process_image(img)
     self.create_output()
-    self.golden_file_prefix = 'sprite-reticule'
+    self.golden_file_prefix = 'reticule'
     self.assert_output_result('chr')
     self.assert_not_exist('nametable')
     self.assert_output_result('palette')
@@ -254,13 +254,13 @@ class AppTests(unittest.TestCase):
     self.assert_file_eq(self.args.output, self.golden('bg-color', 'o'))
 
   def test_output_valiant_sprite(self):
-    img = Image.open('testdata/sprite-reticule.png')
+    img = Image.open('testdata/reticule.png')
     self.args.bg_color = 0x30
     self.args.is_sprite = True
     self.process_image(img)
-    self.args.output = self.args.tmpfile('sprite-reticule.o')
+    self.args.output = self.args.tmpfile('reticule.o')
     self.create_output()
-    self.golden_file_prefix = 'sprite-reticule'
+    self.golden_file_prefix = 'reticule'
     self.assert_file_eq(self.args.output, self.golden(None, 'o'))
 
   def assert_output_result(self, name, golden_suffix=''):
