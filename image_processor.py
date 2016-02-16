@@ -145,7 +145,7 @@ class ImageProcessor(object):
       raise errors.PaletteOverflowError(tile_y, tile_x)
     return color_needs, dot_profile
 
-  def process_block(self, block_y, block_x):
+  def process_block(self, block_y, block_x, is_sprite):
     """Process the individual tiles in the block.
 
     block_y: The y position of the block, 0..15.
@@ -166,11 +166,12 @@ class ImageProcessor(object):
         did = self._dot_manifest.id(dot_profile)
         self._artifacts[y + i][x + j] = [cid, did, None]
         block_color_needs |= set(color_needs)
-    block_color_needs = block_color_needs - set([0xff])
-    if len(block_color_needs) > PALETTE_SIZE:
-      raise errors.PaletteOverflowError(block_y, block_x, is_block=True)
-    bcid = self._block_color_manifest.id(block_color_needs)
-    self._artifacts[y][x][ARTIFACT_BCID] = bcid
+    if not is_sprite:
+      block_color_needs = block_color_needs - set([0xff])
+      if len(block_color_needs) > PALETTE_SIZE:
+        raise errors.PaletteOverflowError(block_y, block_x, is_block=True)
+      bcid = self._block_color_manifest.id(block_color_needs)
+      self._artifacts[y][x][ARTIFACT_BCID] = bcid
 
   def get_dot_xlat(self, color_needs, palette_option):
     """Create an xlat object to convert the color_needs to the palette.
@@ -217,7 +218,23 @@ class ImageProcessor(object):
     self._nt_count[nt_num] += 1
     return nt_num
 
-  def make_palette(self, palette_text, bg_color):
+  def get_color_sets(self, color_element_list):
+    sets = []
+    for color_needs in color_element_list:
+      try:
+        idx = list(color_needs).index(0xff)
+        sets.append(color_needs[0:idx])
+      except ValueError:
+        sets.append(color_needs)
+    return sets
+
+  def make_palette(self, palette_text, bg_color, is_sprite):
+    """Construct the palette object from parsable text or color_needs.
+
+    palette_text: Optional text to parse palette object from.
+    bg_color: Background color. Must match palette's background color, if given.
+    is_sprite: Whether this is a sprite palette.
+    """
     pal = None
     if palette_text:
       # If palette argument was passed, use that palette.
@@ -235,8 +252,12 @@ class ImageProcessor(object):
       guesser = guess_best_palette.GuessBestPalette()
       if not bg_color is None:
         guesser.set_bg_color(bg_color)
+      if not is_sprite:
+        color_sets = self._block_color_manifest.elems()
+      else:
+        color_sets = self.get_color_sets(self._color_manifest.elems())
       try:
-        pal = guesser.make_palette(self._block_color_manifest.elems())
+        pal = guesser.guess_palette(color_sets)
       except errors.TooManyPalettesError as e:
         self._err.add(e)
     return pal
@@ -270,25 +291,40 @@ class ImageProcessor(object):
     for block_y in xrange(num_blocks_y):
       for block_x in xrange(num_blocks_x):
         try:
-          self.process_block(block_y, block_x)
+          self.process_block(block_y, block_x, is_sprite)
         except errors.PaletteOverflowError as e:
           self.collect_error(e, block_y, block_x, 0, 0, is_block=True)
           continue
-    pal = self.make_palette(palette_text, bg_color)
+    if self._err.has():
+      return
+    pal = self.make_palette(palette_text, bg_color, is_sprite)
     if not pal:
       return
     # Find empty tile.
     empty_did = self._dot_manifest.get(chr(0) * 64)
     empty_cid = self._color_manifest.get(chr(pal.bg_color) + '\xff\xff\xff')
     # For each block, get the attribute aka the palette.
-    for block_y in xrange(num_blocks_y):
-      for block_x in xrange(num_blocks_x):
-        y = block_y * 2
-        x = block_x * 2
-        (cid, did, bcid) = self._artifacts[y][x]
-        block_color_needs = self._block_color_manifest.at(bcid)
-        (pid, palette_option) = pal.select(block_color_needs)
-        self._ppu_memory.gfx_0.position_palette[block_y*2][block_x*2] = pid
+    if not is_sprite:
+      for block_y in xrange(num_blocks_y):
+        for block_x in xrange(num_blocks_x):
+          y = block_y * 2
+          x = block_x * 2
+          (cid, did, bcid) = self._artifacts[y][x]
+          block_color_needs = self._block_color_manifest.at(bcid)
+          (pid, palette_option) = pal.select(block_color_needs)
+          self._ppu_memory.gfx_0.position_palette[block_y*2][block_x*2] = pid
+    else:
+      for y in xrange(num_blocks_y*2):
+        for x in xrange(num_blocks_x*2):
+          (cid, did, bcid) = self._artifacts[y][x]
+          color_needs = self._color_manifest.at(cid)
+          for k in range(4):
+            if color_needs[k] == 0xff:
+              color_needs = color_needs[0:k]
+              break
+          color_needs = set(color_needs)
+          (pid, palette_option) = pal.select(color_needs)
+          self._ppu_memory.gfx_0.position_palette[y][x] = pid
     # Traverse tiles in the artifact table, creating the chr and nametable.
     if traversal == 'horizontal':
       rows = num_blocks_y * 2
@@ -300,10 +336,16 @@ class ImageProcessor(object):
                    j in xrange(2))
     for (y,x) in generator:
       (cid, did, bcid) = self._artifacts[y][x]
-      pid = self._ppu_memory.gfx_0.position_palette[(y / 2)*2][(x / 2)*2]
+      if not is_sprite:
+        pid = self._ppu_memory.gfx_0.position_palette[(y / 2)*2][(x / 2)*2]
+      else:
+        pid = self._ppu_memory.gfx_0.position_palette[y][x]
       palette_option = pal.get(pid)
       color_needs = self._color_manifest.at(cid)
-      dot_xlat = self.get_dot_xlat(color_needs, palette_option)
+      try:
+        dot_xlat = self.get_dot_xlat(color_needs, palette_option)
+      except IndexError:
+        raise
       # If there was an error in the tile, the dot_xlat will be empty. So
       # skip this entry.
       if dot_xlat:

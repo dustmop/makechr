@@ -23,6 +23,7 @@ class MockArgs(object):
     self.is_locked_tiles = False
     self.order = None
     self.compile = None
+    # TODO: Change this to a neutral filename.
     self.output = self.tmpfile('full-image-%s.dat')
 
   def tmppng(self, name):
@@ -181,9 +182,48 @@ class AppTests(unittest.TestCase):
     self.golden_file_prefix = 'reticule'
     self.assert_output_result('chr')
     self.assert_not_exist('nametable')
-    self.assert_output_result('palette')
+    self.assert_output_result('palette', '-sprite')
     self.assert_not_exist('attribute')
     self.assert_output_result('spritelist')
+
+  def test_output_sprite_as_nametable(self):
+    img = Image.open('testdata/reticule.png')
+    self.args.bg_color = 0x30
+    self.args.order = 1
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'reticule'
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+    self.assert_not_exist('spritelist')
+
+  def test_output_sprite_more_colors(self):
+    img = Image.open('testdata/reticule-more.png')
+    self.args.bg_color = 0x30
+    self.args.is_sprite = True
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'reticule'
+    self.assert_output_result('chr', '-more')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-more')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-more')
+
+  def test_output_sprite_more_colors_as_nametable(self):
+    img = Image.open('testdata/reticule-more.png')
+    self.args.bg_color = 0x30
+    self.process_image(img)
+    self.assertTrue(self.err.has())
+    errs = self.err.get()
+    expect_errors = ['PaletteOverflowError @ block (0y,0x)',
+                     'PaletteOverflowError @ block (0y,1x)',
+                     'PaletteOverflowError @ block (1y,0x)',
+                     'PaletteOverflowError @ block (1y,1x)']
+    actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
+    self.assertEqual(actual_errors, expect_errors)
 
   def test_output_valiant(self):
     img = Image.open('testdata/full-image.png')
@@ -261,6 +301,16 @@ class AppTests(unittest.TestCase):
     self.args.output = self.args.tmpfile('reticule.o')
     self.create_output()
     self.golden_file_prefix = 'reticule'
+    self.assert_file_eq(self.args.output, self.golden(None, 'o'))
+
+  def test_output_valiant_sprite_more(self):
+    img = Image.open('testdata/reticule-more.png')
+    self.args.bg_color = 0x30
+    self.args.is_sprite = True
+    self.process_image(img)
+    self.args.output = self.args.tmpfile('reticule-more.o')
+    self.create_output()
+    self.golden_file_prefix = 'reticule-more'
     self.assert_file_eq(self.args.output, self.golden(None, 'o'))
 
   def assert_output_result(self, name, golden_suffix=''):

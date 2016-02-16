@@ -168,7 +168,7 @@ class GuessBestPalette(object):
       pal.add([bg_color] + [c for c in color_set if c != bg_color])
     return pal
 
-  def make_palette(self, color_needs_list):
+  def guess_palette(self, color_needs_list):
     uniq_color_sets = self.get_uniq_color_sets(color_needs_list)
     minimal_colors = self.get_minimal_colors(uniq_color_sets)
     possibilities = self.get_merged_color_possibilities(minimal_colors)

@@ -160,6 +160,8 @@ class PpuMemory(object):
 
   def _write_single_palette(self, fout, palette, bg_color):
     if not palette:
+      if not bg_color:
+        bg_color = 0x0f
       fout.write(chr(bg_color) * 16)
       return
     for i in xrange(4):
