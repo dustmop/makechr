@@ -303,17 +303,22 @@ class ImageProcessor(object):
     # Find empty tile.
     empty_did = self._dot_manifest.get(chr(0) * 64)
     empty_cid = self._color_manifest.get(chr(pal.bg_color) + '\xff\xff\xff')
-    # For each block, get the attribute aka the palette.
     if not is_sprite:
+      # For each block, get the attribute aka the palette.
       for block_y in xrange(num_blocks_y):
         for block_x in xrange(num_blocks_x):
           y = block_y * 2
           x = block_x * 2
           (cid, did, bcid) = self._artifacts[y][x]
           block_color_needs = self._block_color_manifest.at(bcid)
-          (pid, palette_option) = pal.select(block_color_needs)
+          try:
+            (pid, palette_option) = pal.select(block_color_needs)
+          except IndexError:
+            self._err.add(errors.PaletteNoChoiceError(y, x, block_color_needs))
+            pid = 0
           self._ppu_memory.gfx_0.position_palette[block_y*2][block_x*2] = pid
     else:
+      # For each tile, get the attribute aka the palette.
       for y in xrange(num_blocks_y*2):
         for x in xrange(num_blocks_x*2):
           (cid, did, bcid) = self._artifacts[y][x]
@@ -323,8 +328,14 @@ class ImageProcessor(object):
               color_needs = color_needs[0:k]
               break
           color_needs = set(color_needs)
-          (pid, palette_option) = pal.select(color_needs)
+          try:
+            (pid, palette_option) = pal.select(color_needs)
+          except IndexError:
+            self._err.add(errors.PaletteNoChoiceError(y, x, color_needs))
+            pid = 0
           self._ppu_memory.gfx_0.position_palette[y][x] = pid
+    if self._err.has():
+      return
     # Traverse tiles in the artifact table, creating the chr and nametable.
     if traversal == 'horizontal':
       rows = num_blocks_y * 2

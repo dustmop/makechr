@@ -51,6 +51,16 @@ class PaletteInconsistentError(Exception):
       self.color_1, self.color_2)
 
 
+class PaletteNoChoiceError(Exception):
+  def __init__(self, y, x, color_needs):
+    self.y = y
+    self.x = x
+    self.color_needs = color_needs
+
+  def __str__(self):
+    return 'at (%dy,%dx)' % (self.y, self.x)
+
+
 class PaletteParseError(Exception):
   def __init__(self, input, i, msg):
     self.input = input

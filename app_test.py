@@ -23,11 +23,10 @@ class MockArgs(object):
     self.is_locked_tiles = False
     self.order = None
     self.compile = None
-    # TODO: Change this to a neutral filename.
-    self.output = self.tmpfile('full-image-%s.dat')
+    self.output = self.tmpfile('actual-%s.dat')
 
   def tmppng(self, name):
-    return os.path.join(self.dir, 'full-image-%s.png' % name)
+    return os.path.join(self.dir, 'actual-%s.png' % name)
 
   def tmpfile(self, template):
     return os.path.join(self.dir, template)
@@ -161,7 +160,7 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette', golden_suffix='-bg-color')
     self.assert_output_result('attribute')
 
-  def test_output_background_color_conflict(self):
+  def test_error_background_color_conflict(self):
     img = Image.open('testdata/full-image.png')
     palette_text = 'P/30-38-16-01/30-19-01-01/'
     self.args.bg_color = 1
@@ -172,6 +171,16 @@ class AppTests(unittest.TestCase):
       msg = '{0} {1}'.format(type(e).__name__, e)
       self.assertEqual(msg, ('PaletteBackgroundColorConflictError between '
                              'palette /30/ <> bg color /1/'))
+
+  def test_error_palette_no_choice(self):
+    img = Image.open('testdata/full-image.png')
+    palette_text = 'P/30-38-16-01/'
+    self.process_image(img, palette_text=palette_text)
+    self.assertTrue(self.err.has())
+    es = self.err.get()
+    for e in es:
+      msg = '{0} {1}'.format(type(e).__name__, e)
+      self.assertEqual(msg, 'PaletteNoChoiceError at (2y,4x)')
 
   def test_output_sprite(self):
     img = Image.open('testdata/reticule.png')
