@@ -1,10 +1,13 @@
 import unittest
-import subprocess
-import gen.valiant_pb2 as valiant
+
+import context
+from makechr.gen import valiant_pb2 as valiant
 from google.protobuf import text_format
-import os
-import tempfile
+
 import filecmp
+import os
+import subprocess
+import tempfile
 
 
 class IntegrationTests(unittest.TestCase):
@@ -15,10 +18,14 @@ class IntegrationTests(unittest.TestCase):
     self.out = self.err = None
 
   def makechr(self, args):
-    cmd = 'python makechr.py ' + ' '.join(args)
+    curr_dir = os.path.dirname(os.path.abspath(__file__))
+    makechr = os.path.join(curr_dir, '../makechr/makechr.py')
+    cmd = 'python ' + makechr + ' ' + ' '.join(args)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     (self.out, self.err) = p.communicate()
+    if self.err:
+      raise RuntimeError(self.err)
 
   def test_basic(self):
     args = ['testdata/full-image.png', '-o', self.output_name]

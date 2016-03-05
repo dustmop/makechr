@@ -1,5 +1,7 @@
-import guess_best_palette
 import unittest
+
+import context
+from makechr import guess_best_palette
 
 
 class GuessBestPaletteTests(unittest.TestCase):

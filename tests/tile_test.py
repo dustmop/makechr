@@ -1,8 +1,9 @@
 import unittest
 
-import errors
+import context
+from makechr import errors, image_processor
+
 from PIL import Image
-import image_processor
 
 
 class TileTests(unittest.TestCase):

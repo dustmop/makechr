@@ -1,12 +1,12 @@
 import unittest
 
-import app
+import context
+from makechr import app, image_processor, view_renderer
+
 import filecmp
-import image_processor
 import os
 from PIL import Image
 import tempfile
-import view_renderer
 
 
 class MockArgs(object):

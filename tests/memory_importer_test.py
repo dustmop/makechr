@@ -1,8 +1,9 @@
 import unittest
 
-import app
+import context
+from makechr import app, memory_importer
+
 import filecmp
-import memory_importer
 import os
 import tempfile
 

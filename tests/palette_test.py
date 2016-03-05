@@ -1,8 +1,7 @@
 import unittest
 
-import errors
-from PIL import Image
-import palette
+import context
+from makechr import errors, palette
 
 
 class PaletteTests(unittest.TestCase):

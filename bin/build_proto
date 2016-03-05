@@ -1,2 +1,4 @@
+#!/bin/bash
 # Run the protobuf compiler to generate python code.
+cd makechr
 protoc --python_out=gen/ valiant.proto
