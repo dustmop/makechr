@@ -69,6 +69,8 @@ class ImageProcessor(object):
         found_diff = diff
     if found_diff > rgb.COLOR_TOLERANCE:
       return -1
+    if found_nc == 0x0d:
+      found_nc = 0x0f
     color_val = r * 256 * 256 + g * 256 + b
     rgb.RGB_XLAT[color_val] = found_nc
     return found_nc
