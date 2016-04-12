@@ -4,6 +4,7 @@ import memory_importer
 import ppu_memory
 import rom_builder
 import view_renderer
+import sys
 
 
 class Application(object):
@@ -13,20 +14,13 @@ class Application(object):
     processor.process_image(img, args.palette, args.bg_color, traversal,
                             args.is_sprite, args.is_locked_tiles)
     if processor.err().has():
-      es = processor.err().get()
-      print('Found {0} error{1}:'.format(len(es), 's'[len(es) == 1:]))
-      for e in es:
-        print('{0} {1}'.format(type(e).__name__, e))
-      if args.error_outfile:
-        print('Errors displayed in "{0}"'.format(args.error_outfile))
-        errs = processor.err().get(include_dups=True)
-        renderer = view_renderer.ViewRenderer()
-        renderer.create_error_view(args.error_outfile, img, errs)
-      return
+      self.handle_errors(processor.err().get(), args)
+      return False
     self.create_views(processor.ppu_memory(), processor, args, img)
     self.create_output(processor.ppu_memory(), args, traversal)
     if args.show_stats:
       self.show_stats(processor.ppu_memory(), processor, args)
+    return True
 
   def get_traversal(self, strategy):
     if not strategy or strategy == 'h' or strategy == 'horizontal':
@@ -83,3 +77,14 @@ class Application(object):
     print('Number of tiles: {0}'.format(len(mem.chr_data)))
     pal = mem.palette_spr if args.is_sprite else mem.palette_nt
     print('Palette: {0}'.format(pal))
+
+  def handle_errors(self, errs, args):
+    sys.stderr.write('Found {0} error{1}:\n'.format(
+      len(errs), 's'[len(errs) == 1:]))
+    for e in errs:
+      sys.stderr.write('{0} {1}\n'.format(type(e).__name__, e))
+    if args.error_outfile:
+      sys.stderr.write('Errors displayed in "{0}"\n'.format(args.error_outfile))
+      errors_with_dups = errs.get(include_dups=True)
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_error_view(args.error_outfile, img, errors_with_dups)

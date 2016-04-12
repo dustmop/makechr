@@ -130,6 +130,16 @@ class UnknownStrategy(Exception):
     return 'UnknownStrategy: "%s"' % self.text
 
 
+class NametableOverflow(Exception):
+  def __init__(self, tile_y, tile_x, nt_num):
+    self.tile_y = tile_y
+    self.tile_x = tile_x
+    self.nt_num = nt_num
+
+  def __str__(self):
+    return '$%03x @ tile (%dy,%dx)' % (self.nt_num, self.tile_y, self.tile_x)
+
+
 class ErrorCollector(object):
   def __init__(self):
     self.e = []

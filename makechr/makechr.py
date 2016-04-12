@@ -118,7 +118,8 @@ def run():
     except IOError:
       sys.stderr.write('Input file not found: "%s"\n' % args.input)
       sys.exit(1)
-    application.run(img, args)
+    if not application.run(img, args):
+      sys.exit(1)
   else:
     parser.print_usage()
 

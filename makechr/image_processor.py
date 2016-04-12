@@ -364,6 +364,8 @@ class ImageProcessor(object):
       if dot_xlat:
         nt_num = self.get_nametable_num(dot_xlat, did, is_locked_tiles)
         self._ppu_memory.gfx_0.nametable[y][x] = nt_num
+        if nt_num >= 0x100:
+          self._err.add(errors.NametableOverflow(y, x, nt_num))
       if empty_cid == cid and empty_did == did:
         self._ppu_memory.empty_tile = nt_num
     # Store palette.

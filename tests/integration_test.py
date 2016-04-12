@@ -17,13 +17,16 @@ class IntegrationTests(unittest.TestCase):
     self.golden_file_prefix = 'full-image'
     self.out = self.err = None
 
-  def makechr(self, args):
+  def makechr(self, args, is_expect_fail=False):
     curr_dir = os.path.dirname(os.path.abspath(__file__))
     makechr = os.path.join(curr_dir, '../makechr/makechr.py')
     cmd = 'python ' + makechr + ' ' + ' '.join(args)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     (self.out, self.err) = p.communicate()
+    self.returncode = p.returncode
+    if is_expect_fail:
+      return
     if self.err:
       raise RuntimeError(self.err)
 
@@ -31,6 +34,7 @@ class IntegrationTests(unittest.TestCase):
     args = ['testdata/full-image.png', '-o', self.output_name]
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden(None, 'o'))
+    self.assertEquals(self.returncode, 0)
 
   def test_order(self):
     # Order 0.
@@ -56,6 +60,14 @@ Number of tiles: 6
 Palette: P/30-38-16-01/30-19/
 """
     self.assertEqual(self.out, expect)
+
+  def test_error_too_many_tiles(self):
+    args = ['testdata/257tiles.png', '-o', self.output_name]
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Found 1 error:
+NametableOverflow $100 @ tile (8y,0x)
+""")
+    self.assertEquals(self.returncode, 1)
 
   def golden(self, name, ext):
     if name:

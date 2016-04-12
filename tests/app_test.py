@@ -189,6 +189,15 @@ class AppTests(unittest.TestCase):
       msg = '{0} {1}'.format(type(e).__name__, e)
       self.assertEqual(msg, 'PaletteNoChoiceError at (2y,4x)')
 
+  def test_error_too_many_tiles(self):
+    img = Image.open('testdata/257tiles.png')
+    self.process_image(img)
+    self.assertTrue(self.err.has())
+    es = self.err.get()
+    for e in es:
+      msg = '{0} {1}'.format(type(e).__name__, e)
+      self.assertEqual(msg, 'NametableOverflow $100 @ tile (8y,0x)')
+
   def test_output_sprite(self):
     img = Image.open('testdata/reticule.png')
     self.args.bg_color = 0x30
