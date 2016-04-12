@@ -20,7 +20,7 @@ class GuessBestPalette(object):
     without any None elements. The order is descending, making it easy to do
     subset comparisions later.
 
-    color_needs: A list or set of color needs.
+    color_needs: A bytearray or set of color needs.
     """
     return sorted([e for e in color_needs if not e is None], reverse=True)
 
