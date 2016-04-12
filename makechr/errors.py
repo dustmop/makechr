@@ -52,13 +52,13 @@ class PaletteInconsistentError(Exception):
 
 
 class PaletteNoChoiceError(Exception):
-  def __init__(self, y, x, color_needs):
-    self.y = y
-    self.x = x
+  def __init__(self, tile_y, tile_x, color_needs):
+    self.tile_y = tile_y
+    self.tile_x = tile_x
     self.color_needs = color_needs
 
   def __str__(self):
-    return 'at (%dy,%dx)' % (self.y, self.x)
+    return 'at (%dy,%dx)' % (self.tile_y, self.tile_x)
 
 
 class PaletteParseError(Exception):

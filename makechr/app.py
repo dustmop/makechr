@@ -14,7 +14,7 @@ class Application(object):
     processor.process_image(img, args.palette, args.bg_color, traversal,
                             args.is_sprite, args.is_locked_tiles)
     if processor.err().has():
-      self.handle_errors(processor.err().get(), args)
+      self.handle_errors(processor.err(), img, args)
       return False
     self.create_views(processor.ppu_memory(), processor, args, img)
     self.create_output(processor.ppu_memory(), args, traversal)
@@ -78,13 +78,16 @@ class Application(object):
     pal = mem.palette_spr if args.is_sprite else mem.palette_nt
     print('Palette: {0}'.format(pal))
 
-  def handle_errors(self, errs, args):
+  def handle_errors(self, error_provider, img, args):
+    es = error_provider.get()
     sys.stderr.write('Found {0} error{1}:\n'.format(
-      len(errs), 's'[len(errs) == 1:]))
-    for e in errs:
+      len(es), 's'[len(es) == 1:]))
+    for e in es:
       sys.stderr.write('{0} {1}\n'.format(type(e).__name__, e))
     if args.error_outfile:
       sys.stderr.write('Errors displayed in "{0}"\n'.format(args.error_outfile))
-      errors_with_dups = errs.get(include_dups=True)
+      errors_with_dups = error_provider.get(include_dups=True)
       renderer = view_renderer.ViewRenderer()
       renderer.create_error_view(args.error_outfile, img, errors_with_dups)
+    else:
+      sys.stderr.write('To see errors visually, use -e command-line option.\n')

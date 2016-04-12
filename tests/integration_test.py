@@ -66,8 +66,21 @@ Palette: P/30-38-16-01/30-19/
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Found 1 error:
 NametableOverflow $100 @ tile (8y,0x)
+To see errors visually, use -e command-line option.
 """)
     self.assertEquals(self.returncode, 1)
+
+  def test_error_view_renderer(self):
+    error_view = os.path.join(self.tmpdir, 'error-no-choice.png')
+    palette_text = 'P/30-38-16-01/'
+    args = ['testdata/full-image.png', '-o', self.output_name, '-e', error_view,
+            '-p', palette_text]
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Found 1 error:
+PaletteNoChoiceError at (2y,4x)
+Errors displayed in "%s"
+""" % error_view)
+    self.assert_file_eq(error_view, self.golden('error-no-choice', 'png'))
 
   def golden(self, name, ext):
     if name:
