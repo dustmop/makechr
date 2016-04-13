@@ -1,6 +1,7 @@
 import errors
 import image_processor
 import memory_importer
+import os
 import ppu_memory
 import rom_builder
 import view_renderer
@@ -65,6 +66,8 @@ class Application(object):
       mem.save_valiant(args.output, order, traversal, args.is_sprite)
     else:
       out_tmpl = args.output or '%s.dat'
+      if out_tmpl[-1] == '/' or os.path.isdir(out_tmpl):
+        out_tmpl = os.path.join(out_tmpl, '%s.dat')
       if not '%s' in out_tmpl:
         raise errors.CommandLineArgError('output needs "%s" in its template')
       mem.save_template(out_tmpl, order, args.is_sprite)
