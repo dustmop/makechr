@@ -62,7 +62,9 @@ class Application(object):
       order = 1
     else:
       order = args.order
-    if args.output and args.output.endswith('.o'):
+    if args.output == '/dev/null':
+      pass
+    elif args.output and args.output.endswith('.o'):
       mem.save_valiant(args.output, order, traversal, args.is_sprite)
     else:
       out_tmpl = args.output or '%s.dat'
