@@ -127,7 +127,7 @@ class PpuMemory(object):
         if tile != self.empty_tile:
           y_pos = y * 8 - 1 if y > 0 else 0
           x_pos = x * 8
-          attr = sprite_palettes[y / 2][x / 2]
+          attr = sprite_palettes[y][x]
           fout.write(chr(y_pos))
           fout.write(chr(tile))
           fout.write(chr(attr))
