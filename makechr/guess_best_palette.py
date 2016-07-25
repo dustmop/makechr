@@ -88,7 +88,7 @@ class GuessBestPalette(object):
     possibilities = set(combined_colors[0])
     recommendations = set(possibilities)
     for color_set in combined_colors[1:]:
-      if len(color_set) == 4:
+      if len(color_set) == PALETTE_SIZE:
         possibilities = possibilities & set(color_set)
       recommendations = recommendations & set(color_set)
     if rgb.BLACK in possibilities:
@@ -99,6 +99,12 @@ class GuessBestPalette(object):
       return min(possibilities)
     return None
 
+  def colors_have_space_for(self, bg_color, combined_colors):
+    for color_set in combined_colors:
+      if not bg_color in color_set and len(color_set) == PALETTE_SIZE:
+        return False
+    return True
+
   def get_valid_combinations(self, finalized, remaining):
     """Calculate all valid combinations of the palette.
 
@@ -106,8 +112,8 @@ class GuessBestPalette(object):
     remaining need to be merged. Try all possible combinations, and for each
     one determine the background color. Return all possibilities, at least 1.
 
-    finalized: Full color sets.
-    remaining: Color sets that need to be merged.
+    finalized: List of color sets that take up the full size.
+    remaining: List of color sets that need to be merged.
     """
     merged_color_possibilities = []
     num_available = NUM_ALLOWED_PALETTES - len(finalized)
@@ -117,9 +123,12 @@ class GuessBestPalette(object):
       merged_colors = self.merge_color_sets(remaining, merge_strategy)
       if not merged_colors:
         continue
+      # TODO: Is it possible get a finalized value that doesn't contain bg?
       combined_colors = finalized + merged_colors
       bg_color = self.get_background_color(combined_colors)
       if bg_color is None:
+        continue
+      if not self.colors_have_space_for(bg_color, merged_colors):
         continue
       merged_color_possibilities.append([bg_color, combined_colors])
     if not len(merged_color_possibilities):

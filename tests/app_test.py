@@ -98,6 +98,17 @@ class AppTests(unittest.TestCase):
     self.golden_file_prefix = 'safe-black'
     self.assert_output_result('palette')
 
+  def test_output_combines_color_with_background(self):
+    img = Image.open('testdata/combine-colors.png')
+    self.args.bg_color = 0x0f
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'combine-colors'
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_output_for_locked_tiles(self):
     img = Image.open('testdata/full-image.png')
     self.args.is_locked_tiles = True

@@ -245,10 +245,11 @@ class ImageProcessor(object):
         pal = parser.parse(palette_text)
       except errors.PaletteParseError as e:
         self._err.add(e)
-        return
+        return None
       if not bg_color is None and pal.bg_color != bg_color:
         self._err.add(errors.PaletteBackgroundColorConflictError(
           pal.bg_color, bg_color))
+        return None
     else:
       # Make the palette from the color needs.
       guesser = guess_best_palette.GuessBestPalette()
@@ -262,6 +263,7 @@ class ImageProcessor(object):
         pal = guesser.guess_palette(color_sets)
       except errors.TooManyPalettesError as e:
         self._err.add(e)
+        return None
     return pal
 
   def process_image(self, img, palette_text, bg_color, traversal,
@@ -299,6 +301,7 @@ class ImageProcessor(object):
           continue
     if self._err.has():
       return
+    # Make the palette.
     pal = self.make_palette(palette_text, bg_color, is_sprite)
     if not pal:
       return
