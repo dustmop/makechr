@@ -190,6 +190,16 @@ class AppTests(unittest.TestCase):
       self.assertEqual(msg, ('PaletteBackgroundColorConflictError between '
                              'palette /30/ <> bg color /1/'))
 
+  def test_error_background_but_already_filled(self):
+    img = Image.open('testdata/full-image.png')
+    self.args.bg_color = 0x19
+    self.process_image(img)
+    self.assertTrue(self.err.has())
+    es = self.err.get()
+    for e in es:
+      msg = '{0} {1}'.format(type(e).__name__, e)
+      self.assertEqual(msg, 'TooManyPalettesError 38-30-16-01,MERGE={30-19}')
+
   def test_error_palette_no_choice(self):
     img = Image.open('testdata/full-image.png')
     palette_text = 'P/30-38-16-01/'

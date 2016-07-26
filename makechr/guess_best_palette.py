@@ -123,12 +123,11 @@ class GuessBestPalette(object):
       merged_colors = self.merge_color_sets(remaining, merge_strategy)
       if not merged_colors:
         continue
-      # TODO: Is it possible get a finalized value that doesn't contain bg?
       combined_colors = finalized + merged_colors
       bg_color = self.get_background_color(combined_colors)
       if bg_color is None:
         continue
-      if not self.colors_have_space_for(bg_color, merged_colors):
+      if not self.colors_have_space_for(bg_color, combined_colors):
         continue
       merged_color_possibilities.append([bg_color, combined_colors])
     if not len(merged_color_possibilities):
