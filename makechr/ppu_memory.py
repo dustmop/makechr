@@ -33,6 +33,12 @@ class PpuMemory(object):
   def get_writer(self):
     return self._writer
 
+  def override_bg_color(self, bg_color):
+    if self.palette_nt:
+      self.palette_nt.set_bg_color(bg_color)
+    if self.palette_spr:
+      self.palette_spr.set_bg_color(bg_color)
+
   def save_template(self, tmpl, chr_order, is_sprite):
     """Save binary files representing the ppu memory.
 

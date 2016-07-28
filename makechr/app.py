@@ -12,11 +12,13 @@ class Application(object):
   def run(self, img, args):
     traversal = self.get_traversal(args.traversal_strategy)
     processor = image_processor.ImageProcessor()
-    processor.process_image(img, args.palette, args.bg_color, traversal,
-                            args.is_sprite, args.is_locked_tiles)
+    processor.process_image(img, args.palette, args.bg_color.look,
+                            traversal, args.is_sprite, args.is_locked_tiles)
     if processor.err().has():
       self.handle_errors(processor.err(), img, args)
       return False
+    if args.bg_color.fill:
+      processor.ppu_memory().override_bg_color(args.bg_color.fill)
     self.create_views(processor.ppu_memory(), processor, args, img)
     self.create_output(processor.ppu_memory(), args, traversal)
     if args.show_stats:

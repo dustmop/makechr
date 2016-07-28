@@ -1,11 +1,8 @@
 import app
 import argparse
+import bg_color_spec
 from PIL import Image
 import sys
-
-
-def hex_int(txt):
-  return int(txt, 16)
 
 
 def run():
@@ -36,11 +33,11 @@ def run():
                             'like this: "P/30-16-1c-02/30-2a/". Each value '
                             'is in hexadecimal.'))
   parser.add_argument('-b', dest='bg_color', metavar='background_color',
-                      type=hex_int,
-                      help=('Background color for the palette, in '
-                            'hexadecimal. If palette is provided with -p, '
-                            'this must match the palette background color, '
-                            'otherwise it is an error.'))
+                      type=bg_color_spec.build, default=bg_color_spec.default(),
+                      help=('Background color spec. Either a single color in '
+                            'hexadecimal, or a pair separated by an equals, '
+                            'which specify the look (used in the pixel art) '
+                            'then the fill (output to the palette).'))
   parser.add_argument('-s', dest='is_sprite', action='store_true',
                       help=('Sprite mode, has 3 effects. 1) Nametable and '
                             'attribute components are not output but '

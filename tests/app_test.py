@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import app, image_processor, view_renderer
+from makechr import app, bg_color_spec, image_processor, view_renderer
 
 import filecmp
 import os
@@ -18,7 +18,7 @@ class MockArgs(object):
     self.nametable_view = self.tmppng('nt')
     self.chr_view = self.tmppng('chr')
     self.grid_view = self.tmppng('grid')
-    self.bg_color = None
+    self.bg_color = bg_color_spec.default()
     self.is_sprite = False
     self.is_locked_tiles = False
     self.order = None
@@ -40,7 +40,8 @@ class AppTests(unittest.TestCase):
 
   def process_image(self, img, palette_text=None):
     self.processor = image_processor.ImageProcessor()
-    self.processor.process_image(img, palette_text, self.args.bg_color,
+    self.processor.process_image(img, palette_text,
+                                 self.args.bg_color.look,
                                  self.traversal, self.args.is_sprite,
                                  self.args.is_locked_tiles)
     self.ppu_memory = self.processor.ppu_memory()
@@ -48,6 +49,8 @@ class AppTests(unittest.TestCase):
 
   def create_output(self):
     a = app.Application()
+    if self.args.bg_color.fill:
+      self.ppu_memory.override_bg_color(self.args.bg_color.fill)
     a.create_output(self.ppu_memory, self.args, self.traversal)
 
   def test_views(self):
@@ -100,7 +103,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_combines_color_with_background(self):
     img = Image.open('testdata/combine-colors.png')
-    self.args.bg_color = 0x0f
+    self.args.bg_color = bg_color_spec.build('0f')
     self.process_image(img)
     self.create_output()
     self.golden_file_prefix = 'combine-colors'
@@ -170,7 +173,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_background_color(self):
     img = Image.open('testdata/full-image.png')
-    self.args.bg_color = 0x16
+    self.args.bg_color = bg_color_spec.build('16')
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr', golden_suffix='-bg-color')
@@ -178,10 +181,20 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette', golden_suffix='-bg-color')
     self.assert_output_result('attribute')
 
+  def test_output_background_color_pair(self):
+    img = Image.open('testdata/full-image.png')
+    self.args.bg_color = bg_color_spec.build('16=0f')
+    self.process_image(img)
+    self.create_output()
+    self.assert_output_result('chr', golden_suffix='-bg-color')
+    self.assert_output_result('nametable', golden_suffix='-bg-color')
+    self.assert_output_result('palette', golden_suffix='-black-color')
+    self.assert_output_result('attribute')
+
   def test_error_background_color_conflict(self):
     img = Image.open('testdata/full-image.png')
     palette_text = 'P/30-38-16-01/30-19-01-01/'
-    self.args.bg_color = 1
+    self.args.bg_color = bg_color_spec.build('01')
     self.process_image(img, palette_text=palette_text)
     self.assertTrue(self.err.has())
     es = self.err.get()
@@ -192,7 +205,7 @@ class AppTests(unittest.TestCase):
 
   def test_error_background_but_already_filled(self):
     img = Image.open('testdata/full-image.png')
-    self.args.bg_color = 0x19
+    self.args.bg_color = bg_color_spec.build('19')
     self.process_image(img)
     self.assertTrue(self.err.has())
     es = self.err.get()
@@ -221,7 +234,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_sprite(self):
     img = Image.open('testdata/reticule.png')
-    self.args.bg_color = 0x30
+    self.args.bg_color = bg_color_spec.build('30')
     self.args.is_sprite = True
     self.process_image(img)
     self.create_output()
@@ -234,7 +247,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_sprite_as_nametable(self):
     img = Image.open('testdata/reticule.png')
-    self.args.bg_color = 0x30
+    self.args.bg_color = bg_color_spec.build('30')
     self.args.order = 1
     self.process_image(img)
     self.create_output()
@@ -247,7 +260,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_sprite_more_colors(self):
     img = Image.open('testdata/reticule-more.png')
-    self.args.bg_color = 0x30
+    self.args.bg_color = bg_color_spec.build('30')
     self.args.is_sprite = True
     self.process_image(img)
     self.create_output()
@@ -260,7 +273,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_sprite_more_colors_as_nametable(self):
     img = Image.open('testdata/reticule-more.png')
-    self.args.bg_color = 0x30
+    self.args.bg_color = bg_color_spec.build('30')
     self.process_image(img)
     self.assertTrue(self.err.has())
     errs = self.err.get()
@@ -333,7 +346,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_valiant_background_color(self):
     img = Image.open('testdata/full-image.png')
-    self.args.bg_color = 0x16
+    self.args.bg_color = bg_color_spec.build('16')
     self.process_image(img)
     self.args.output = self.args.tmpfile('full-image.o')
     self.create_output()
@@ -341,7 +354,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_valiant_sprite(self):
     img = Image.open('testdata/reticule.png')
-    self.args.bg_color = 0x30
+    self.args.bg_color = bg_color_spec.build('30')
     self.args.is_sprite = True
     self.process_image(img)
     self.args.output = self.args.tmpfile('reticule.o')
@@ -351,7 +364,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_valiant_sprite_more(self):
     img = Image.open('testdata/reticule-more.png')
-    self.args.bg_color = 0x30
+    self.args.bg_color = bg_color_spec.build('30')
     self.args.is_sprite = True
     self.process_image(img)
     self.args.output = self.args.tmpfile('reticule-more.o')

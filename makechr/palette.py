@@ -15,10 +15,16 @@ class Palette(object):
 
   def set_bg_color(self, bg_color):
     self.bg_color = bg_color
+    self.pal_as_sets = []
+    for p in self.pals:
+      p[0] = self.bg_color
+      self.pal_as_sets.append(set(p))
 
   def add(self, p):
     if self.bg_color is None:
       raise errors.PaletteBackgroundColorMissingError()
+    if self.bg_color != p[0]:
+      raise errors.PaletteBackgroundColorConflictError(p[0], self.bg_color)
     p = [self.bg_color] + p[1:]
     self.pals.append(p)
     self.pal_as_sets.append(set(p))
