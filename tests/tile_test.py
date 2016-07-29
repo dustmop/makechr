@@ -11,7 +11,7 @@ class TileTests(unittest.TestCase):
     img = Image.open('testdata/blue-tile.png')
     processor = image_processor.ImageProcessor()
     processor.load_image(img)
-    (color_needs, dot_profile) = processor.process_tile(0, 0)
+    (color_needs, dot_profile) = processor.process_tile(0, 0, 0, 0)
     self.assertEqual(color_needs, bytearray([2, 0xff, 0xff, 0xff]))
     self.assertEqual(dot_profile, bytearray([0] * 64))
 
@@ -20,13 +20,13 @@ class TileTests(unittest.TestCase):
     img = Image.open('testdata/blue-and-red-tile.png')
     processor = image_processor.ImageProcessor()
     processor.load_image(img)
-    (color_needs, dot_profile) = processor.process_tile(0, 0)
+    (color_needs, dot_profile) = processor.process_tile(0, 0, 0, 0)
     self.assertEqual(color_needs, bytearray([2, 7, 0xff, 0xff]))
     self.assertEqual(dot_profile, expected_dot_profile)
     img = Image.open('testdata/red-and-blue-tile.png')
     processor = image_processor.ImageProcessor()
     processor.load_image(img)
-    (color_needs, dot_profile) = processor.process_tile(0, 0)
+    (color_needs, dot_profile) = processor.process_tile(0, 0, 0, 0)
     self.assertEqual(color_needs, bytearray([7, 2, 0xff, 0xff]))
     self.assertEqual(dot_profile, expected_dot_profile)
 
@@ -34,7 +34,7 @@ class TileTests(unittest.TestCase):
     img = Image.open('testdata/gradiant-tile.png')
     processor = image_processor.ImageProcessor()
     processor.load_image(img)
-    (color_needs, dot_profile) = processor.process_tile(0, 0)
+    (color_needs, dot_profile) = processor.process_tile(0, 0, 0, 0)
     self.assertEqual(color_needs, bytearray([2, 0x21, 0x2a, 0x0b]))
     self.assertEqual(dot_profile, bytearray([0, 0, 0, 0, 1, 1, 1, 1,
                                              0, 0, 0, 1, 1, 1, 1, 2,
@@ -50,14 +50,14 @@ class TileTests(unittest.TestCase):
     processor = image_processor.ImageProcessor()
     processor.load_image(img)
     with self.assertRaises(errors.ColorNotAllowedError):
-      processor.process_tile(0, 0)
+      processor.process_tile(0, 0, 0, 0)
 
   def test_process_tile_error_palette_overflow(self):
     img = Image.open('testdata/palette-overflow-tile.png')
     processor = image_processor.ImageProcessor()
     processor.load_image(img)
     with self.assertRaises(errors.PaletteOverflowError):
-      processor.process_tile(0, 0)
+      processor.process_tile(0, 0, 0, 0)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,5 @@
 import errors
+import free_sprite_processor
 import image_processor
 import memory_importer
 import os
@@ -11,9 +12,17 @@ import sys
 class Application(object):
   def run(self, img, args):
     traversal = self.get_traversal(args.traversal_strategy)
-    processor = image_processor.ImageProcessor()
-    processor.process_image(img, args.palette, args.bg_color.look,
-                            traversal, args.is_sprite, args.is_locked_tiles)
+    if traversal == 'free':
+      if not args.is_sprite or args.bg_color.fill is None:
+        raise errors.CommandLineArgError('Traversal strategy \'free\' requires '
+                                         '-s and -b `look=fill` flags')
+      processor = free_sprite_processor.FreeSpriteProcessor()
+      processor.process_image(img, args.palette, args.bg_color.look,
+                              args.bg_color.fill)
+    else:
+      processor = image_processor.ImageProcessor()
+      processor.process_image(img, args.palette, args.bg_color.look,
+                              traversal, args.is_sprite, args.is_locked_tiles)
     if processor.err().has():
       self.handle_errors(processor.err(), img, args)
       return False
@@ -30,6 +39,8 @@ class Application(object):
       return 'horizontal'
     elif strategy == 'b' or strategy == 'block':
       return 'block'
+    elif strategy == 'f' or strategy == 'free':
+      return 'free'
     else:
       raise errors.UnknownStrategy(strategy)
 

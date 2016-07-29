@@ -61,7 +61,9 @@ def run():
                             'nametable, according to this strategy. If '
                             '"horizontal" then traverse left to right, top to '
                             'bottom. If "block" then traverse a block at a '
-                            'time, in a zig-zag.'))
+                            'time, in a zig-zag. If "free" then traverse '
+                            'freely looking for sprites (requires -s flag '
+                            'and -b).'))
   parser.add_argument('-r', dest='order', metavar='chr_order', type=int,
                       help=('Order that the CHR data appears in memory, '
                             'relative to other CHR data. Must be 0 or 1. '

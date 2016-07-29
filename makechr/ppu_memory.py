@@ -29,6 +29,7 @@ class PpuMemory(object):
     self.empty_tile = None
     self.is_locked_tiles = False
     self.nt_width = None
+    self.spritelist = []
 
   def get_writer(self):
     return self._writer
@@ -92,7 +93,7 @@ class PpuMemory(object):
       self._save_attribute(fout, self.gfx_0.position_palette)
     if 'spritelist' in components:
       fout = self._writer.get_writable('spritelist', False)
-      self._save_spritelist(fout, self.gfx_0.nametable,
+      self._save_spritelist(fout, self.spritelist,
                             self.gfx_0.position_palette)
     self._writer.close()
 
@@ -125,20 +126,14 @@ class PpuMemory(object):
         attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
         fout.write(chr(attr))
 
-  def _save_spritelist(self, fout, sprite_positions, sprite_palettes):
+  def _save_spritelist(self, fout, spritelist, sprite_palettes):
     n = 0
-    for y in xrange(NUM_BLOCKS_Y * 2):
-      for x in xrange(NUM_BLOCKS_X * 2):
-        tile = sprite_positions[y][x]
-        if tile != self.empty_tile:
-          y_pos = y * 8 - 1 if y > 0 else 0
-          x_pos = x * 8
-          attr = sprite_palettes[y][x]
-          fout.write(chr(y_pos))
-          fout.write(chr(tile))
-          fout.write(chr(attr))
-          fout.write(chr(x_pos))
-          n += 1
+    for y_pos, tile, attr, x_pos in spritelist:
+      fout.write(chr(y_pos))
+      fout.write(chr(tile))
+      fout.write(chr(attr))
+      fout.write(chr(x_pos))
+      n += 1
     if n < 64:
       fout.write(chr(0xff))
 

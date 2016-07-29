@@ -2,6 +2,7 @@ import unittest
 
 import context
 from makechr import app, bg_color_spec, image_processor, view_renderer
+from makechr import free_sprite_processor
 
 import filecmp
 import os
@@ -19,6 +20,7 @@ class MockArgs(object):
     self.chr_view = self.tmppng('chr')
     self.grid_view = self.tmppng('grid')
     self.bg_color = bg_color_spec.default()
+    self.traversal = 'horizontal'
     self.is_sprite = False
     self.is_locked_tiles = False
     self.order = None
@@ -36,14 +38,19 @@ class AppTests(unittest.TestCase):
   def setUp(self):
     self.args = MockArgs()
     self.golden_file_prefix = 'full-image'
-    self.traversal = 'horizontal'
 
   def process_image(self, img, palette_text=None):
-    self.processor = image_processor.ImageProcessor()
-    self.processor.process_image(img, palette_text,
-                                 self.args.bg_color.look,
-                                 self.traversal, self.args.is_sprite,
-                                 self.args.is_locked_tiles)
+    if self.args.traversal != 'free':
+      self.processor = image_processor.ImageProcessor()
+      self.processor.process_image(img, palette_text,
+                                   self.args.bg_color.look,
+                                   self.args.traversal, self.args.is_sprite,
+                                   self.args.is_locked_tiles)
+    else:
+      self.processor = free_sprite_processor.FreeSpriteProcessor()
+      self.processor.process_image(img, palette_text,
+                                   self.args.bg_color.look,
+                                   self.args.bg_color.fill)
     self.ppu_memory = self.processor.ppu_memory()
     self.err = self.processor.err()
 
@@ -51,7 +58,7 @@ class AppTests(unittest.TestCase):
     a = app.Application()
     if self.args.bg_color.fill:
       self.ppu_memory.override_bg_color(self.args.bg_color.fill)
-    a.create_output(self.ppu_memory, self.args, self.traversal)
+    a.create_output(self.ppu_memory, self.args, self.args.traversal)
 
   def test_views(self):
     img = Image.open('testdata/full-image.png')
@@ -153,7 +160,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_traverse_block(self):
     img = Image.open('testdata/full-image.png')
-    self.traversal='block'
+    self.args.traversal = 'block'
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr', golden_suffix='-traverse-block')
@@ -284,6 +291,20 @@ class AppTests(unittest.TestCase):
     actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
     self.assertEqual(actual_errors, expect_errors)
 
+  def test_output_free_sprite_traversal(self):
+    img = Image.open('testdata/free-sprites.png')
+    self.args.bg_color = bg_color_spec.build('00=30')
+    self.args.is_sprite = True
+    self.args.traversal = 'free'
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'free-sprites'
+    self.assert_output_result('chr')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist')
+
   def test_output_valiant(self):
     img = Image.open('testdata/full-image.png')
     self.process_image(img)
@@ -338,7 +359,7 @@ class AppTests(unittest.TestCase):
 
   def test_output_valiant_traverse_block(self):
     img = Image.open('testdata/full-image.png')
-    self.traversal='block'
+    self.args.traversal = 'block'
     self.process_image(img)
     self.args.output = self.args.tmpfile('full-image.o')
     self.create_output()
