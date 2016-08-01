@@ -64,9 +64,14 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     for corner_y, corner_x, cid, did in artifacts:
       color_needs = self.get_color_needs(cid)
       (pid, palette_option) = pal.select(color_needs)
+      # TODO: There are two different types of `color_needs`, the above is a
+      # set, and needs to be passed to palette.select. Below is a bytearray,
+      # and needs to be passed to get_dot_xlat. These should be changed to
+      # always be the same type.
+      color_needs = self._color_manifest.at(cid)
       dot_xlat = self.get_dot_xlat(color_needs, palette_option)
       nt_num = self.get_nametable_num(dot_xlat, did, False)
-      self._ppu_memory.spritelist.append([corner_y, nt_num, pid, corner_x])
+      self._ppu_memory.spritelist.append([corner_y - 1, nt_num, pid, corner_x])
     self._ppu_memory.palette_spr = pal
 
   def _find_region_corners(self, fill):
