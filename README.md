@@ -32,8 +32,9 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
     -e [error_file]  Output errors to an image file.
 
     -p [palette]     Palette to use for the input image. If not set, makechr
-                     will attempt to automatically derive a palette. See below
-                     for the palette syntax.
+                     will attempt to automatically derive a palette, or
+                     extract a palette if the image uses indexed color. See
+                     below for the palette syntax.
 
     -b [background_color]
                      Background color for the palette. If the palette is not

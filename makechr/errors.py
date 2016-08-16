@@ -58,7 +58,8 @@ class PaletteNoChoiceError(Exception):
     self.color_needs = color_needs
 
   def __str__(self):
-    return 'at (%dy,%dx)' % (self.tile_y, self.tile_x)
+    needs = '-'.join(['%02x' % e for e in self.color_needs])
+    return 'at (%dy,%dx) for %s' % (self.tile_y, self.tile_x, needs)
 
 
 class PaletteParseError(Exception):

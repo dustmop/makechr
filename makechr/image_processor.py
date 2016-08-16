@@ -1,4 +1,5 @@
 import chr_tile
+import extract_indexed_image_palette
 import errors
 import guess_best_palette
 import id_manifest
@@ -27,8 +28,9 @@ class ImageProcessor(object):
     self.image_x = self.image_y = None
 
   def load_image(self, img):
-    (self.image_x, self.image_y) = img.size
-    self.pixels = img.convert('RGB').load()
+    self.img = img
+    (self.image_x, self.image_y) = self.img.size
+    self.pixels = self.img.convert('RGB').load()
 
   def artifacts(self):
     return self._artifacts
@@ -264,20 +266,26 @@ class ImageProcessor(object):
         self._err.add(errors.PaletteBackgroundColorConflictError(
           pal.bg_color, bg_color))
         return None
+      return pal
+    if self.img.palette:
+      # If the image uses indexed color, try to extract a palette.
+      extractor = extract_indexed_image_palette.ExtractIndexedImagePalette(self)
+      pal = extractor.extract_palette(self.img.palette)
+      if pal:
+        return pal
+    # Make the palette from the color needs.
+    guesser = guess_best_palette.GuessBestPalette()
+    if not bg_color is None:
+      guesser.set_bg_color(bg_color)
+    if not is_sprite:
+      color_sets = self._block_color_manifest.elems()
     else:
-      # Make the palette from the color needs.
-      guesser = guess_best_palette.GuessBestPalette()
-      if not bg_color is None:
-        guesser.set_bg_color(bg_color)
-      if not is_sprite:
-        color_sets = self._block_color_manifest.elems()
-      else:
-        color_sets = self.get_color_sets(self._color_manifest.elems())
-      try:
-        pal = guesser.guess_palette(color_sets)
-      except errors.TooManyPalettesError as e:
-        self._err.add(e)
-        return None
+      color_sets = self.get_color_sets(self._color_manifest.elems())
+    try:
+      pal = guesser.guess_palette(color_sets)
+    except errors.TooManyPalettesError as e:
+      self._err.add(e)
+      return None
     return pal
 
   def process_image(self, img, palette_text, bg_color, traversal,

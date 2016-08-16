@@ -77,7 +77,7 @@ To see errors visually, use -e command-line option.
             '-p', palette_text]
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Found 1 error:
-PaletteNoChoiceError at (2y,4x)
+PaletteNoChoiceError at (2y,4x) for 30-19
 Errors displayed in "%s"
 """ % error_view)
     self.assert_file_eq(error_view, self.golden('error-no-choice', 'png'))

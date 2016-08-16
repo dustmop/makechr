@@ -198,6 +198,15 @@ class AppTests(unittest.TestCase):
     self.assert_output_result('palette', golden_suffix='-black-color')
     self.assert_output_result('attribute')
 
+  def test_output_extract_palette(self):
+    img = Image.open('testdata/full-image-16color.png')
+    self.process_image(img)
+    self.create_output()
+    self.assert_output_result('chr', golden_suffix='-16color')
+    self.assert_output_result('nametable', golden_suffix='-16color')
+    self.assert_output_result('palette', golden_suffix='-16color')
+    self.assert_output_result('attribute', golden_suffix='-16color')
+
   def test_error_background_color_conflict(self):
     img = Image.open('testdata/full-image.png')
     palette_text = 'P/30-38-16-01/30-19-01-01/'
@@ -228,7 +237,7 @@ class AppTests(unittest.TestCase):
     es = self.err.get()
     for e in es:
       msg = '{0} {1}'.format(type(e).__name__, e)
-      self.assertEqual(msg, 'PaletteNoChoiceError at (2y,4x)')
+      self.assertEqual(msg, 'PaletteNoChoiceError at (2y,4x) for 30-19')
 
   def test_error_too_many_tiles(self):
     img = Image.open('testdata/257tiles.png')
