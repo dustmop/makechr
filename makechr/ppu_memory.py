@@ -13,6 +13,14 @@ class GraphicsPage(object):
                              [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
 
 
+class PpuMemoryConfig(object):
+  def __init__(self, chr_order, palette_order, traversal, is_sprite):
+    self.chr_order = chr_order
+    self.palette_order = palette_order
+    self.traversal = traversal
+    self.is_sprite = is_sprite
+
+
 class PpuMemory(object):
   """PpuMemory
 
@@ -35,59 +43,58 @@ class PpuMemory(object):
     return self._writer
 
   def override_bg_color(self, bg_color):
+    self._bg_color = bg_color
     if self.palette_nt:
-      self.palette_nt.set_bg_color(bg_color)
+      self.palette_nt.set_bg_color(self._bg_color)
     if self.palette_spr:
-      self.palette_spr.set_bg_color(bg_color)
+      self.palette_spr.set_bg_color(self._bg_color)
 
-  def save_template(self, tmpl, chr_order, is_sprite):
+  def save_template(self, tmpl, config):
     """Save binary files representing the ppu memory.
 
     tmpl: String representing a filename template to save files to.
-    chr_order: Order of the chr data in memory.
-    is_sprite: Whether the image is of sprites.
+    config: Configuration for how memory is represented.
     """
-    components = self._get_enabled_components(is_sprite)
     self._writer = binary_file_writer.BinaryFileWriter(tmpl,
         self.is_locked_tiles, self.nt_width)
-    self._save_components(components, chr_order)
+    self._save_components(config)
 
-  def save_valiant(self, output_filename, chr_order, traversal, is_sprite):
+  def save_valiant(self, output_filename, config):
     """Save the ppu memory as a protocal buffer based object file.
 
     The format of an object file is specific by valiant.proto.
 
     output_filename: String representing a filename for the object file.
-    chr_order: Order of the chr data in memory.
-    traversal: Traversal order, either "horizontal" or "block".
-    is_sprite: Whether the image is of sprites.
+    config: Configuration for how memory is represented.
     """
     global object_file_writer
     if object_file_writer is None:
       import object_file_writer
-    components = self._get_enabled_components(is_sprite)
     self._writer = object_file_writer.ObjectFileWriter()
-    self._save_components(components, chr_order)
+    self._save_components(config)
     module_name = os.path.splitext(os.path.basename(output_filename))[0]
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
     self._writer.write_chr_info(self.chr_data)
-    self._writer.write_extra_settings(chr_order, traversal,
-                                      self.is_locked_tiles)
+    self._writer.write_extra_settings(config, self.is_locked_tiles)
     self._writer.save(output_filename)
 
-  def _save_components(self, components, chr_order):
+  def _save_components(self, config):
+    self._bg_color = self._get_bg_color(self.palette_nt, self.palette_spr)
+    components = self._get_enabled_components(config.is_sprite)
     if 'nametable' in components:
       fout = self._writer.get_writable('nametable', False)
       self._save_nametable(fout, self.gfx_0.nametable)
     if 'chr' in components:
       fout = self._writer.get_writable('chr', True)
-      self._writer.pad(size=0x1000, order=chr_order, align=0x10, extract=0x2000)
+      self._writer.configure(null_value=0, size=0x1000, order=config.chr_order,
+                             align=0x10, extract=0x2000)
       self._save_chr(fout, self.chr_data)
     if 'palette' in components:
       fout = self._writer.get_writable('palette', True)
+      self._writer.configure(null_value=self._bg_color, size=0x10,
+                             order=config.palette_order, extract=0x20)
       self._save_palette(fout, self.palette_nt, self.palette_spr)
-      self._writer.set_null_value(self._bg_color)
     if 'attribute' in components:
       fout = self._writer.get_writable('attribute', False)
       self._save_attribute(fout, self.gfx_0.position_palette)
@@ -108,7 +115,6 @@ class PpuMemory(object):
       d.write(fout)
 
   def _save_palette(self, fout, palette_1, palette_2):
-    self._bg_color = self._get_bg_color(palette_1, palette_2)
     self._write_single_palette(fout, palette_1, self._bg_color)
     self._write_single_palette(fout, palette_2, self._bg_color)
 
@@ -161,9 +167,6 @@ class PpuMemory(object):
 
   def _write_single_palette(self, fout, palette, bg_color):
     if not palette:
-      if not bg_color:
-        bg_color = 0x0f
-      fout.write(chr(bg_color) * 16)
       return
     for i in xrange(4):
       palette_option = palette.get(i)

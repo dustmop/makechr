@@ -10,6 +10,7 @@ class BinaryFileWriter(object):
     self._fout = None
     self._tmpl = tmpl
     self._order = None
+    self._null_value = ZERO_BYTE
     self._component_req = {}
     self._simulate_nt = simulate_nt
     self._nt_width = nt_width
@@ -46,7 +47,9 @@ class BinaryFileWriter(object):
       nt += self._nt_width
     return content
 
-  def pad(self, size, order, align, extract):
+  def configure(self, null_value=None, size=None, order=None, align=None,
+                extract=None):
+    self._null_value = chr(null_value or 0)
     _ = size
     _ = order
     _ = align
@@ -54,16 +57,12 @@ class BinaryFileWriter(object):
     self._order = order
     if self._order == 1:
       num = extract - size
-      self._fout.write(ZERO_BYTE * num)
+      self._fout.write(self._null_value * num)
 
   def close(self):
     extract = self._component_req.get(self._name)
     if extract:
       num = extract - self._fout.tell()
-      self._fout.write(ZERO_BYTE * num)
+      self._fout.write(self._null_value * num)
     self._fout.close()
     self._fout = None
-
-
-  def set_null_value(self, val):
-    pass

@@ -33,6 +33,7 @@ enum DataRole {
 message GfxSettings {
   optional int32 bg_color = 1;
   repeated ChrMetadata chr_metadata = 5;
+  repeated PaletteMetadata palette_metadata = 6;
 }
 
 message GfxComponent {
@@ -47,6 +48,11 @@ message ChrMetadata {
   optional int32 size = 3;
   optional int32 is_locked_tiles = 4;
   optional string traversal = 5;
+}
+
+message PaletteMetadata {
+  optional int32 order = 1;
+  optional int32 size = 3;
 }
 
 ///////////////////////////////////////////////////

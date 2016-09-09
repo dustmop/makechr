@@ -19,7 +19,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='valiant.proto',
   package='valiant',
-  serialized_pb=_b('\n\rvaliant.proto\x12\x07valiant\"v\n\nObjectFile\x12\x0e\n\x06magic1\x18\x05 \x01(\x05\x12\x0e\n\x06magic2\x18\x08 \x01(\x06\x12%\n\x06header\x18\r \x01(\x0b\x32\x15.valiant.ObjectHeader\x12!\n\x04\x64\x61ta\x18\x0e \x01(\x0b\x32\x13.valiant.ObjectData\"\x1e\n\x0cObjectHeader\x12\x0e\n\x06module\x18\x01 \x01(\t\"\x88\x01\n\nObjectData\x12\'\n\x08\x62inaries\x18\x01 \x03(\x0b\x32\x15.valiant.DirectBinary\x12&\n\x08settings\x18\x02 \x01(\x0b\x32\x14.valiant.GfxSettings\x12)\n\ncomponents\x18\x03 \x03(\x0b\x32\x15.valiant.GfxComponent\"K\n\x0bGfxSettings\x12\x10\n\x08\x62g_color\x18\x01 \x01(\x05\x12*\n\x0c\x63hr_metadata\x18\x05 \x03(\x0b\x32\x14.valiant.ChrMetadata\"S\n\x0cGfxComponent\x12\x1f\n\x04role\x18\x01 \x01(\x0e\x32\x11.valiant.DataRole\x12\x14\n\x0c\x62inary_index\x18\x02 \x01(\x05\x12\x0c\n\x04name\x18\x03 \x01(\t\"j\n\x0b\x43hrMetadata\x12\r\n\x05order\x18\x01 \x01(\x05\x12\x12\n\nsorted_idx\x18\x02 \x03(\x05\x12\x0c\n\x04size\x18\x03 \x01(\x05\x12\x17\n\x0fis_locked_tiles\x18\x04 \x01(\x05\x12\x11\n\ttraversal\x18\x05 \x01(\t\"Q\n\x0c\x44irectBinary\x12\x0b\n\x03\x62in\x18\x01 \x01(\x0c\x12\x0f\n\x07padding\x18\x02 \x01(\x05\x12\x0f\n\x07pre_pad\x18\x03 \x01(\x05\x12\x12\n\nnull_value\x18\x04 \x01(\x05*X\n\x08\x44\x61taRole\x12\x08\n\x04NONE\x10\x00\x12\x07\n\x03\x43HR\x10\x01\x12\r\n\tNAMETABLE\x10\x02\x12\r\n\tATTRIBUTE\x10\x03\x12\x0b\n\x07PALETTE\x10\x04\x12\x0e\n\nSPRITELIST\x10\x05')
+  serialized_pb=_b('\n\rvaliant.proto\x12\x07valiant\"v\n\nObjectFile\x12\x0e\n\x06magic1\x18\x05 \x01(\x05\x12\x0e\n\x06magic2\x18\x08 \x01(\x06\x12%\n\x06header\x18\r \x01(\x0b\x32\x15.valiant.ObjectHeader\x12!\n\x04\x64\x61ta\x18\x0e \x01(\x0b\x32\x13.valiant.ObjectData\"\x1e\n\x0cObjectHeader\x12\x0e\n\x06module\x18\x01 \x01(\t\"\x88\x01\n\nObjectData\x12\'\n\x08\x62inaries\x18\x01 \x03(\x0b\x32\x15.valiant.DirectBinary\x12&\n\x08settings\x18\x02 \x01(\x0b\x32\x14.valiant.GfxSettings\x12)\n\ncomponents\x18\x03 \x03(\x0b\x32\x15.valiant.GfxComponent\"\x7f\n\x0bGfxSettings\x12\x10\n\x08\x62g_color\x18\x01 \x01(\x05\x12*\n\x0c\x63hr_metadata\x18\x05 \x03(\x0b\x32\x14.valiant.ChrMetadata\x12\x32\n\x10palette_metadata\x18\x06 \x03(\x0b\x32\x18.valiant.PaletteMetadata\"S\n\x0cGfxComponent\x12\x1f\n\x04role\x18\x01 \x01(\x0e\x32\x11.valiant.DataRole\x12\x14\n\x0c\x62inary_index\x18\x02 \x01(\x05\x12\x0c\n\x04name\x18\x03 \x01(\t\"j\n\x0b\x43hrMetadata\x12\r\n\x05order\x18\x01 \x01(\x05\x12\x12\n\nsorted_idx\x18\x02 \x03(\x05\x12\x0c\n\x04size\x18\x03 \x01(\x05\x12\x17\n\x0fis_locked_tiles\x18\x04 \x01(\x05\x12\x11\n\ttraversal\x18\x05 \x01(\t\".\n\x0fPaletteMetadata\x12\r\n\x05order\x18\x01 \x01(\x05\x12\x0c\n\x04size\x18\x03 \x01(\x05\"Q\n\x0c\x44irectBinary\x12\x0b\n\x03\x62in\x18\x01 \x01(\x0c\x12\x0f\n\x07padding\x18\x02 \x01(\x05\x12\x0f\n\x07pre_pad\x18\x03 \x01(\x05\x12\x12\n\nnull_value\x18\x04 \x01(\x05*X\n\x08\x44\x61taRole\x12\x08\n\x04NONE\x10\x00\x12\x07\n\x03\x43HR\x10\x01\x12\r\n\tNAMETABLE\x10\x02\x12\r\n\tATTRIBUTE\x10\x03\x12\x0b\n\x07PALETTE\x10\x04\x12\x0e\n\nSPRITELIST\x10\x05')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -56,8 +56,8 @@ _DATAROLE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=670,
-  serialized_end=758,
+  serialized_start=770,
+  serialized_end=858,
 )
 _sym_db.RegisterEnumDescriptor(_DATAROLE)
 
@@ -217,6 +217,13 @@ _GFXSETTINGS = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='palette_metadata', full_name='valiant.GfxSettings.palette_metadata', index=2,
+      number=6, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -229,7 +236,7 @@ _GFXSETTINGS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=317,
-  serialized_end=392,
+  serialized_end=444,
 )
 
 
@@ -272,8 +279,8 @@ _GFXCOMPONENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=394,
-  serialized_end=477,
+  serialized_start=446,
+  serialized_end=529,
 )
 
 
@@ -330,8 +337,45 @@ _CHRMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=479,
-  serialized_end=585,
+  serialized_start=531,
+  serialized_end=637,
+)
+
+
+_PALETTEMETADATA = _descriptor.Descriptor(
+  name='PaletteMetadata',
+  full_name='valiant.PaletteMetadata',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='order', full_name='valiant.PaletteMetadata.order', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='size', full_name='valiant.PaletteMetadata.size', index=1,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=639,
+  serialized_end=685,
 )
 
 
@@ -381,8 +425,8 @@ _DIRECTBINARY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=587,
-  serialized_end=668,
+  serialized_start=687,
+  serialized_end=768,
 )
 
 _OBJECTFILE.fields_by_name['header'].message_type = _OBJECTHEADER
@@ -391,6 +435,7 @@ _OBJECTDATA.fields_by_name['binaries'].message_type = _DIRECTBINARY
 _OBJECTDATA.fields_by_name['settings'].message_type = _GFXSETTINGS
 _OBJECTDATA.fields_by_name['components'].message_type = _GFXCOMPONENT
 _GFXSETTINGS.fields_by_name['chr_metadata'].message_type = _CHRMETADATA
+_GFXSETTINGS.fields_by_name['palette_metadata'].message_type = _PALETTEMETADATA
 _GFXCOMPONENT.fields_by_name['role'].enum_type = _DATAROLE
 DESCRIPTOR.message_types_by_name['ObjectFile'] = _OBJECTFILE
 DESCRIPTOR.message_types_by_name['ObjectHeader'] = _OBJECTHEADER
@@ -398,6 +443,7 @@ DESCRIPTOR.message_types_by_name['ObjectData'] = _OBJECTDATA
 DESCRIPTOR.message_types_by_name['GfxSettings'] = _GFXSETTINGS
 DESCRIPTOR.message_types_by_name['GfxComponent'] = _GFXCOMPONENT
 DESCRIPTOR.message_types_by_name['ChrMetadata'] = _CHRMETADATA
+DESCRIPTOR.message_types_by_name['PaletteMetadata'] = _PALETTEMETADATA
 DESCRIPTOR.message_types_by_name['DirectBinary'] = _DIRECTBINARY
 DESCRIPTOR.enum_types_by_name['DataRole'] = _DATAROLE
 
@@ -442,6 +488,13 @@ ChrMetadata = _reflection.GeneratedProtocolMessageType('ChrMetadata', (_message.
   # @@protoc_insertion_point(class_scope:valiant.ChrMetadata)
   ))
 _sym_db.RegisterMessage(ChrMetadata)
+
+PaletteMetadata = _reflection.GeneratedProtocolMessageType('PaletteMetadata', (_message.Message,), dict(
+  DESCRIPTOR = _PALETTEMETADATA,
+  __module__ = 'valiant_pb2'
+  # @@protoc_insertion_point(class_scope:valiant.PaletteMetadata)
+  ))
+_sym_db.RegisterMessage(PaletteMetadata)
 
 DirectBinary = _reflection.GeneratedProtocolMessageType('DirectBinary', (_message.Message,), dict(
   DESCRIPTOR = _DIRECTBINARY,

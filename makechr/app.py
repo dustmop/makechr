@@ -72,20 +72,28 @@ class Application(object):
 
   def create_output(self, mem, args, traversal):
     if args.order is None and args.is_sprite:
-      order = 1
+      chr_order = 1
     else:
-      order = args.order
+      chr_order = args.order
+    if args.is_sprite:
+      palette_order = 1
+    else:
+      palette_order = 0
+    config = ppu_memory.PpuMemoryConfig(chr_order=chr_order,
+                                        palette_order=palette_order,
+                                        traversal=traversal,
+                                        is_sprite=args.is_sprite)
     if args.output == '/dev/null':
       pass
     elif args.output and args.output.endswith('.o'):
-      mem.save_valiant(args.output, order, traversal, args.is_sprite)
+      mem.save_valiant(args.output, config)
     else:
       out_tmpl = args.output or '%s.dat'
       if out_tmpl[-1] == '/' or os.path.isdir(out_tmpl):
         out_tmpl = os.path.join(out_tmpl, '%s.dat')
       if not '%s' in out_tmpl:
         raise errors.CommandLineArgError('output needs "%s" in its template')
-      mem.save_template(out_tmpl, order, args.is_sprite)
+      mem.save_template(out_tmpl, config)
     if args.compile:
       builder = rom_builder.RomBuilder()
       builder.build(mem.get_writer(), args.compile)

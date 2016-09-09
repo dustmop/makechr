@@ -52,14 +52,13 @@ class ObjectFileWriter(object):
       self.add_component(self.buffer.getvalue(), self.info)
       self.info.clear()
 
-  def pad(self, size, order, align, extract):
+  def configure(self, null_value=None, size=None, order=None, align=None,
+                extract=None):
+    self.info.null_value = null_value
     self.info.size = size
     self.info.order = order
     self.info.align = align
     self.component_req[self.info.name] = extract
-
-  def set_null_value(self, val):
-    self.info.null_value = val
 
   def get_bytes(self, name):
     """Get bytes written to the component with name."""
@@ -110,18 +109,22 @@ class ObjectFileWriter(object):
         max = i
     chr_metadata.size = max + 1
 
-  def write_extra_settings(self, order, traversal, is_locked_tiles):
+  def write_extra_settings(self, options, is_locked_tiles):
     """Write extra settings to the valiant object."""
-    if traversal == 'horizontal' and not order and not is_locked_tiles:
+    if (options.traversal == 'horizontal' and not options.chr_order and
+        not options.palette_order and not is_locked_tiles):
       return
     settings = self.obj_data.settings
     chr_metadata = self._get_chr_metadata(settings)
-    if order:
-      chr_metadata.order = order
+    if options.chr_order:
+      chr_metadata.order = options.chr_order
     if is_locked_tiles:
       chr_metadata.is_locked_tiles = is_locked_tiles
-    if traversal and traversal != 'horizontal':
-      chr_metadata.traversal = traversal
+    if options.traversal and options.traversal != 'horizontal':
+      chr_metadata.traversal = options.traversal
+    if options.is_sprite:
+      palette_metadata = self._get_palette_metadata(settings)
+      palette_metadata.order = 1
 
   def add_component(self, bytes, info):
     pad_size = info.size - len(bytes) if (not info.size is None) else None
@@ -133,7 +136,7 @@ class ObjectFileWriter(object):
     idx = len(self.obj_data.binaries)
     binary = self.obj_data.binaries.add()
     binary.bin = bytes
-    if not info.null_value is None:
+    if info.null_value:
       binary.null_value = info.null_value
     if not pre_pad is None:
       binary.pre_pad = pre_pad
@@ -173,6 +176,12 @@ class ObjectFileWriter(object):
       return settings.chr_metadata[0]
     else:
       return settings.chr_metadata.add()
+
+  def _get_palette_metadata(self, settings):
+    if len(settings.palette_metadata) > 0:
+      return settings.palette_metadata[0]
+    else:
+      return settings.palette_metadata.add()
 
   def save(self, filename):
     serialized = self.file_obj.SerializeToString()
