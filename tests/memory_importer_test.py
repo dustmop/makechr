@@ -6,6 +6,7 @@ from makechr import app, memory_importer
 import filecmp
 import os
 import tempfile
+from PIL import Image, ImageChops
 
 
 class MockArgs(object):
@@ -36,10 +37,24 @@ class MemoryImporterTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_import_and_render(self):
+    importer = memory_importer.MemoryImporter()
+    mem = importer.read('testdata/full-image.mem')
+    self.args.output = self.args.tmpfile('full-image.png')
+    a = app.Application()
+    a.create_output(mem, self.args, 'horizontal')
+    self.assert_equal_image(self.args.output, 'testdata/full-image.png')
+
   def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name
     expect_file = self.golden(name + golden_suffix, 'dat')
     self.assert_file_eq(actual_file, expect_file)
+
+  def assert_equal_image(self, actual_file, expect_file):
+    actual_img = Image.open(actual_file)
+    expect_img = Image.open(expect_file)
+    bbox = ImageChops.difference(actual_img, expect_img).getbbox()
+    self.assertTrue(bbox is None)
 
   def golden(self, name, ext):
     return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)

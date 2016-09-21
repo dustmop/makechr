@@ -3,6 +3,7 @@ import free_sprite_processor
 import image_processor
 import memory_importer
 import os
+import pixel_art_renderer
 import ppu_memory
 import rom_builder
 import view_renderer
@@ -87,6 +88,10 @@ class Application(object):
       pass
     elif args.output and args.output.endswith('.o'):
       mem.save_valiant(args.output, config)
+    elif args.output and args.output.endswith('.png'):
+      renderer = pixel_art_renderer.PixelArtRenderer()
+      img = renderer.render(mem)
+      img.save(args.output)
     else:
       out_tmpl = args.output or '%s.dat'
       if out_tmpl[-1] == '/' or os.path.isdir(out_tmpl):
