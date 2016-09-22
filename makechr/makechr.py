@@ -5,6 +5,9 @@ from PIL import Image
 import sys
 
 
+__version__ = '1.1'
+
+
 def run():
   usage = ''
   parser = argparse.ArgumentParser(
@@ -13,6 +16,8 @@ def run():
             '-p P/30-2c-01/'))
   parser.add_argument('input', type=str, nargs='?',
                       help='Filename for pixel art image. Should by 256x240.')
+  parser.add_argument('--version', dest='version', action='store_true',
+                      help=('Show the version number and exit.'))
 
   # Output.
   parser.add_argument('-o', dest='output', metavar='output',
@@ -108,6 +113,9 @@ def run():
                             'input image at x2 resolution with a grid, light '
                             'green for blocks, dark green for tiles.'))
   args = parser.parse_args()
+  if args.version:
+    sys.stdout.write('makechr ' + __version__ + '\n')
+    sys.exit(0)
   application = app.Application()
   if args.memimport:
     application.read_memory(args.memimport, args)

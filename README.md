@@ -10,7 +10,7 @@ Alternatively, if an input image is exactly 128px by 128px, representing a page 
 
 # Example usage
 
-    python makechr.py image.png
+    makechr image.png
 
 This will output four files: chr.dat, nametable.dat, palette.dat, attribute.dat.
 
@@ -36,11 +36,15 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
                      extract a palette if the image uses indexed color. See
                      below for the palette syntax.
 
-    -b [background_color]
+    -b [background_color] | [background_look=background_fill]
                      Background color for the palette. If the palette is not
                      provided, the derived palette will used this color. If the
-                     palette is provided, it's background color must match.
-                     Color must be in hexadecimal.
+                     palette is provided, its background color must match.
+                     Color must be in hexadecimal. Alternatively, a pair
+                     of colors may be provided, separated by an "=" operator.
+                     The first color is the "look", which appears in the input
+                     image, the second color is the "fill", which is output to
+                     the palette.
 
     -s               Sprite mode. Will prevent nametable and attribute
                      components from being output. Output spritelist component,
@@ -56,10 +60,13 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
                      will be processed.
 
     -t [strategy]    Strategy for traversing tile during CHR and nametable
-                     generation. Can be "horizontal" or "block". Horizontal
-                     will traverse tiles left to right, top to bottom. Block
-                     will traverse blocks at a top, top-left to top-right to
-                     bottom-left to bottom-right. (default is horizontal)
+                     generation. Can be "horizontal", "block", or "free".
+                     Horizontal will traverse tiles left to right, top to
+                     bottom. Block will traverse blocks at a top, top-left
+                     to top-right to bottom-left to bottom-right. Free is
+                     only usable with sprites and a background color spec,
+                     and will look for sprites positioned freely in the
+                     image. (default is horizontal)
 
     -r [chr_order]   Order that the CHR data appears in memory relative to
                      other CHR data. Can be 0 or 1. If 0, then the CHR data
