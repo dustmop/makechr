@@ -35,6 +35,7 @@ class IntegrationTests(unittest.TestCase):
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden(None, 'o'))
     self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.out, '')
 
   def test_order(self):
     # Order 0.
@@ -45,11 +46,13 @@ class IntegrationTests(unittest.TestCase):
     args = ['testdata/full-image.png', '-o', self.output_name, '-r', '1']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden('order1', 'o'))
+    self.assertEqual(self.out, '')
 
   def test_bg_color(self):
     args = ['testdata/full-image.png', '-o', self.output_name, '-b', '16']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden('bg-color', 'o'))
+    self.assertEqual(self.out, '')
 
   def test_show_stats(self):
     args = ['testdata/full-image.png', '-o', self.output_name, '-z']
@@ -60,6 +63,23 @@ Number of tiles: 6
 Palette: P/30-38-16-01/30-19/
 """
     self.assertEqual(self.out, expect)
+
+  def test_import_memory_produce_png(self):
+    self.output_name = os.path.join(self.tmpdir, 'full-image.png')
+    args = ['-m', 'testdata/full-image.mem', '-o', self.output_name]
+    self.makechr(args)
+    self.assert_file_eq(self.output_name, self.golden(None, 'png'))
+    self.assertEqual(self.out, '')
+
+  def test_import_memory_produce_view(self):
+    nt_view_name = os.path.join(self.tmpdir, 'nt.png')
+    reuse_view_name = os.path.join(self.tmpdir, 'reuse.png')
+    args = ['-m', 'testdata/full-image.mem', '-o', '/dev/null',
+            '--nametable-view', nt_view_name, '--reuse-view', reuse_view_name]
+    self.makechr(args)
+    self.assert_file_eq(nt_view_name, self.golden('nt', 'png'))
+    self.assert_file_eq(reuse_view_name, self.golden('reuse', 'png'))
+    self.assertEqual(self.out, '')
 
   def test_error_too_many_tiles(self):
     args = ['testdata/257tiles.png', '-o', self.output_name]
@@ -81,6 +101,13 @@ PaletteNoChoiceError at (2y,4x) for 30-19
 Errors displayed in "%s"
 """ % error_view)
     self.assert_file_eq(error_view, self.golden('error-no-choice', 'png'))
+
+  def test_error_input_and_import(self):
+    args = ['testdata/full-image.png', '-m', 'testdata/full-image.mem',
+            '-o', self.output_name]
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Cannot both import memory and process input file""")
+    self.assertEquals(self.returncode, 1)
 
   def golden(self, name, ext):
     if name:

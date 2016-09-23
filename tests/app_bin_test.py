@@ -13,7 +13,7 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     img = Image.open('testdata/full-image.png')
     self.process_image(img)
     a = app.Application()
-    a.create_views(self.ppu_memory, self.processor, self.args, img)
+    a.create_views(self.ppu_memory, self.args, img)
     self.assert_file_eq(self.args.palette_view, self.golden('pal', 'png'))
     self.assert_file_eq(self.args.colorization_view,
                         self.golden('color', 'png'))

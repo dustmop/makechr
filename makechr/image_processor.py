@@ -17,7 +17,6 @@ class ImageProcessor(object):
 
   def __init__(self):
     self._ppu_memory = ppu_memory.PpuMemory()
-    self._nt_count = {}
     self._nametable_cache = {}
     self._color_manifest = id_manifest.IdManifest()
     self._dot_manifest = id_manifest.IdManifest()
@@ -37,9 +36,6 @@ class ImageProcessor(object):
 
   def ppu_memory(self):
     return self._ppu_memory
-
-  def nt_count(self):
-    return self._nt_count
 
   def err(self):
     return self._err
@@ -221,10 +217,8 @@ class ImageProcessor(object):
           val = xlat[dot_profile[i]]
           tile.put_pixel(row, col, val)
       nt_num = self._ppu_memory.chr_page.add(tile)
-      self._nt_count[nt_num] = 0
       if not is_locked_tiles:
         self._nametable_cache[key] = nt_num
-    self._nt_count[nt_num] += 1
     return nt_num
 
   def get_color_sets(self, color_element_list):

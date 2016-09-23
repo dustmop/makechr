@@ -59,6 +59,13 @@ class PaletteTests(unittest.TestCase):
     with self.assertRaises(errors.PaletteBackgroundColorConflictError):
       pal.add([0x30, 0x01])
 
+  def test_bg_color_add_zero_bg_color_is_ignored(self):
+    pal = palette.Palette()
+    pal.set_bg_color(0x0f)
+    pal.add([0x0f, 0x01, 0x02, 0x03])
+    pal.add([0x00, 0x04, 0x05, 0x06])
+    self.assertEqual(str(pal), 'P/0f-01-02-03/0f-04-05-06/')
+
   def test_bg_color_override_old(self):
     pal = palette.Palette()
     pal.set_bg_color(0x0f)

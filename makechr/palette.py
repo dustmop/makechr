@@ -23,7 +23,9 @@ class Palette(object):
   def add(self, p):
     if self.bg_color is None:
       raise errors.PaletteBackgroundColorMissingError()
-    if self.bg_color != p[0]:
+    elif p[0] == 0:
+      pass
+    elif self.bg_color != p[0]:
       raise errors.PaletteBackgroundColorConflictError(p[0], self.bg_color)
     p = [self.bg_color] + p[1:]
     self.pals.append(p)

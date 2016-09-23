@@ -1,6 +1,7 @@
 import app
 import argparse
 import bg_color_spec
+import errno
 from PIL import Image
 import sys
 
@@ -117,13 +118,19 @@ def run():
     sys.stdout.write('makechr ' + __version__ + '\n')
     sys.exit(0)
   application = app.Application()
-  if args.memimport:
+  if args.memimport and args.input:
+    sys.stderr.write('Cannot both import memory and process input file')
+    sys.exit(1)
+  elif args.memimport:
     application.read_memory(args.memimport, args)
   elif args.input:
     try:
       img = Image.open(args.input)
-    except IOError:
-      sys.stderr.write('Input file not found: "%s"\n' % args.input)
+    except IOError, e:
+      if e.errno is None:
+        sys.stderr.write('Not an image file: "%s"\n' % args.input)
+      elif e.errno == errno.ENOENT:
+        sys.stderr.write('Input file not found: "%s"\n' % args.input)
       sys.exit(1)
     if not application.run(img, args):
       sys.exit(1)

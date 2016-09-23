@@ -27,6 +27,9 @@ class ChrTile(object):
     self.low = [ord(b) for b in bytes[0:8]]
     self.hi = [ord(b) for b in bytes[8:16]]
 
+  def is_empty(self):
+    return all(e == 0 for e in self.low) and all(e == 0 for e in self.hi)
+
   def _assign_bit_low_plane(self, bit, index, offset):
     self.low[index] |= (bit << (7 - offset))
 

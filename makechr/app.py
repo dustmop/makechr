@@ -1,3 +1,4 @@
+import collections
 import errors
 import free_sprite_processor
 import image_processor
@@ -29,7 +30,7 @@ class Application(object):
       return False
     if args.bg_color.fill:
       processor.ppu_memory().override_bg_color(args.bg_color.fill)
-    self.create_views(processor.ppu_memory(), processor, args, img)
+    self.create_views(processor.ppu_memory(), args, img)
     self.create_output(processor.ppu_memory(), args, traversal)
     if args.show_stats:
       self.show_stats(processor.ppu_memory(), processor, args)
@@ -48,19 +49,24 @@ class Application(object):
   def read_memory(self, filename, args):
     importer = memory_importer.MemoryImporter()
     mem = importer.read(filename)
+    img = None
+    if args.grid_view:
+      renderer = pixel_art_renderer.PixelArtRenderer()
+      img = renderer.render(mem)
+    self.create_views(mem, args, img)
     self.create_output(mem, args, self.get_traversal(None))
 
-  def create_views(self, mem, processor, args, img):
+  def create_views(self, mem, args, img):
     if args.palette_view:
       renderer = view_renderer.ViewRenderer()
       renderer.create_palette_view(args.palette_view, mem)
     if args.colorization_view:
       renderer = view_renderer.ViewRenderer()
-      renderer.create_colorization_view(args.colorization_view,
-          mem, processor.artifacts(), processor.color_manifest())
+      renderer.create_colorization_view(args.colorization_view, mem)
     if args.reuse_view:
+      nt_count = self.build_nt_count(mem)
       renderer = view_renderer.ViewRenderer()
-      renderer.create_reuse_view(args.reuse_view, mem, processor.nt_count())
+      renderer.create_reuse_view(args.reuse_view, mem, nt_count)
     if args.nametable_view:
       renderer = view_renderer.ViewRenderer()
       renderer.create_nametable_view(args.nametable_view, mem)
@@ -102,6 +108,14 @@ class Application(object):
     if args.compile:
       builder = rom_builder.RomBuilder()
       builder.build(mem.get_writer(), args.compile)
+
+  def build_nt_count(self, mem):
+    nametable = mem.gfx_0.nametable
+    nt_count = collections.defaultdict(int)
+    for y in xrange(30):
+      for x in xrange(32):
+        nt_count[nametable[y][x]] += 1
+    return nt_count
 
   def show_stats(self, mem, processor, args):
     print('Number of dot-profiles: {0}'.format(len(processor.dot_manifest())))

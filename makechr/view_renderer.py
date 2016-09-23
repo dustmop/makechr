@@ -17,6 +17,7 @@ class ViewRenderer(object):
     self.img = None
     self.draw = None
     self.font = None
+    self.empty_tile = None
 
   def create_file(self, outfile, width, height, color=None):
     if color is None:
@@ -27,6 +28,14 @@ class ViewRenderer(object):
 
   def save_file(self):
     self.img.save(self.outfile)
+
+  def determine_empty_tile(self, ppu_memory):
+    self.empty_tile = None
+    chr_page = ppu_memory.chr_page
+    for i in xrange(chr_page.size()):
+      if chr_page.get(i).is_empty():
+        self.empty_tile = i
+        return
 
   def to_tuple(self, value):
     r = value / (256 * 256)
@@ -116,10 +125,11 @@ class ViewRenderer(object):
       color = (0x00, 0x00, 0x00)
     self.draw.rectangle([j+0,i+0,j+s,i+s], color)
 
-  def draw_empty_block(self, block_y, block_x):
+  def draw_empty_block(self, block_y, block_x, bg):
     s = self.scale * 8
     i = block_y * 2 * s
     j = block_x * 2 * s
+    # TODO: Draw bg color instead.
     self.draw.rectangle([j+0,i+0,j+s*2,i+s*2], (0,0,0,255))
 
   def draw_nt_value(self, tile_y, tile_x, nt):
@@ -143,18 +153,12 @@ class ViewRenderer(object):
     self.draw.line([   x-1, y+sz+1, x+sz+1, y+sz+1], ERROR_GRID_COLOR2)
     self.draw.line([x+sz+1,    y-1, x+sz+1, y+sz+1], ERROR_GRID_COLOR2)
 
-  def is_empty_block(self, y, x, artifacts, cmanifest, bg):
-    # TODO: This could be much more efficient. Perhaps add a value to artifacts
-    # that determines whether the tile / block is empty.
-    cid_0 = artifacts[y * 2  ][x * 2  ][ARTIFACT_CID]
-    cid_1 = artifacts[y * 2  ][x * 2+1][ARTIFACT_CID]
-    cid_2 = artifacts[y * 2+1][x * 2  ][ARTIFACT_CID]
-    cid_3 = artifacts[y * 2+1][x * 2+1][ARTIFACT_CID]
-    if cid_0 == cid_1 and cid_1 == cid_2 and cid_2 == cid_3:
-      color_needs = cmanifest.at(cid_0)
-      if color_needs == bytearray([bg, 0xff, 0xff, 0xff]):
-        return True
-    return False
+  def is_empty_block(self, y, x, nametable):
+    nt0 = nametable[y*2  ][x*2  ]
+    nt1 = nametable[y*2  ][x*2+1]
+    nt2 = nametable[y*2+1][x*2  ]
+    nt3 = nametable[y*2+1][x*2+1]
+    return all(e == self.empty_tile for e in [nt0, nt1, nt2, nt3])
 
   def draw_grid(self, width, height):
     s = self.scale * 8
@@ -171,16 +175,15 @@ class ViewRenderer(object):
     for row in xrange(1, 15):
       self.draw.line([0, row*2*s, width, row*2*s], block_grid_color)
 
-  def create_colorization_view(self, outfile, ppu_memory, artifacts, cmanifest):
+  def create_colorization_view(self, outfile, ppu_memory):
     """Create an image that shows which palette is used for each block.
 
     outfile: Filename to output the view to.
     ppu_memory: Ppu memory containing position_palette and palette.
-    artifacts: Artifacts created by the image processor.
-    cmanifest: The color id_manifest.
     """
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
+    self.determine_empty_tile(ppu_memory)
     self.create_file(outfile, width, height)
     palette = ppu_memory.palette_nt
     # TODO: Support both graphics pages.
@@ -189,10 +192,10 @@ class ViewRenderer(object):
       for x in xrange(NUM_BLOCKS_X):
         pid = position_palette[y*2][x*2]
         poption = palette.get(pid)
-        if self.is_empty_block(y, x, artifacts, cmanifest, poption[0]):
-          self.draw_empty_block(y, x)
-          continue
-        self.draw_block(y, x, poption)
+        if self.is_empty_block(y, x, ppu_memory.gfx_0.nametable):
+          self.draw_empty_block(y, x, poption[0])
+        else:
+          self.draw_block(y, x, poption)
     self.save_file()
 
   def create_reuse_view(self, outfile, ppu_memory, nt_count):
@@ -243,6 +246,7 @@ class ViewRenderer(object):
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.load_nt_font()
+    self.determine_empty_tile(ppu_memory)
     self.create_file(outfile, width, height, (255, 255, 255))
     # TODO: Support both graphics pages.
     nametable = ppu_memory.gfx_0.nametable
@@ -253,7 +257,7 @@ class ViewRenderer(object):
             y = block_y * 2 + i
             x = block_x * 2 + j
             nt = nametable[y][x]
-            if nt != 0:
+            if nt != self.empty_tile:
               self.draw_nt_value(y, x, nt)
     self.draw_grid(width, height)
     self.save_file()
