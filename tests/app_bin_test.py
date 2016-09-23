@@ -123,7 +123,7 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     es = self.err.get()
     for e in es:
       msg = '{0} {1}'.format(type(e).__name__, e)
-      self.assertEqual(msg, 'NametableOverflow $100 @ tile (8y,0x)')
+      self.assertEqual(msg, 'NametableOverflow at tile (8y,0x)')
 
   def test_error(self):
     """Multiple errors."""

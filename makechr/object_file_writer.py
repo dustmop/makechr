@@ -94,7 +94,8 @@ class ObjectFileWriter(object):
   def write_chr_info(self, chr_data):
     """Write size of chr data. Also, sort the chr data and write the
        indexes to the valiant object."""
-    decorated = [(c.low + c.hi,i) for i,c in enumerate(chr_data)]
+    # TODO: Remove this.
+    decorated = [(c.low + c.hi,i) for i,c in enumerate(chr_data.tiles)]
     decorated.sort()
     settings = self.obj_data.settings
     chr_metadata = self._get_chr_metadata(settings)

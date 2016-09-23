@@ -101,7 +101,7 @@ class ViewRenderer(object):
       for x in xrange(8):
         base_y = tile_y * (s + 1)
         base_x = tile_x * (s + 1)
-        pixel = tile.get(y, x)
+        pixel = tile.get_pixel(y, x)
         gray = GRAY_PALETTE[pixel]
         self.draw.rectangle([base_x + x * t, base_y + y * t,
                              base_x + x * t + t - 1, base_y + y * t + t - 1],
@@ -270,11 +270,11 @@ class ViewRenderer(object):
     """
     self.scale = SCALE_FACTOR
     s = self.scale * 8
-    chr_data = ppu_memory.chr_data
-    rows = int(math.ceil(len(chr_data) / 16.0))
+    chr_page = ppu_memory.chr_page
+    rows = int(math.ceil(chr_page.size() / 16.0))
     width, height = (16 * (s + 1) - 1, rows * (s + 1) - 1)
     self.create_file(outfile, width, height, (255, 255, 255))
-    for k, tile in enumerate(chr_data):
+    for k, tile in enumerate(chr_page.tiles):
       tile_y = k / 16
       tile_x = k % 16
       self.draw_chr(tile, tile_y, tile_x)

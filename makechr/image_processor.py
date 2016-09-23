@@ -1,4 +1,4 @@
-import chr_tile
+import chr_data
 import extract_indexed_image_palette
 import errors
 import guess_best_palette
@@ -207,21 +207,20 @@ class ImageProcessor(object):
     xlat: Dot translator.
     did: Id for the dot_profile.
     """
-    if is_locked_tiles and len(self._ppu_memory.chr_data) == 0x100:
+    if is_locked_tiles and self._ppu_memory.chr_page.is_full():
       return 0
     key = str([did] + xlat)
     if key in self._nametable_cache:
       nt_num = self._nametable_cache[key]
     else:
       dot_profile = self._dot_manifest.at(did)
-      tile = chr_tile.ChrTile()
+      tile = chr_data.ChrTile()
       for row in xrange(8):
         for col in xrange(8):
           i = row * 8 + col
           val = xlat[dot_profile[i]]
-          tile.set(row, col, val)
-      nt_num = len(self._ppu_memory.chr_data)
-      self._ppu_memory.chr_data.append(tile)
+          tile.put_pixel(row, col, val)
+      nt_num = self._ppu_memory.chr_page.add(tile)
       self._nt_count[nt_num] = 0
       if not is_locked_tiles:
         self._nametable_cache[key] = nt_num
@@ -384,9 +383,10 @@ class ImageProcessor(object):
       # skip this entry.
       if dot_xlat:
         nt_num = self.get_nametable_num(dot_xlat, did, is_locked_tiles)
+        if nt_num is None:
+          self._err.add(errors.NametableOverflow(y, x))
+          nt_num = 0
         self._ppu_memory.gfx_0.nametable[y][x] = nt_num
-        if nt_num >= 0x100:
-          self._err.add(errors.NametableOverflow(y, x, nt_num))
       if empty_cid == cid and empty_did == did:
         self._ppu_memory.empty_tile = nt_num
     # Convert nametable to spritelist

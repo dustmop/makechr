@@ -1,4 +1,4 @@
-import chr_tile
+import chr_data
 import os
 import palette
 import ppu_memory
@@ -13,9 +13,8 @@ class MemoryImporter(object):
       raise errors.FileFormatError(file_size, size=0x4000)
     mem = ppu_memory.PpuMemory()
     # Read CHR from $0000-$2000
-    for k in xrange(512):
-      tile = chr_tile.ChrTile.from_binary(fp.read(16))
-      mem.chr_data.append(tile)
+    mem.chr_page = chr_data.ChrPage.from_binary(fp.read(0x1000))
+    mem.chr_page2 = chr_data.ChrPage.from_binary(fp.read(0x1000))
     # TODO: Handle chr order (background / sprite at $0000 / $1000).
     # For each graphics page, read nametable & attribute.
     for loop_num in xrange(2):

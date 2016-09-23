@@ -1,4 +1,5 @@
 import binary_file_writer
+import chr_data
 from constants import *
 import os
 
@@ -31,7 +32,7 @@ class PpuMemory(object):
     self.gfx_1 = GraphicsPage() # unused
     self.palette_nt = None
     self.palette_spr = None
-    self.chr_data = []
+    self.chr_page = chr_data.ChrPage()
     self._writer = None
     self._bg_color = None
     self.empty_tile = None
@@ -75,7 +76,7 @@ class PpuMemory(object):
     module_name = os.path.splitext(os.path.basename(output_filename))[0]
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
-    self._writer.write_chr_info(self.chr_data)
+    self._writer.write_chr_info(self.chr_page)
     self._writer.write_extra_settings(config, self.is_locked_tiles)
     self._writer.save(output_filename)
 
@@ -89,7 +90,7 @@ class PpuMemory(object):
       fout = self._writer.get_writable('chr', True)
       self._writer.configure(null_value=0, size=0x1000, order=config.chr_order,
                              align=0x10, extract=0x2000)
-      self._save_chr(fout, self.chr_data)
+      self._save_chr(fout, self.chr_page)
     if 'palette' in components:
       fout = self._writer.get_writable('palette', True)
       self._writer.configure(null_value=self._bg_color, size=0x10,
@@ -110,9 +111,8 @@ class PpuMemory(object):
         nt = nametable[y][x]
         fout.write(chr(nt))
 
-  def _save_chr(self, fout, chr_data):
-    for d in chr_data:
-      d.write(fout)
+  def _save_chr(self, fout, chr_page):
+    chr_page.save(fout)
 
   def _save_palette(self, fout, palette_1, palette_2):
     self._write_single_palette(fout, palette_1, self._bg_color)
