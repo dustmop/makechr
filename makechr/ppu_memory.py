@@ -40,9 +40,6 @@ class PpuMemory(object):
     self.nt_width = None
     self.spritelist = []
 
-  def get_writer(self):
-    return self._writer
-
   def override_bg_color(self, bg_color):
     self._bg_color = bg_color
     if self.palette_nt:
@@ -177,3 +174,48 @@ class PpuMemory(object):
           fout.write(chr(palette_option[j]))
         else:
           fout.write(chr(bg_color))
+
+  def get_bytes(self, role):
+    if role == 'nametable':
+      nametable = self.gfx_0.nametable
+      bytes = bytearray()
+      for y in xrange(30):
+        bytes += bytearray(nametable[y])
+      return bytes
+    elif role == 'attribute':
+      position = self.gfx_0.position_palette
+      bytes = bytearray()
+      for attr_y in xrange(NUM_BLOCKS_Y / 2 + 1):
+        for attr_x in xrange(NUM_BLOCKS_X / 2):
+          block_y = attr_y * 2
+          block_x = attr_x * 2
+          y = block_y * 2
+          x = block_x * 2
+          p0 = position[y  ][x  ]
+          p1 = position[y  ][x+2]
+          p2 = position[y+2][x  ] if block_y + 1 < NUM_BLOCKS_Y else 0
+          p3 = position[y+2][x+2] if block_y + 1 < NUM_BLOCKS_Y else 0
+          attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
+          bytes.append(attr)
+      return bytes
+    elif role == 'palette':
+      if self._bg_color is None:
+        self._bg_color = self._get_bg_color(self.palette_nt, self.palette_spr)
+      bytes = bytearray()
+      if self.palette_nt:
+        bytes += self.palette_nt.to_bytes()
+        bytes += bytearray([self._bg_color] * (0x10 - len(bytes)))
+      else:
+        bytes += bytearray([self._bg_color] * 0x10)
+      if self.palette_spr:
+        bytes += self.palette_spr.to_bytes()
+        bytes += bytearray([self._bg_color] * (0x20 - len(bytes)))
+      else:
+        bytes += bytearray([self._bg_color] * 0x10)
+      return bytes
+    elif role == 'chr':
+      bytes = self.chr_page.to_bytes()
+      bytes += bytearray([0] * (0x2000 - len(bytes)))
+      return bytes
+    else:
+      raise RuntimeError('Unknown role %s' % role)

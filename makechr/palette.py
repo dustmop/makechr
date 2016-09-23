@@ -44,6 +44,12 @@ class Palette(object):
     if i < len(self.pals):
       return self.pals[i]
 
+  def to_bytes(self):
+    bytes = bytearray()
+    for p in self.pals:
+      bytes += bytearray(p)
+    return bytes
+
 
 class PaletteParser(object):
   def parse(self, text):

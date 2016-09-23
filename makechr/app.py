@@ -107,7 +107,7 @@ class Application(object):
       mem.save_template(out_tmpl, config)
     if args.compile:
       builder = rom_builder.RomBuilder()
-      builder.build(mem.get_writer(), args.compile)
+      builder.build(mem, args.compile)
 
   def build_nt_count(self, mem):
     nametable = mem.gfx_0.nametable

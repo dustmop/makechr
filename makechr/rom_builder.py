@@ -14,14 +14,14 @@ class RomBuilder(object):
     self.rom_vectors = '\x00\x00\x20\xc4\x00\x00'
     self.fill_size = 0x3b61
 
-  def build(self, built_data, outfile):
+  def build(self, mem, outfile):
     fout = open(outfile, 'wb')
     fout.write(self.rom_header)
-    fout.write(built_data.get_bytes('palette'))
-    fout.write(built_data.get_bytes('nametable'))
-    fout.write(built_data.get_bytes('attribute'))
+    fout.write(mem.get_bytes('palette'))
+    fout.write(mem.get_bytes('nametable'))
+    fout.write(mem.get_bytes('attribute'))
     fout.write(self.rom_code)
     fout.write('\x00' * self.fill_size)
     fout.write(self.rom_vectors)
-    fout.write(built_data.get_bytes('chr'))
+    fout.write(mem.get_bytes('chr'))
     fout.close()

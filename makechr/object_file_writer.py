@@ -60,28 +60,6 @@ class ObjectFileWriter(object):
     self.info.align = align
     self.component_req[self.info.name] = extract
 
-  def get_bytes(self, name):
-    """Get bytes written to the component with name."""
-    binary_index = None
-    role = valiant.DataRole.Value(name.upper())
-    for component in self.obj_data.components:
-      if component.role == role:
-        binary_index = component.binary_index
-        break
-    if binary_index is None:
-      raise ValueError('Did not find component "%s"' % (name,))
-    binary = self.obj_data.binaries[binary_index]
-    content = binary.bin
-    null_value = chr(binary.null_value or 0)
-    if binary.padding:
-      content = content + (null_value * binary.padding)
-    if binary.pre_pad:
-      content = (null_value * binary.padding) + content
-    extract = self.component_req.get(name)
-    if extract and len(content) < extract:
-      content = content + (null_value * (extract - len(content)))
-    return content
-
   def write_module(self, module_name):
     """Write the module name to the valiant object."""
     self.file_obj.header.module = module_name
