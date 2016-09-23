@@ -76,4 +76,4 @@ class GeneralAppTests(unittest.TestCase):
   def assert_file_eq(self, actual_file, expect_file):
     self.assertTrue(filecmp.cmp(actual_file, expect_file, shallow=False),
                     "Files did not match actual:%s expect:%s" % (
-        actual_file, expect_file))
+                      actual_file, os.path.abspath(expect_file)))

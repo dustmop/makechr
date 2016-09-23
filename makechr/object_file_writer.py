@@ -92,23 +92,10 @@ class ObjectFileWriter(object):
     settings.bg_color = bg_color
 
   def write_chr_info(self, chr_data):
-    """Write size of chr data. Also, sort the chr data and write the
-       indexes to the valiant object."""
-    # TODO: Remove this.
-    decorated = [(c.low + c.hi,i) for i,c in enumerate(chr_data.tiles)]
-    decorated.sort()
+    """Write size of chr data."""
     settings = self.obj_data.settings
     chr_metadata = self._get_chr_metadata(settings)
-    max = 0
-    last = None
-    for c,i in decorated:
-      if c == last:
-        continue
-      chr_metadata.sorted_idx.append(i)
-      last = c
-      if i > max:
-        max = i
-    chr_metadata.size = max + 1
+    chr_metadata.size = chr_data.size()
 
   def write_extra_settings(self, options, is_locked_tiles):
     """Write extra settings to the valiant object."""

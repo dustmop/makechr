@@ -33,10 +33,19 @@ class ChrTile(object):
   def _assign_bit_hi_plane(self, bit, index, offset):
     self.hi[index] |= (bit << (7 - offset))
 
-  def write(self, fp):
-    """Write chr image to an output stream."""
-    fp.write(bytearray(self.low))
-    fp.write(bytearray(self.hi))
+  def __cmp__(self, other):
+    if self.low < other.low:
+      return -1
+    elif self.low > other.low:
+      return 1
+    elif self.hi < other.hi:
+      return -1
+    elif self.hi > other.hi:
+      return 1
+    return 0
+
+  def __repr__(self):
+    return '%s' % (self.low + self.hi)
 
 
 class ChrPage(object):
@@ -62,12 +71,61 @@ class ChrPage(object):
   @staticmethod
   def from_binary(bytes):
     make = ChrPage()
-    for k in xrange(0x100):
+    for k in xrange(len(bytes) / 0x10):
       tile = ChrTile()
       tile.set(bytes[k*0x10:k*0x10+0x10])
       make.add(tile)
     return make
 
-  def save(self, fp):
-    for t in self.tiles:
-      t.write(fp)
+  def to_bytes(self):
+    bytes = bytearray(len(self.tiles) * 0x10)
+    for k,tile in enumerate(self.tiles):
+      bytes[k*0x10+0x00:k*0x10+0x08] = tile.low
+      bytes[k*0x10+0x08:k*0x10+0x10] = tile.hi
+    return bytes
+
+
+class SortableChrPage(ChrPage):
+  def __init__(self):
+    ChrPage.__init__(self)
+    self.idx = []
+
+  def add(self, tile):
+    r = ChrPage.add(self, tile)
+    self._assign_idx()
+    return r
+
+  def clone(self):
+    make = SortableChrPage()
+    make.tiles = self.tiles
+    make.idx = self.idx
+    return make
+
+  def index(self, k):
+    return self.idx[k]
+
+  def k_smallest(self, k):
+    return self.tiles[self.idx[k]]
+
+  def num_idx(self):
+    return len(self.idx)
+
+  @staticmethod
+  def from_binary(bytes):
+    inner = ChrPage.from_binary(bytes)
+    make = SortableChrPage()
+    make.tiles = inner.tiles
+    make._assign_idx()
+    return make
+
+  def _assign_idx(self):
+    es = [(e.low + e.hi,i) for (i,e) in enumerate(self.tiles)]
+    es.sort(key=lambda x:x[0])
+    self.idx = []
+    last = None
+    for e,i in es:
+      if e == last:
+        continue
+      last = e
+      self.idx.append(i)
+

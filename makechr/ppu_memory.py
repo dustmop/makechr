@@ -112,7 +112,7 @@ class PpuMemory(object):
         fout.write(chr(nt))
 
   def _save_chr(self, fout, chr_page):
-    chr_page.save(fout)
+    fout.write(chr_page.to_bytes())
 
   def _save_palette(self, fout, palette_1, palette_2):
     self._write_single_palette(fout, palette_1, self._bg_color)
