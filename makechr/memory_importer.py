@@ -1,4 +1,5 @@
 import chr_data
+import errors
 import os
 import palette
 import ppu_memory

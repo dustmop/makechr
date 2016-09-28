@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import app, memory_importer
+from makechr import app, errors, memory_importer
 
 import filecmp
 import os
@@ -44,6 +44,12 @@ class MemoryImporterTests(unittest.TestCase):
     a = app.Application()
     a.create_output(mem, self.args, 'horizontal')
     self.assert_equal_image(self.args.output, 'testdata/full-image.png')
+
+  def test_import_error_bad_size(self):
+    importer = memory_importer.MemoryImporter()
+    with self.assertRaises(errors.FileFormatError) as e:
+      importer.read('testdata/full-image-chr.dat')
+      self.assertEqual(e.file_size, 0x2000)
 
   def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name
