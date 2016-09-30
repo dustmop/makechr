@@ -30,11 +30,26 @@ class ChrTile(object):
   def is_empty(self):
     return all(e == 0 for e in self.low) and all(e == 0 for e in self.hi)
 
+  def flip(self, direction):
+    make = ChrTile()
+    make.low = self.low
+    make.hi = self.hi
+    if direction == 'v' or direction == 'vh':
+      make.low = make.low[::-1]
+      make.hi = make.hi[::-1]
+    if direction == 'h' or direction == 'vh':
+      make.low = [self._reverse_bits(b) for b in make.low]
+      make.hi = [self._reverse_bits(b) for b in make.hi]
+    return make
+
   def _assign_bit_low_plane(self, bit, index, offset):
     self.low[index] |= (bit << (7 - offset))
 
   def _assign_bit_hi_plane(self, bit, index, offset):
     self.hi[index] |= (bit << (7 - offset))
+
+  def _reverse_bits(self, b):
+    return int('{:08b}'.format(b)[::-1], 2)
 
   def __cmp__(self, other):
     if self.low < other.low:

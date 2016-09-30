@@ -85,6 +85,22 @@ class ChrDataTests(unittest.TestCase):
     self.assertEqual(spage.get(4), expect_tile)
     self.assertEqual(spage.k_smallest(0), expect_tile)
 
+  def test_flip(self):
+    empty = [0] * 8
+    origin = [0,1,2,3,4,5,6,7]
+    golden = [0x00,0x80,0x40,0xc0,0x20,0xa0,0x60,0xe0]
+    tile = chr_data.ChrTile()
+    tile.set(bytes(bytearray(origin + empty)))
+    horz = tile.flip('h')
+    self.assertEqual(horz.low, golden)
+    self.assertEqual(horz.hi, empty)
+    vert = tile.flip('v')
+    self.assertEqual(vert.low, origin[::-1])
+    self.assertEqual(vert.hi, empty)
+    spin = tile.flip('vh')
+    self.assertEqual(spin.low, golden[::-1])
+    self.assertEqual(spin.hi, empty)
+
 
 if __name__ == '__main__':
   unittest.main()

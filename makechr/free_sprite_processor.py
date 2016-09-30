@@ -70,8 +70,9 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
       # always be the same type.
       color_needs = self._color_manifest.at(cid)
       dot_xlat = self.get_dot_xlat(color_needs, palette_option)
-      nt_num = self.get_nametable_num(dot_xlat, did, False)
-      self._ppu_memory.spritelist.append([corner_y - 1, nt_num, pid, corner_x])
+      (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, True, False)
+      self._ppu_memory.spritelist.append([corner_y - 1, chr_num,
+                                          pid | flip_bits, corner_x])
     self._ppu_memory.palette_spr = pal
 
   def _find_region_corners(self, fill):
