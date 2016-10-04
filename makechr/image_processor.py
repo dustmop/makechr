@@ -390,6 +390,10 @@ class ImageProcessor(object):
         pid = self._ppu_memory.gfx_0.position_palette[y][x]
       palette_option = pal.get(pid)
       color_needs = self._color_manifest.at(cid)
+      if is_sprite and empty_cid == cid and empty_did == did:
+        self._ppu_memory.gfx_0.nametable[y][x] = 0x100
+        self._ppu_memory.empty_tile = 0x100
+        continue
       # Create a translator that can turn the dot_profile into a chr_tile.
       try:
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)

@@ -30,7 +30,7 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.create_output()
     self.golden_file_prefix = 'reticule'
-    self.assert_output_result('chr')
+    self.assert_output_result('chr', '-as-nametable')
     self.assert_output_result('nametable')
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
