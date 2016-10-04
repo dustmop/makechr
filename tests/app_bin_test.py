@@ -121,12 +121,22 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.assertTrue(self.err.has())
     es = self.err.get()
-    for e in es:
-      msg = '{0} {1}'.format(type(e).__name__, e)
-      self.assertEqual(msg, 'NametableOverflow at tile (8y,0x)')
+    self.assertEqual(len(es), 1)
+    msg = '{0} {1}'.format(type(es[0]).__name__, es[0])
+    self.assertEqual(msg, 'NametableOverflow 256 at tile (8y,0x)')
 
-  def test_error(self):
-    """Multiple errors."""
+  def test_error_even_more_tiles(self):
+    """If there are too many tiles, report how many are needed as an error."""
+    img = Image.open('testdata/276tiles.png')
+    self.process_image(img)
+    self.assertTrue(self.err.has())
+    es = self.err.get()
+    self.assertEqual(len(es), 1)
+    msg = '{0} {1}'.format(type(es[0]).__name__, es[0])
+    self.assertEqual(msg, 'NametableOverflow 275 at tile (8y,0x)')
+
+  def test_error_image(self):
+    """Multiple errors, as an image."""
     img = Image.open('testdata/full-image-with-error.png')
     self.process_image(img)
     self.args.error_outfile = self.args.tmppng('error')

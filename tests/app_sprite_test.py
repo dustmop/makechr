@@ -79,6 +79,18 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_not_exist('attribute')
     self.assert_output_result('spritelist')
 
+  def test_error_for_too_many_sprites(self):
+    """If there are too many sprites, throw error."""
+    img = Image.open('testdata/implied-bg-color.png')
+    self.args.is_sprite = True
+    self.process_image(img)
+    self.assertTrue(self.err.has())
+    es = self.err.get()
+    self.assertEqual(len(es), 1)
+    msg = '{0} {1}'.format(type(es[0]).__name__, es[0])
+    self.assertEqual(msg, 'SpritelistOverflow at tile (2y,9x)')
+
+
 
 if __name__ == '__main__':
   unittest.main()

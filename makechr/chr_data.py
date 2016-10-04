@@ -1,3 +1,6 @@
+import errors
+
+
 class ChrTile(object):
   def __init__(self):
     self.low = [0] * 8
@@ -72,7 +75,7 @@ class ChrPage(object):
 
   def add(self, tile):
     if self.is_full():
-      return None
+      raise errors.ChrPageFull()
     ret = self.size()
     self.tiles.append(tile)
     return ret

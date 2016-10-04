@@ -212,6 +212,7 @@ class ImageProcessor(object):
     key = str([did] + xlat)
     if key in self._chrdata_cache:
       return self._chrdata_cache[key]
+    # Translate dot_profile to create tile.
     dot_profile = self._dot_manifest.at(did)
     tile = chr_data.ChrTile()
     for row in xrange(8):
@@ -221,15 +222,22 @@ class ImageProcessor(object):
         tile.put_pixel(row, col, val)
     if is_sprite and str(tile) in self._chrdata_cache:
       return self._chrdata_cache[str(tile)]
-    chr_num = self._ppu_memory.chr_page.add(tile)
+    # Add the tile to the chr collection.
+    try:
+      chr_num = self._ppu_memory.chr_page.add(tile)
+    except errors.ChrPageFull:
+      chr_num = len(self._chrdata_cache)
+      self._chrdata_cache[key] = (0, 0x00)
+      raise errors.NametableOverflow(chr_num)
+    # Save in the cache.
     if is_sprite:
       horz_tile = tile.flip('h')
       vert_tile = tile.flip('v')
       spin_tile = tile.flip('vh')
-      self._chrdata_cache[str(tile)]      = (chr_num, 0x00)
-      self._chrdata_cache[str(horz_tile)] = (chr_num, 0x40)
-      self._chrdata_cache[str(vert_tile)] = (chr_num, 0x80)
       self._chrdata_cache[str(spin_tile)] = (chr_num, 0xc0)
+      self._chrdata_cache[str(vert_tile)] = (chr_num, 0x80)
+      self._chrdata_cache[str(horz_tile)] = (chr_num, 0x40)
+      self._chrdata_cache[str(tile)]      = (chr_num, 0x00)
     elif not is_locked_tiles:
       self._chrdata_cache[key] = (chr_num, 0x00)
     return (chr_num, 0x00)
@@ -390,10 +398,11 @@ class ImageProcessor(object):
       # If there was an error in the tile, the dot_xlat will be empty. So
       # skip this entry.
       if dot_xlat:
-        (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, is_sprite,
-                                                  is_locked_tiles)
-        if chr_num is None:
-          self._err.add(errors.NametableOverflow(y, x))
+        try:
+          (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, is_sprite,
+                                                    is_locked_tiles)
+        except errors.NametableOverflow, e:
+          self._err.add(errors.NametableOverflow(e.chr_num, y, x))
           chr_num = 0
         if is_sprite:
           self._flip_bits[y][x] = flip_bits
@@ -405,12 +414,16 @@ class ImageProcessor(object):
       for y in xrange(NUM_BLOCKS_Y * 2):
         for x in xrange(NUM_BLOCKS_X * 2):
           tile = self._ppu_memory.gfx_0.nametable[y][x]
-          if tile != self._ppu_memory.empty_tile:
-            y_pos = y * 8 - 1 if y > 0 else 0
-            x_pos = x * 8
-            attr = (self._ppu_memory.gfx_0.position_palette[y][x] |
-                    self._flip_bits[y][x])
-            self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
+          if tile == self._ppu_memory.empty_tile:
+            continue
+          if len(self._ppu_memory.spritelist) == 0x40:
+            self._err.add(errors.SpritelistOverflow(y, x))
+            continue
+          y_pos = y * 8 - 1 if y > 0 else 0
+          x_pos = x * 8
+          attr = (self._ppu_memory.gfx_0.position_palette[y][x] |
+                  self._flip_bits[y][x])
+          self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
     # Store palette.
     if not is_sprite:
       self._ppu_memory.palette_nt = pal

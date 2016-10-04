@@ -85,7 +85,7 @@ Palette: P/30-38-16-01/30-19/
     args = ['testdata/257tiles.png', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Found 1 error:
-NametableOverflow at tile (8y,0x)
+NametableOverflow 256 at tile (8y,0x)
 To see errors visually, use -e command-line option.
 """)
     self.assertEquals(self.returncode, 1)

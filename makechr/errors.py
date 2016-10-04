@@ -132,7 +132,21 @@ class UnknownStrategy(Exception):
 
 
 class NametableOverflow(Exception):
-  def __init__(self, tile_y, tile_x):
+  def __init__(self, chr_num, tile_y=0, tile_x=0):
+    self.chr_num = chr_num
+    self.tile_y = tile_y
+    self.tile_x = tile_x
+
+  def __str__(self):
+    return '%d at tile (%dy,%dx)' % (self.chr_num, self.tile_y, self.tile_x)
+
+
+class ChrPageFull(Exception):
+  pass
+
+
+class SpritelistOverflow(Exception):
+  def __init__(self, tile_y=0, tile_x=0):
     self.tile_y = tile_y
     self.tile_x = tile_x
 
@@ -145,6 +159,8 @@ class ErrorCollector(object):
     self.e = []
     self.dup = []
     self.color_not_allowed_dups = {}
+    self.nametable_overflow_idx = None
+    self.spritelist_overflow_idx = None
 
   def add(self, error):
     if isinstance(error, ColorNotAllowedError):
@@ -155,6 +171,18 @@ class ErrorCollector(object):
         self.dup.append(error)
         return
       self.color_not_allowed_dups[c] = len(self.e)
+    if isinstance(error, NametableOverflow):
+      if self.nametable_overflow_idx is None:
+        self.nametable_overflow_idx = len(self.e)
+      else:
+        idx = self.nametable_overflow_idx
+        self.e[idx].chr_num = error.chr_num
+        return
+    if isinstance(error, SpritelistOverflow):
+      if self.spritelist_overflow_idx is None:
+        self.spritelist_overflow_idx = len(self.e)
+      else:
+        return
     self.e.append(error)
 
   def has(self):
