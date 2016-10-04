@@ -37,9 +37,11 @@ class GeneralAppTests(unittest.TestCase):
     self.args = MockArgs()
     self.golden_file_prefix = 'full-image'
 
-  def process_image(self, img, palette_text=None):
+  def process_image(self, img, palette_text=None, auto_sprite_bg=False):
     if self.args.traversal != 'free':
       self.processor = image_processor.ImageProcessor()
+      if auto_sprite_bg:
+        self.processor._test_only_auto_sprite_bg = auto_sprite_bg
       self.processor.process_image(img, palette_text,
                                    self.args.bg_color.look,
                                    self.args.traversal, self.args.is_sprite,

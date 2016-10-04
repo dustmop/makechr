@@ -36,6 +36,27 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('attribute')
     self.assert_not_exist('spritelist')
 
+  def test_output_sprite_auto_bg_color(self):
+    """In sprite mode the bg color can be auto detected."""
+    img = Image.open('testdata/reticule.png')
+    self.args.is_sprite = True
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'reticule'
+    self.assert_output_result('chr')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-sprite')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist')
+    # Without this functionality, the derived palette won't have the right
+    # background color, which will cause spritelist overflow.
+    self.process_image(img, auto_sprite_bg=True)
+    self.assertTrue(self.err.has())
+    es = self.err.get()
+    self.assertEqual(len(es), 1)
+    msg = '{0} {1}'.format(type(es[0]).__name__, es[0])
+    self.assertEqual(msg, 'SpritelistOverflow at tile (2y,0x)')
+
   def test_output_sprite_more_colors(self):
     """Sprite mode for image that must use sprites, due to palette."""
     img = Image.open('testdata/reticule-more.png')
@@ -83,12 +104,12 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     """If there are too many sprites, throw error."""
     img = Image.open('testdata/implied-bg-color.png')
     self.args.is_sprite = True
-    self.process_image(img)
+    self.process_image(img, auto_sprite_bg=False)
     self.assertTrue(self.err.has())
     es = self.err.get()
     self.assertEqual(len(es), 1)
     msg = '{0} {1}'.format(type(es[0]).__name__, es[0])
-    self.assertEqual(msg, 'SpritelistOverflow at tile (2y,9x)')
+    self.assertEqual(msg, 'SpritelistOverflow at tile (2y,7x)')
 
 
 

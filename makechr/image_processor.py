@@ -21,6 +21,7 @@ class ImageProcessor(object):
     self._color_manifest = id_manifest.IdManifest()
     self._dot_manifest = id_manifest.IdManifest()
     self._block_color_manifest = id_manifest.IdManifest()
+    self._test_only_auto_sprite_bg = False
     self._artifacts = [row[:] for row in
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     self._flip_bits = [row[:] for row in
@@ -288,6 +289,12 @@ class ImageProcessor(object):
       pal = extractor.extract_palette(self.img.palette, self.img.format)
       if pal:
         return pal
+    # If sprite mode, and there's no bg color, we can figure it out based upon
+    # how many empty tiles there need to be.
+    if is_sprite and bg_color is None and not self._test_only_auto_sprite_bg:
+      for color, num in self._color_manifest.counts():
+        if num >= 0x40 and bg_color is None:
+          bg_color = color
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
     if not bg_color is None:
@@ -327,6 +334,9 @@ class ImageProcessor(object):
       num_blocks_y = NUM_BLOCKS_SMALL_SQUARE
       num_blocks_x = NUM_BLOCKS_SMALL_SQUARE
       self._ppu_memory.nt_width = NUM_BLOCKS_SMALL_SQUARE * 2
+    # In order to auto detect the background color, have to count color needs.
+    if is_sprite and bg_color is None:
+      self._color_manifest = id_manifest.CountingIdManifest()
     # For each block, look at each tile and get their color needs and
     # dot profile. Save the corresponding ids in the artifact table.
     for block_y in xrange(num_blocks_y):
