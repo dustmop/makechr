@@ -43,6 +43,8 @@ class Application(object):
       return 'block'
     elif strategy == 'f' or strategy == 'free':
       return 'free'
+    elif strategy == '8x16':
+      return '8x16'
     else:
       raise errors.UnknownStrategy(strategy)
 

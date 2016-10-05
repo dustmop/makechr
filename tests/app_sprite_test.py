@@ -85,6 +85,20 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
     self.assertEqual(actual_errors, expect_errors)
 
+  def test_output_sprite_8x16(self):
+    """Sprite mode with 8x16 sprites."""
+    img = Image.open('testdata/reticule.png')
+    self.args.is_sprite = True
+    self.args.traversal = '8x16'
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'reticule'
+    self.assert_output_result('chr', '-8x16')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-sprite')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-8x16')
+
   def test_output_free_sprite_traversal(self):
     """Sprite mode using free traversal."""
     img = Image.open('testdata/free-sprites.png')

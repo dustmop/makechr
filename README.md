@@ -60,13 +60,15 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
                      will be processed.
 
     -t [strategy]    Strategy for traversing tile during CHR and nametable
-                     generation. Can be "horizontal", "block", or "free".
-                     Horizontal will traverse tiles left to right, top to
-                     bottom. Block will traverse blocks at a top, top-left
-                     to top-right to bottom-left to bottom-right. Free is
-                     only usable with sprites and a background color spec,
-                     and will look for sprites positioned freely in the
-                     image. (default is horizontal)
+                     generation. Can be "horizontal", "block", "free", or.
+                     "8x16". Horizontal will traverse tiles left to right,
+                     top to bottom. Block will traverse blocks at a top,
+                     top-left to top-right to bottom-left to bottom-right.
+                     Free is only usable with sprites and a background color
+                     spec, and will look for sprites positioned freely in the
+                     image. 8x16 is only usable with sprites and will create
+                     data that is suitable for 8x16 mode. (default is
+                     horizontal)
 
     -r [chr_order]   Order that the CHR data appears in memory relative to
                      other CHR data. Can be 0 or 1. If 0, then the CHR data

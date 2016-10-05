@@ -69,7 +69,8 @@ def run():
                             'bottom. If "block" then traverse a block at a '
                             'time, in a zig-zag. If "free" then traverse '
                             'freely looking for sprites (requires -s flag '
-                            'and -b).'))
+                            'and -b). If "8x16" then traverse sprites so '
+                            'that they are suitable for 8x16 mode.'))
   parser.add_argument('-r', dest='order', metavar='chr_order', type=int,
                       help=('Order that the CHR data appears in memory, '
                             'relative to other CHR data. Must be 0 or 1. '

@@ -25,7 +25,7 @@ class ImageProcessor(object):
     self._artifacts = [row[:] for row in
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     self._flip_bits = [row[:] for row in
-                       [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+                       [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     self._err = errors.ErrorCollector()
     self.image_x = self.image_y = None
 
@@ -392,6 +392,10 @@ class ImageProcessor(object):
       generator = ((y*2+i,x*2+j) for y in xrange(num_blocks_y) for
                    x in xrange(num_blocks_x) for i in xrange(2) for
                    j in xrange(2))
+    elif traversal == '8x16':
+      generator = ((y*2+i,x*2+j) for y in xrange(num_blocks_y) for
+                   x in xrange(num_blocks_x) for j in xrange(2) for
+                   i in xrange(2))
     for (y,x) in generator:
       (cid, did, bcid) = self._artifacts[y][x]
       if not is_sprite:
@@ -425,19 +429,30 @@ class ImageProcessor(object):
         self._ppu_memory.empty_tile = chr_num
     # Convert nametable to spritelist
     if is_sprite:
-      for y in xrange(NUM_BLOCKS_Y * 2):
-        for x in xrange(NUM_BLOCKS_X * 2):
-          tile = self._ppu_memory.gfx_0.nametable[y][x]
-          if tile == self._ppu_memory.empty_tile:
-            continue
-          if len(self._ppu_memory.spritelist) == 0x40:
-            self._err.add(errors.SpritelistOverflow(y, x))
-            continue
-          y_pos = y * 8 - 1 if y > 0 else 0
-          x_pos = x * 8
-          attr = (self._ppu_memory.gfx_0.position_palette[y][x] |
-                  self._flip_bits[y][x])
-          self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
+      if traversal != '8x16':
+        rows = num_blocks_y * 2
+        cols = num_blocks_x * 2
+        tile_low_bit = 0
+        generator = ((y,x) for y in xrange(rows) for x in xrange(cols))
+      else:
+        rows = num_blocks_y
+        cols = num_blocks_x * 2
+        # TODO: Only set this to 1 if the sprite chr order is 1.
+        tile_low_bit = 1
+        generator = ((y*2,x) for y in xrange(rows) for x in xrange(cols))
+      for (y,x) in generator:
+        tile = self._ppu_memory.gfx_0.nametable[y][x]
+        if tile == self._ppu_memory.empty_tile:
+          continue
+        if len(self._ppu_memory.spritelist) == 0x40:
+          self._err.add(errors.SpritelistOverflow(y, x))
+          continue
+        y_pos = y * 8 - 1 if y > 0 else 0
+        x_pos = x * 8
+        attr = (self._ppu_memory.gfx_0.position_palette[y][x] |
+                self._flip_bits[y][x])
+        self._ppu_memory.spritelist.append([y_pos, tile + tile_low_bit,
+                                            attr, x_pos])
     # Store palette.
     if not is_sprite:
       self._ppu_memory.palette_nt = pal
