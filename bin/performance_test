@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+
+import os
+import subprocess
+import re
+import sys
+import tempfile
+
+num_trials = 5
+collect = ''
+tmp_dir = tempfile.mkdtemp()
+src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../makechr'))
+makechr_app = 'python %s' % (os.path.join(src_dir, 'makechr.py'),)
+test_file = os.path.join(src_dir, 'res/perf_data.png')
+
+for n in range(num_trials):
+  cmd = 'time %s %s -o %s/%%s.dat' % (makechr_app, test_file, tmp_dir)
+  p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+  (out, err) = p.communicate()
+  if p.returncode != 0:
+    print err
+    sys.exit(1)
+  collect += err
+
+real, user, syst = ([], [], [])
+for line in collect.split('\n'):
+  m = re.search('0m([\d\.]+)s', line)
+  if m:
+    if 'real' in line:
+      real.append(float(m.group(1)))
+    elif 'user' in line:
+      user.append(float(m.group(1)))
+    elif 'sys' in line:
+      syst.append(float(m.group(1)))
+
+def average(elems):
+  num = 0.0
+  for e in elems:
+    num += e
+  return num / len(elems)
+
+def stddev(elems):
+  mean = average(elems)
+  num = 0.0
+  for e in elems:
+    num += (e - mean) ** 2
+  return num ** 0.5
+
+real = real[1:]
+user = user[1:]
+syst = syst[1:]
+
+print 'Run time over %s trials' % len(real)
+print '----------------'
+print 'real    0m%.3fs' % average(real)
+print 'user    0m%.3fs' % average(user)
+print 'sys     0m%.3fs' % average(syst)
+print
+print 'Standard deviations'
+print '----------------'
+print 'SD real 0m%.3fs' % stddev(real)
+print 'SD user 0m%.3fs' % stddev(user)
+print 'SD sys  0m%.3fs' % stddev(syst)
+
