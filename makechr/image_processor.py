@@ -147,11 +147,8 @@ class ImageProcessor(object):
             color_needs[idx] = nc
             break
         else:
-          color_needs.append(nc)
-          idx = len(color_needs) - 1
+          raise errors.PaletteOverflowError(tile_y, tile_x)
         dot_profile[row + j] = idx
-    if len(color_needs) > PALETTE_SIZE:
-      raise errors.PaletteOverflowError(tile_y, tile_x)
     return color_needs, dot_profile
 
   def process_block(self, block_y, block_x, is_sprite):
@@ -160,10 +157,13 @@ class ImageProcessor(object):
     block_y: The y position of the block, 0..15.
     block_x: The x position of the block, 0..14.
     """
-    block_color_needs = set([])
+    block_color_needs = bytearray([NULL, NULL, NULL, NULL])
     y = block_y * 2
     x = block_x * 2
     process_tile_func = self.process_tile
+    combine_color_needs_func = self.combine_color_needs
+    if is_sprite:
+      combine_color_needs_func = self.null_func
     for i in xrange(2):
       for j in xrange(2):
         try:
@@ -174,13 +174,33 @@ class ImageProcessor(object):
         cid = self._color_manifest.id(color_needs)
         did = self._dot_manifest.id(dot_profile)
         self._artifacts[y + i][x + j] = [cid, did, None]
-        block_color_needs |= set(color_needs)
+        try:
+          combine_color_needs_func(block_color_needs, color_needs)
+        except errors.PaletteOverflowError as e:
+          e.block_y = block_y
+          e.block_x = block_x
+          self.collect_error(e, block_y, block_x, i, j)
+          return
     if not is_sprite:
-      block_color_needs = block_color_needs - set([NULL])
-      if len(block_color_needs) > PALETTE_SIZE:
-        raise errors.PaletteOverflowError(block_y, block_x, is_block=True)
       bcid = self._block_color_manifest.id(block_color_needs)
       self._artifacts[y][x][ARTIFACT_BCID] = bcid
+
+  def combine_color_needs(self, target, source):
+    """Combine by filling in null elements. Raise an error if full."""
+    for a in source:
+      if a == NULL:
+        return
+      for k, b in enumerate(target):
+        if a == b:
+          break
+        elif b == NULL:
+          target[k] = a
+          break
+      else:
+        raise errors.PaletteOverflowError(is_block=True)
+
+  def null_func(self, *args):
+    pass
 
   def get_dot_xlat(self, color_needs, palette_option):
     """Create an xlat object to convert the color_needs to the palette.
@@ -252,14 +272,6 @@ class ImageProcessor(object):
       except ValueError:
         sets.append(color_needs)
     return sets
-
-  def get_color_needs(self, cid):
-    color_needs = self._color_manifest.at(cid)
-    for k in range(4): # TODO: Change 4 into meaningful constant.
-      if color_needs[k] == NULL:
-        color_needs = color_needs[0:k]
-        break
-    return set(color_needs)
 
   def make_palette(self, palette_text, bg_color, is_sprite):
     """Construct the palette object from parsable text or color_needs.
@@ -374,7 +386,7 @@ class ImageProcessor(object):
       for y in xrange(num_blocks_y*2):
         for x in xrange(num_blocks_x*2):
           (cid, did, bcid) = self._artifacts[y][x]
-          color_needs = self.get_color_needs(cid)
+          color_needs = self._color_manifest.at(cid)
           try:
             (pid, palette_option) = pal.select(color_needs)
           except IndexError:

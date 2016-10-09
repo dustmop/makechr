@@ -13,17 +13,6 @@ class GuessBestPalette(object):
   def set_bg_color(self, bg_color):
     self._bg_color = bg_color
 
-  def to_ordered_colors(self, color_needs):
-    """Convert color needs array or set to an ordered list.
-
-    Given color needs array or set, parse it to make a sorted color list,
-    without any None elements. The order is descending, making it easy to do
-    subset comparisions later.
-
-    color_needs: A bytearray or set of color needs.
-    """
-    return sorted([e for e in color_needs if not e is None], reverse=True)
-
   def is_subset(self, subject, target):
     """Return whether subject is a strict subset of target."""
     return set(subject) <= set(target)
@@ -35,7 +24,8 @@ class GuessBestPalette(object):
     """
     seen = {}
     for color_needs in color_manifest:
-      ordered_colors = self.to_ordered_colors(color_needs)
+      # Desending order, making it easy to do subset comparisions later.
+      ordered_colors = sorted(color_needs, reverse=True)
       name = '-'.join(['%02x' % e for e in ordered_colors])
       seen[name] = ordered_colors
     return sorted(seen.values())

@@ -7,7 +7,7 @@ class CommandLineArgError(Exception):
 
 
 class PaletteOverflowError(Exception):
-  def __init__(self, elem_y, elem_x, is_block=False):
+  def __init__(self, elem_y=None, elem_x=None, is_block=False):
     if is_block:
       self.block_y = elem_y
       self.block_x = elem_x

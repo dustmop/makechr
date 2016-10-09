@@ -2,11 +2,11 @@ import collections
 
 
 class IdManifest(object):
-  """Stores objects, returning monotonically increasing ids for each.
+  """Stores bytearrays, returning monotonically increasing ids for each.
 
-  Stores objects, typically bytearrays, creating hashable keys for each
-  element stored. Faster than an OrderedDict because it avoids needing to
-  unserialize strings back to bytearrays.
+  Stores bytearrays creating hashable keys for each element stored. Faster
+  than an OrderedDict because it avoids needing to unserialize strings back
+  to bytearrays.
   """
 
   def __init__(self):
@@ -23,7 +23,7 @@ class IdManifest(object):
     else:
       result = len(self._dict)
       self._dict[key] = result
-      self._elems.append(obj)
+      self._elems.append([e for e in obj if e != 0xff])
     return result
 
   def at(self, id):

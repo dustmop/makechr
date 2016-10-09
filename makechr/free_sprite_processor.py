@@ -62,13 +62,8 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     pal = self.make_palette(palette_text, bg_color_look, True)
     # Build the PPU memory.
     for corner_y, corner_x, cid, did in artifacts:
-      color_needs = self.get_color_needs(cid)
-      (pid, palette_option) = pal.select(color_needs)
-      # TODO: There are two different types of `color_needs`, the above is a
-      # set, and needs to be passed to palette.select. Below is a bytearray,
-      # and needs to be passed to get_dot_xlat. These should be changed to
-      # always be the same type.
       color_needs = self._color_manifest.at(cid)
+      (pid, palette_option) = pal.select(color_needs)
       dot_xlat = self.get_dot_xlat(color_needs, palette_option)
       (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, True, False)
       self._ppu_memory.spritelist.append([corner_y - 1, chr_num,

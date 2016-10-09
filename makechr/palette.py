@@ -32,7 +32,7 @@ class Palette(object):
     self.pal_as_sets.append(set(p))
 
   def select(self, color_needs):
-    want = set([c for c in color_needs if not c is None])
+    want = set([c for c in color_needs if not c is 0xff])
     for i,p in enumerate(self.pal_as_sets):
       if want <= p:
         break

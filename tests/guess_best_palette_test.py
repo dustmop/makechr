@@ -8,14 +8,6 @@ class GuessBestPaletteTests(unittest.TestCase):
   def setUp(self):
     self.guesser = guess_best_palette.GuessBestPalette()
 
-  def test_to_ordered_colors(self):
-    # Set of colors.
-    ordered_colors = self.guesser.to_ordered_colors(set([0x0f, 0x30, 0x1b]))
-    self.assertEquals(ordered_colors, [48, 27, 15])
-    # Bytearray of colors.
-    ordered_colors = self.guesser.to_ordered_colors(bytearray('\x0f\x30\x1b'))
-    self.assertEquals(ordered_colors, [48, 27, 15])
-
   def test_uniq_color_sets(self):
     # Color manifest uses bytearray.
     color_element_list = []
