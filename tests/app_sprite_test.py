@@ -85,6 +85,20 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
     self.assertEqual(actual_errors, expect_errors)
 
+  def test_output_sprite_locked_tiles(self):
+    """Sprite mode with locked tiles."""
+    img = Image.open('testdata/reticule.png')
+    self.args.is_sprite = True
+    self.args.is_locked_tiles = True
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'reticule'
+    self.assert_output_result('chr', '-locked')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-sprite')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-locked')
+
   def test_output_sprite_8x16(self):
     """Sprite mode with 8x16 sprites."""
     img = Image.open('testdata/reticule.png')
@@ -98,6 +112,35 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('palette', '-sprite')
     self.assert_not_exist('attribute')
     self.assert_output_result('spritelist', '-8x16')
+
+  def test_output_sprite_8x16_with_blanks(self):
+    """Sprite mode with 8x16 sprites, which contains some empty tiles."""
+    img = Image.open('testdata/full-image.png')
+    self.args.is_sprite = True
+    self.args.traversal = '8x16'
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'full-image'
+    self.assert_output_result('chr', '-8x16')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-sprite')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-8x16')
+
+  def test_output_sprite_locked_tiles_and_8x16(self):
+    """Sprite mode with 8x16 sprites and locked_tiles."""
+    img = Image.open('testdata/reticule.png')
+    self.args.is_sprite = True
+    self.args.is_locked_tiles = True
+    self.args.traversal = '8x16'
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'reticule'
+    self.assert_output_result('chr', '-locked-8x16')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-sprite')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-locked-8x16')
 
   def test_output_free_sprite_traversal(self):
     """Sprite mode using free traversal."""

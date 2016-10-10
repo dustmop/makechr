@@ -60,6 +60,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
       cid = self._color_manifest.id(color_needs)
       did = self._dot_manifest.id(dot_profile)
       artifacts.append([corner_y, corner_x, cid, did])
+    self._needs_provider = self._color_manifest
     # Build the palette.
     pal = self.make_palette(palette_text, bg_color_look, True)
     # Build the PPU memory.

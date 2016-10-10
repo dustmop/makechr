@@ -22,6 +22,7 @@ class ImageProcessor(object):
     self._color_manifest = id_manifest.IdManifest()
     self._dot_manifest = id_manifest.IdManifest()
     self._block_color_manifest = id_manifest.IdManifest()
+    self._needs_provider = None
     self._test_only_auto_sprite_bg = False
     self._artifacts = [row[:] for row in
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
@@ -221,7 +222,7 @@ class ImageProcessor(object):
     return dot_xlat
 
   def store_chrdata(self, xlat, did, config):
-    """Take the dot_profile, xlat its dots making chr data, and save it.
+    """Translate dots to make chr data, and save it. Cache results.
 
     xlat: Dot translator.
     did: Id for the dot_profile.
@@ -232,14 +233,7 @@ class ImageProcessor(object):
     key = str([did] + xlat)
     if key in self._chrdata_cache:
       return self._chrdata_cache[key]
-    # Translate dot_profile to create tile.
-    dot_profile = self._dot_manifest.at(did)
-    tile = chr_data.ChrTile()
-    for row in xrange(8):
-      for col in xrange(8):
-        i = row * 8 + col
-        val = xlat[dot_profile[i]]
-        tile.put_pixel(row, col, val)
+    tile = self.build_tile(xlat, did)
     if config.is_sprite and str(tile) in self._chrdata_cache:
       return self._chrdata_cache[str(tile)]
     # Add the tile to the chr collection.
@@ -250,7 +244,7 @@ class ImageProcessor(object):
       self._chrdata_cache[key] = (0, 0x00)
       raise errors.NametableOverflow(chr_num)
     # Save in the cache.
-    if config.is_sprite:
+    if config.is_sprite and not config.is_locked_tiles:
       horz_tile = tile.flip('h')
       vert_tile = tile.flip('v')
       spin_tile = tile.flip('vh')
@@ -261,6 +255,21 @@ class ImageProcessor(object):
     elif not config.is_locked_tiles:
       self._chrdata_cache[key] = (chr_num, 0x00)
     return (chr_num, 0x00)
+
+  def build_tile(self, xlat, did):
+    """Lookup dot_profile, and translate it to create tile.
+
+    xlat: Dot translator.
+    did: Id for the dot profile.
+    """
+    dot_profile = self._dot_manifest.at(did)
+    tile = chr_data.ChrTile()
+    for row in xrange(8):
+      for col in xrange(8):
+        i = row * 8 + col
+        val = xlat[dot_profile[i]]
+        tile.put_pixel(row, col, val)
+    return tile
 
   def make_palette(self, palette_text, bg_color, is_sprite):
     """Construct the palette object from parsable text or color_needs.
@@ -293,17 +302,14 @@ class ImageProcessor(object):
     # If sprite mode, and there's no bg color, we can figure it out based upon
     # how many empty tiles there need to be.
     if is_sprite and bg_color is None and not self._test_only_auto_sprite_bg:
-      for color, num in self._color_manifest.counts():
+      for color, num in self._needs_provider.counts():
         if num >= 0x40 and bg_color is None:
           bg_color = color
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
     if not bg_color is None:
       guesser.set_bg_color(bg_color)
-    if not is_sprite:
-      color_sets = self._block_color_manifest.elems()
-    else:
-      color_sets = self._color_manifest.elems()
+    color_sets = self._needs_provider.elems()
     try:
       pal = guesser.guess_palette(color_sets)
     except errors.TooManyPalettesError as e:
@@ -326,6 +332,9 @@ class ImageProcessor(object):
         except errors.PaletteOverflowError as e:
           self.collect_error(e, block_y, block_x, 0, 0, is_block=True)
           continue
+    self._needs_provider = self._block_color_manifest
+    if config.is_sprite:
+      self._needs_provider = self._color_manifest
 
   def make_colorization(self, pal, config):
     """Select colorization for each position in the image.
@@ -340,11 +349,11 @@ class ImageProcessor(object):
           y = block_y * 2
           x = block_x * 2
           (cid, did, bcid) = self._artifacts[y][x]
-          block_color_needs = self._block_color_manifest.at(bcid)
+          color_needs = self._needs_provider.at(bcid)
           try:
-            (pid, palette_option) = pal.select(block_color_needs)
+            (pid, palette_option) = pal.select(color_needs)
           except IndexError:
-            self._err.add(errors.PaletteNoChoiceError(y, x, block_color_needs))
+            self._err.add(errors.PaletteNoChoiceError(y, x, color_needs))
             pid = 0
           for a,b in itertools.product(range(2),range(2)):
             self._ppu_memory.gfx_0.colorization[y + a][x + b] = pid
@@ -353,7 +362,7 @@ class ImageProcessor(object):
       for y in xrange(self.blocks_y * 2):
         for x in xrange(self.blocks_x * 2):
           (cid, did, bcid) = self._artifacts[y][x]
-          color_needs = self._color_manifest.at(cid)
+          color_needs = self._needs_provider.at(cid)
           try:
             (pid, palette_option) = pal.select(color_needs)
           except IndexError:
@@ -380,18 +389,17 @@ class ImageProcessor(object):
                    x in xrange(self.blocks_x) for i in xrange(2) for
                    j in xrange(2))
     elif traversal == '8x16':
-      generator = ((y*2+i,x*2+j) for y in xrange(self.blocks_y) for
-                   x in xrange(self.blocks_x) for j in xrange(2) for
-                   i in xrange(2))
+      raise RuntimeError('Should not be invoked outside of 8x16Processor')
     for (y,x) in generator:
       (cid, did, bcid) = self._artifacts[y][x]
       pid = self._ppu_memory.gfx_0.colorization[y][x]
       palette_option = pal.get(pid)
       color_needs = self._color_manifest.at(cid)
-      if config.is_sprite and empty_cid == cid and empty_did == did:
-        self._ppu_memory.gfx_0.nametable[y][x] = 0x100
-        self._ppu_memory.empty_tile = 0x100
-        continue
+      if config.is_sprite and not config.is_locked_tiles:
+        if empty_cid == cid and empty_did == did:
+          self._ppu_memory.gfx_0.nametable[y][x] = 0x100
+          self._ppu_memory.empty_tile = 0x100
+          continue
       # Create a translator that can turn the dot_profile into a chr_tile.
       dot_xlat = self.get_dot_xlat(color_needs, palette_option)
       if not dot_xlat:
@@ -409,32 +417,28 @@ class ImageProcessor(object):
       if empty_cid == cid and empty_did == did:
         self._ppu_memory.empty_tile = chr_num
 
-  def make_spritelist(self, traversal):
+  def make_spritelist(self, traversal, pal, config):
     """Convert data from the nametable to create spritelist.
 
     traversal: Method of traversal
     """
-    if traversal != '8x16':
-      tile_low_bit = 0
-      generator = ((y,x) for y in xrange(self.blocks_y * 2) for
-                   x in xrange(self.blocks_x * 2))
-    else:
-      # TODO: Only set this to 1 if the sprite chr order is 1.
-      tile_low_bit = 1
-      generator = ((y*2,x) for y in xrange(self.blocks_y) for
-                   x in xrange(self.blocks_x * 2))
+    empty_did = self._dot_manifest.get(chr(0) * 64)
+    empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
+    generator = ((y,x) for y in xrange(self.blocks_y * 2) for
+                 x in xrange(self.blocks_x * 2))
     for (y,x) in generator:
-      tile = self._ppu_memory.gfx_0.nametable[y][x]
-      if tile == self._ppu_memory.empty_tile:
+      (cid, did, bcid) = self._artifacts[y][x]
+      if empty_cid == cid and empty_did == did:
         continue
+      tile = self._ppu_memory.gfx_0.nametable[y][x]
       if len(self._ppu_memory.spritelist) == 0x40:
-        self._err.add(errors.SpritelistOverflow(y, x))
+        if not config.is_locked_tiles:
+          self._err.add(errors.SpritelistOverflow(y, x))
         continue
       y_pos = y * 8 - 1 if y > 0 else 0
       x_pos = x * 8
       attr = self._ppu_memory.gfx_0.colorization[y][x] | self._flip_bits[y][x]
-      self._ppu_memory.spritelist.append([y_pos, tile + tile_low_bit,
-                                          attr, x_pos])
+      self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
 
   def process_image(self, img, palette_text, bg_color, traversal,
                     is_sprite, is_locked_tiles):
@@ -486,4 +490,4 @@ class ImageProcessor(object):
       self._ppu_memory.palette_nt = pal
     else:
       self._ppu_memory.palette_spr = pal
-      self.make_spritelist(traversal)
+      self.make_spritelist(traversal, pal, config)

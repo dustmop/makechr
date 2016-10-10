@@ -1,4 +1,5 @@
 import collections
+import eight_by_sixteen_processor
 import errors
 import free_sprite_processor
 import image_processor
@@ -21,6 +22,13 @@ class Application(object):
       processor = free_sprite_processor.FreeSpriteProcessor()
       processor.process_image(img, args.palette, args.bg_color.look,
                               args.bg_color.fill)
+    elif traversal == '8x16':
+      if not args.is_sprite:
+        raise errors.CommandLineArgError('Traversal strategy \'8x16\' requires '
+                                         '-s flag')
+      processor = eight_by_sixteen_processor.EightBySixteenProcessor()
+      processor.process_image(img, args.palette, args.bg_color.look,
+                              traversal, args.is_sprite, args.is_locked_tiles)
     else:
       processor = image_processor.ImageProcessor()
       processor.process_image(img, args.palette, args.bg_color.look,

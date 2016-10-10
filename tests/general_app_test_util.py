@@ -2,6 +2,7 @@ import unittest
 
 import context
 from makechr import app, bg_color_spec, image_processor, free_sprite_processor
+from makechr import eight_by_sixteen_processor
 
 import filecmp
 import os
@@ -38,7 +39,18 @@ class GeneralAppTests(unittest.TestCase):
     self.golden_file_prefix = 'full-image'
 
   def process_image(self, img, palette_text=None, auto_sprite_bg=False):
-    if self.args.traversal != 'free':
+    if self.args.traversal == 'free':
+      self.processor = free_sprite_processor.FreeSpriteProcessor()
+      self.processor.process_image(img, palette_text,
+                                   self.args.bg_color.look,
+                                   self.args.bg_color.fill)
+    elif self.args.traversal == '8x16':
+      self.processor = eight_by_sixteen_processor.EightBySixteenProcessor()
+      self.processor.process_image(img, palette_text,
+                                   self.args.bg_color.look,
+                                   self.args.traversal, self.args.is_sprite,
+                                   self.args.is_locked_tiles)
+    else:
       self.processor = image_processor.ImageProcessor()
       if auto_sprite_bg:
         self.processor._test_only_auto_sprite_bg = auto_sprite_bg
@@ -46,11 +58,6 @@ class GeneralAppTests(unittest.TestCase):
                                    self.args.bg_color.look,
                                    self.args.traversal, self.args.is_sprite,
                                    self.args.is_locked_tiles)
-    else:
-      self.processor = free_sprite_processor.FreeSpriteProcessor()
-      self.processor.process_image(img, palette_text,
-                                   self.args.bg_color.look,
-                                   self.args.bg_color.fill)
     self.ppu_memory = self.processor.ppu_memory()
     self.err = self.processor.err()
 
