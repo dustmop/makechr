@@ -5,14 +5,13 @@ ZERO_BYTE = chr(0)
 
 
 class BinaryFileWriter(object):
-  def __init__(self, tmpl, simulate_nt, nt_width):
+  def __init__(self, tmpl):
     self._name = None
     self._fout = None
     self._tmpl = tmpl
     self._order = None
     self._null_value = ZERO_BYTE
     self._component_req = {}
-    self._nt_width = nt_width
 
   def _fill_template(self, replace):
     return self._tmpl.replace('%s', replace)

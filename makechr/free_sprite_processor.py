@@ -1,5 +1,6 @@
 import collections
 import image_processor
+import ppu_memory
 import rgb
 
 
@@ -48,6 +49,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     bg_color_fill: Background color which fills up the outside space.
     """
     self.load_image(img)
+    config = ppu_memory.PpuMemoryConfig(is_sprite=True, is_locked_tiles=False)
     # Scan the image, find corners of each tile based upon region merging.
     self._find_region_corners(bg_color_fill)
     # Collect artifacts, each of which is a corner with color and dot ids.
@@ -65,7 +67,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
       color_needs = self._color_manifest.at(cid)
       (pid, palette_option) = pal.select(color_needs)
       dot_xlat = self.get_dot_xlat(color_needs, palette_option)
-      (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, True, False)
+      (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
       self._ppu_memory.spritelist.append([corner_y - 1, chr_num,
                                           pid | flip_bits, corner_x])
     self._ppu_memory.palette_spr = pal

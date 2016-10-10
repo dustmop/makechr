@@ -179,7 +179,7 @@ class ViewRenderer(object):
     """Create an image that shows which palette is used for each block.
 
     outfile: Filename to output the view to.
-    ppu_memory: Ppu memory containing position_palette and palette.
+    ppu_memory: Ppu memory containing colorization and palette.
     """
     self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
@@ -187,10 +187,10 @@ class ViewRenderer(object):
     self.create_file(outfile, width, height)
     palette = ppu_memory.palette_nt
     # TODO: Support both graphics pages.
-    position_palette = ppu_memory.gfx_0.position_palette
+    colorization = ppu_memory.gfx_0.colorization
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
-        pid = position_palette[y*2][x*2]
+        pid = colorization[y*2][x*2]
         poption = palette.get(pid)
         if self.is_empty_block(y, x, ppu_memory.gfx_0.nametable):
           self.draw_empty_block(y, x, poption[0])

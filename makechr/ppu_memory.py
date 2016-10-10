@@ -10,16 +10,18 @@ class GraphicsPage(object):
   def __init__(self):
     self.nametable = [row[:] for row in
                       [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
-    self.position_palette = [row[:] for row in
-                             [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+    self.colorization = [row[:] for row in
+                         [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
 
 
 class PpuMemoryConfig(object):
-  def __init__(self, chr_order, palette_order, traversal, is_sprite):
+  def __init__(self, chr_order=None, palette_order=None, traversal=None,
+               is_sprite=None, is_locked_tiles=None):
     self.chr_order = chr_order
     self.palette_order = palette_order
     self.traversal = traversal
     self.is_sprite = is_sprite
+    self.is_locked_tiles = is_locked_tiles
 
 
 class PpuMemory(object):
@@ -36,8 +38,6 @@ class PpuMemory(object):
     self._writer = None
     self._bg_color = None
     self.empty_tile = None
-    self.is_locked_tiles = False
-    self.nt_width = None
     self.spritelist = []
 
   def override_bg_color(self, bg_color):
@@ -53,8 +53,7 @@ class PpuMemory(object):
     tmpl: String representing a filename template to save files to.
     config: Configuration for how memory is represented.
     """
-    self._writer = binary_file_writer.BinaryFileWriter(tmpl,
-        self.is_locked_tiles, self.nt_width)
+    self._writer = binary_file_writer.BinaryFileWriter(tmpl)
     self._save_components(config)
 
   def save_valiant(self, output_filename, config):
@@ -74,12 +73,12 @@ class PpuMemory(object):
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
     self._writer.write_chr_info(self.chr_page)
-    self._writer.write_extra_settings(config, self.is_locked_tiles)
+    self._writer.write_extra_settings(config)
     self._writer.save(output_filename)
 
   def _save_components(self, config):
     self._bg_color = self._get_bg_color(self.palette_nt, self.palette_spr)
-    components = self._get_enabled_components(config.is_sprite)
+    components = self._get_enabled_components(config)
     if 'nametable' in components:
       fout = self._writer.get_writable('nametable', False)
       self._save_nametable(fout, self.gfx_0.nametable)
@@ -95,11 +94,11 @@ class PpuMemory(object):
       self._save_palette(fout, self.palette_nt, self.palette_spr)
     if 'attribute' in components:
       fout = self._writer.get_writable('attribute', False)
-      self._save_attribute(fout, self.gfx_0.position_palette)
+      self._save_attribute(fout, self.gfx_0.colorization)
     if 'spritelist' in components:
       fout = self._writer.get_writable('spritelist', False)
       self._save_spritelist(fout, self.spritelist,
-                            self.gfx_0.position_palette)
+                            self.gfx_0.colorization)
     self._writer.close()
 
   def _save_nametable(self, fout, nametable):
@@ -115,17 +114,17 @@ class PpuMemory(object):
     self._write_single_palette(fout, palette_1, self._bg_color)
     self._write_single_palette(fout, palette_2, self._bg_color)
 
-  def _save_attribute(self, fout, position_palette):
+  def _save_attribute(self, fout, colorization):
     for attr_y in xrange(NUM_BLOCKS_Y / 2 + 1):
       for attr_x in xrange(NUM_BLOCKS_X / 2):
         block_y = attr_y * 2
         block_x = attr_x * 2
         y = block_y * 2
         x = block_x * 2
-        p0 = position_palette[y + 0][x + 0]
-        p1 = position_palette[y + 0][x + 2]
-        p2 = position_palette[y + 2][x + 0] if block_y + 1 < NUM_BLOCKS_Y else 0
-        p3 = position_palette[y + 2][x + 2] if block_y + 1 < NUM_BLOCKS_Y else 0
+        p0 = colorization[y + 0][x + 0]
+        p1 = colorization[y + 0][x + 2]
+        p2 = colorization[y + 2][x + 0] if block_y + 1 < NUM_BLOCKS_Y else 0
+        p3 = colorization[y + 2][x + 2] if block_y + 1 < NUM_BLOCKS_Y else 0
         attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
         fout.write(chr(attr))
 
@@ -150,13 +149,13 @@ class PpuMemory(object):
       bg_color = palette_2.bg_color
     return bg_color
 
-  def _get_enabled_components(self, is_sprite):
+  def _get_enabled_components(self, config):
     components = set()
-    if not is_sprite and not self.is_locked_tiles:
+    if not config.is_sprite and not config.is_locked_tiles:
       components.add('nametable')
     components.add('chr')
     components.add('palette')
-    if not is_sprite:
+    if not config.is_sprite:
       components.add('attribute')
     else:
       components.add('spritelist')
@@ -183,7 +182,7 @@ class PpuMemory(object):
         bytes += bytearray(nametable[y])
       return bytes
     elif role == 'attribute':
-      position = self.gfx_0.position_palette
+      colorization = self.gfx_0.colorization
       bytes = bytearray()
       for attr_y in xrange(NUM_BLOCKS_Y / 2 + 1):
         for attr_x in xrange(NUM_BLOCKS_X / 2):
@@ -191,10 +190,10 @@ class PpuMemory(object):
           block_x = attr_x * 2
           y = block_y * 2
           x = block_x * 2
-          p0 = position[y  ][x  ]
-          p1 = position[y  ][x+2]
-          p2 = position[y+2][x  ] if block_y + 1 < NUM_BLOCKS_Y else 0
-          p3 = position[y+2][x+2] if block_y + 1 < NUM_BLOCKS_Y else 0
+          p0 = colorization[y  ][x  ]
+          p1 = colorization[y  ][x+2]
+          p2 = colorization[y+2][x  ] if block_y + 1 < NUM_BLOCKS_Y else 0
+          p3 = colorization[y+2][x+2] if block_y + 1 < NUM_BLOCKS_Y else 0
           attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
           bytes.append(attr)
       return bytes

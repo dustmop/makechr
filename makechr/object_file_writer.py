@@ -75,20 +75,20 @@ class ObjectFileWriter(object):
     chr_metadata = self._get_chr_metadata(settings)
     chr_metadata.size = chr_data.size()
 
-  def write_extra_settings(self, options, is_locked_tiles):
+  def write_extra_settings(self, config):
     """Write extra settings to the valiant object."""
-    if (options.traversal == 'horizontal' and not options.chr_order and
-        not options.palette_order and not is_locked_tiles):
+    if (config.traversal == 'horizontal' and not config.chr_order and
+        not config.palette_order and not config.is_locked_tiles):
       return
     settings = self.obj_data.settings
     chr_metadata = self._get_chr_metadata(settings)
-    if options.chr_order:
-      chr_metadata.order = options.chr_order
-    if is_locked_tiles:
-      chr_metadata.is_locked_tiles = is_locked_tiles
-    if options.traversal and options.traversal != 'horizontal':
-      chr_metadata.traversal = options.traversal
-    if options.is_sprite:
+    if config.chr_order:
+      chr_metadata.order = config.chr_order
+    if config.is_locked_tiles:
+      chr_metadata.is_locked_tiles = config.is_locked_tiles
+    if config.traversal and config.traversal != 'horizontal':
+      chr_metadata.traversal = config.traversal
+    if config.is_sprite:
       palette_metadata = self._get_palette_metadata(settings)
       palette_metadata.order = 1
 

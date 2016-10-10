@@ -33,11 +33,11 @@ class MemoryImporter(object):
         byte = ord(fp.read(1))
         y = (k / 8) * 4
         x = (k % 8) * 4
-        gfx.position_palette[y + 0][x + 0] = (byte & 0x03)
-        gfx.position_palette[y + 0][x + 2] = (byte & 0x0c) >> 2
+        gfx.colorization[y + 0][x + 0] = (byte & 0x03)
+        gfx.colorization[y + 0][x + 2] = (byte & 0x0c) >> 2
         if y < (7 * 4):
-          gfx.position_palette[y + 2][x + 0] = (byte & 0x30) >> 4
-          gfx.position_palette[y + 2][x + 2] = (byte & 0xc0) >> 6
+          gfx.colorization[y + 2][x + 0] = (byte & 0x30) >> 4
+          gfx.colorization[y + 2][x + 2] = (byte & 0xc0) >> 6
     # Unused $3000-$3f00.
     unused = fp.read(0x0f00)
     # Read palette $3f00.

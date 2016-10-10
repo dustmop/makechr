@@ -91,7 +91,8 @@ class Application(object):
     config = ppu_memory.PpuMemoryConfig(chr_order=chr_order,
                                         palette_order=palette_order,
                                         traversal=traversal,
-                                        is_sprite=args.is_sprite)
+                                        is_sprite=args.is_sprite,
+                                        is_locked_tiles=args.is_locked_tiles)
     if args.output == '/dev/null':
       pass
     elif args.output and args.output.endswith('.o'):
