@@ -295,7 +295,6 @@ class ImageProcessor(object):
     if self.img.palette:
       # If the image uses indexed color, try to extract a palette.
       extractor = extract_indexed_image_palette.ExtractIndexedImagePalette(self)
-      # TODO: Add a test for this.
       pal = extractor.extract_palette(self.img.palette, self.img.format)
       if pal:
         return pal

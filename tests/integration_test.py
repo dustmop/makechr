@@ -81,6 +81,14 @@ Palette: P/30-38-16-01/30-19/
     self.assert_file_eq(reuse_view_name, self.golden('reuse', 'png'))
     self.assertEqual(self.out, '')
 
+  def test_sprite_8x16(self):
+    self.output_name = os.path.join(self.tmpdir, 'reticule.o')
+    self.golden_file_prefix = 'reticule'
+    args = ['testdata/reticule.png', '-o', self.output_name, '-t', '8x16', '-s']
+    self.makechr(args)
+    self.assert_file_eq(self.output_name, self.golden('8x16', 'o'))
+    self.assertEqual(self.out, '')
+
   def test_error_too_many_tiles(self):
     args = ['testdata/257tiles.png', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
@@ -107,6 +115,14 @@ Errors displayed in "%s"
             '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Cannot both import memory and process input file""")
+    self.assertEquals(self.returncode, 1)
+
+  def test_error_8x16_without_sprite(self):
+    self.output_name = os.path.join(self.tmpdir, 'reticule.o')
+    self.golden_file_prefix = 'reticule'
+    args = ['testdata/reticule.png', '-o', self.output_name, '-t', '8x16']
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Command-line error: Traversal strategy \'8x16\' requires -s flag\n""")
     self.assertEquals(self.returncode, 1)
 
   def golden(self, name, ext):

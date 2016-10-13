@@ -2,11 +2,12 @@ import app
 import argparse
 import bg_color_spec
 import errno
+import errors
 from PIL import Image
 import sys
 
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 
 def run():
@@ -133,7 +134,11 @@ def run():
       elif e.errno == errno.ENOENT:
         sys.stderr.write('Input file not found: "%s"\n' % args.input)
       sys.exit(1)
-    if not application.run(img, args):
+    try:
+      if not application.run(img, args):
+        sys.exit(1)
+    except errors.CommandLineArgError, e:
+      sys.stderr.write('Command-line error: %s\n' % e)
       sys.exit(1)
   else:
     parser.print_usage()
