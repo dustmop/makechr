@@ -154,6 +154,25 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.assert_file_eq(self.args.error_outfile,
                         'testdata/errors-full-image.png')
 
+  def test_error_image_small_square(self):
+    """Multiple errors, with a 128x128 image, outputs correctly."""
+    img = Image.open('testdata/full-image-small-square-with-error.png')
+    self.process_image(img)
+    self.args.error_outfile = self.args.tmppng('error')
+    self.create_output()
+    self.assertTrue(self.err.has())
+    errs = self.err.get()
+    expect_errors = ['PaletteOverflowError @ block (1y,3x)',
+                     'PaletteOverflowError @ tile (2y,10x)',
+                     ('ColorNotAllowedError @ tile (4y,1x) and ' +
+                      'pixel (1y,2x) - "ff,ff,00"')]
+    actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
+    self.assertEqual(actual_errors, expect_errors)
+    renderer = view_renderer.ViewRenderer()
+    renderer.create_error_view(self.args.error_outfile, img, errs)
+    self.assert_file_eq(self.args.error_outfile,
+                        'testdata/errors-full-image-small-square.png')
+
 
 if __name__ == '__main__':
   unittest.main()

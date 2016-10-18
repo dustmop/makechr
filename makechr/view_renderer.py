@@ -292,11 +292,12 @@ class ViewRenderer(object):
     errs: List of errors created by processor.
     """
     self.scale = SCALE_FACTOR
-    width, height = (256 * self.scale, 240 * self.scale)
-    self.img = img.resize((width, height), Image.NEAREST).convert('RGB')
+    orig_wide, orig_high = img.size
+    make_wide, make_high = (orig_wide * self.scale, orig_high * self.scale)
+    self.img = img.resize((make_wide, make_high), Image.NEAREST).convert('RGB')
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
-    self.draw_grid(width, height)
+    self.draw_grid(make_wide, make_high)
     s = self.scale * 8
     # Draw errors.
     for e in errs:
