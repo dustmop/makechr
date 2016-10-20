@@ -33,7 +33,9 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
 
   def __init__(self):
     image_processor.ImageProcessor.__init__(self)
-    self._interest = {}
+    self._regions = []
+    self._corners = []
+    self._lengths = {}
 
   def process_image(self, img, palette_text, bg_color_look, bg_color_fill):
     """Process free sprites image, creating the ppu_memory it represents.
@@ -55,11 +57,19 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     # Collect artifacts, each of which is a corner with color and dot ids.
     artifacts = []
     for corner_y, corner_x in self._corners:
-      (color_needs, dot_profile) = self.process_tile(
-        corner_y / 8, corner_x / 8, corner_y % 8, corner_x % 8)
-      cid = self._color_manifest.id(color_needs)
-      did = self._dot_manifest.id(dot_profile)
-      artifacts.append([corner_y, corner_x, cid, did])
+      (unused_y, right_x) = self._lengths[(corner_y, corner_x)]
+      while True:
+        (color_needs, dot_profile) = self.process_tile(
+          corner_y / 8, corner_x / 8, corner_y % 8, corner_x % 8)
+        cid = self._color_manifest.id(color_needs)
+        did = self._dot_manifest.id(dot_profile)
+        artifacts.append([corner_y, corner_x, cid, did])
+        # Move to the right.
+        corner_x += 8
+        if corner_x >= right_x:
+          break
+        if right_x - corner_x < 8:
+          corner_x = right_x - 8
     self._needs_provider = self._color_manifest
     # Build the palette.
     pal = self.make_palette(palette_text, bg_color_look, True)
@@ -75,8 +85,6 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
 
   def _find_region_corners(self, fill):
     """Scan the entire image. Calculate the positions of tile corners."""
-    self._regions = []
-    self._corners = []
     for y in xrange(self.image_y):
       isImage = False
       x = 0
@@ -120,42 +128,67 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     k = 0
     for r in self._regions:
       if edge.left == r.left and edge.right == r.right and y == r.bottom + 1:
+        # Edge and region have equal sides, extend region one pixel below.
+        # |..rrrr........|
+        # |..eeee........|
         r.bottom = y
         return
       if edge.left >= r.right:
+        # Edge is to the right of this region, look at the next one.
+        # |..rrrr.???????|
+        # |........eeee..|
         k += 1
         continue
       if edge.right <= r.left:
+        # Edge is before this region, insert it. This makes a new corner.
+        # |.......rrrr...|
+        # |..Ceee........|
         break
       if edge.left < r.left and edge.right == r.right:
         # Corner created by a partially overlapping edge.
+        # |....rrrr......|
+        # |..Ceeeee......|
         self._corners.append((y, edge.left))
+        # TODO: Change this to something that's more clever.
+        actual_right = edge.left + 8
+        self._lengths[self._corners[-1]] = (None, actual_right)
         r.left = edge.left
         r.bottom = y
         return
       if edge.left == r.left and edge.right < r.right:
+        # |..rrrrrr......|
+        # |..eeee........|
         r.right = edge.right
         r.bottom = y
         return
       if edge.left == r.left and edge.right > r.right:
         # Region expands to the right, implying a corner inside the region.
+        # |..rrrr........|
+        # |..eeeCeee.....|
         self._corners.append((y, edge.right - 8))
+        self._lengths[self._corners[-1]] = (None, edge.right)
         r.right = edge.right
         r.bottom = y
         return
       if edge.left > r.left and edge.right == r.right:
+        # |..rrrrrr......|
+        # |....eeee......|
         r.left = edge.left
         r.bottom = y
         return
       if edge.left < r.left and edge.right < r.right:
         # Entire region shifts to the left, creating a new corner.
+        # |....rrrr......|
+        # |..Ceee........|
         self._corners.append((y, edge.left))
+        self._lengths[self._corners[-1]] = (None, edge.right)
         r.left = edge.left
         r.bottom = y
         return
       raise NotImplementedError()
     # Corner caused by a brand new edge of a region.
     self._corners.append((y, edge.left))
+    self._lengths[self._corners[-1]] = (None, edge.right)
     insert = Region(top=y, left=edge.left, right=edge.right, bottom=y)
     self._regions = self._regions[:k] + [insert] + self._regions[k:]
 
