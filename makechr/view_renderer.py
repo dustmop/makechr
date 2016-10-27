@@ -284,6 +284,19 @@ class ViewRenderer(object):
       self.draw_chr(tile, tile_y, tile_x)
     self.save_file()
 
+  def create_free_zone_view(self, outfile, img, ppu_memory):
+    """Create an image that shows zones for free sprite traversal.
+
+    outfile: Filename to output the error display to.
+    img: Input pixel art image.
+    ppu_memory: Ppu memory containing zones.
+    """
+    create = img.copy()
+    draw = ImageDraw.Draw(create)
+    for z in ppu_memory.zones:
+      draw.rectangle(z.rect(), outline=(0xff,0,0))
+    create.save(outfile)
+
   def create_error_view(self, outfile, img, errs):
     """Create an image that shows the errors.
 

@@ -18,6 +18,7 @@ class MockArgs(object):
     self.nametable_view = self.tmppng('nt')
     self.chr_view = self.tmppng('chr')
     self.grid_view = self.tmppng('grid')
+    self.free_zone_view = None
     self.bg_color = bg_color_spec.default()
     self.traversal = 'horizontal'
     self.is_sprite = False
@@ -25,6 +26,15 @@ class MockArgs(object):
     self.order = None
     self.compile = None
     self.output = self.tmpfile('actual-%s.dat')
+
+  def clear_views(self):
+    self.palette_view = None
+    self.colorization_view = None
+    self.reuse_view = None
+    self.nametable_view = None
+    self.chr_view = None
+    self.grid_view = None
+    self.free_zone_view = None
 
   def tmppng(self, name):
     return os.path.join(self.dir, 'actual-%s.png' % name)

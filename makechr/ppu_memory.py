@@ -39,6 +39,9 @@ class PpuMemory(object):
     self._bg_color = None
     self.empty_tile = None
     self.spritelist = []
+    # HACK: Not actually a part of ppu_memory. Only set here so that it can
+    # be passed to the view renderer after free sprite traversal.
+    self.zones = None
 
   def override_bg_color(self, bg_color):
     self._bg_color = bg_color

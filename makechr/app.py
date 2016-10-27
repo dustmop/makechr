@@ -86,6 +86,9 @@ class Application(object):
     if args.grid_view:
       renderer = view_renderer.ViewRenderer()
       renderer.create_grid_view(args.grid_view, img)
+    if args.free_zone_view:
+      renderer = view_renderer.ViewRenderer()
+      renderer.create_free_zone_view(args.free_zone_view, img, mem)
 
   def create_output(self, mem, args, traversal):
     if args.order is None and args.is_sprite:

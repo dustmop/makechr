@@ -122,6 +122,9 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
       (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
       self._ppu_memory.spritelist.append([y - 1, chr_num, pid | flip_bits, x])
     self._ppu_memory.palette_spr = pal
+    # HACK: Assign zones to ppu_memory so that they can be used by the
+    # view renderer.
+    self._ppu_memory.zones = zones
 
   def _find_zones(self, fill):
     """Scan the entire image. Calculate the positions of tile corners."""

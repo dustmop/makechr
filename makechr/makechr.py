@@ -115,6 +115,11 @@ def run():
                       help=('Output filename for grid view to output. Is the '
                             'input image at x2 resolution with a grid, light '
                             'green for blocks, dark green for tiles.'))
+  parser.add_argument('--free-zone-view', dest='free_zone_view',
+                      metavar='image',
+                      help=('Output filename for free zone view to output. '
+                            'Will show where zones are according to free '
+                            'sprite traversal.'))
   args = parser.parse_args()
   if args.version:
     sys.stdout.write('makechr ' + __version__ + '\n')

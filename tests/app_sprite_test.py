@@ -4,7 +4,7 @@ import unittest
 from PIL import Image
 
 import context
-from makechr import bg_color_spec
+from makechr import app, bg_color_spec
 
 
 class AppSpriteTests(general_app_test_util.GeneralAppTests):
@@ -183,6 +183,33 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     msg = '{0} {1}'.format(type(es[0]).__name__, es[0])
     self.assertEqual(msg, 'SpritelistOverflow at tile (2y,7x)')
 
+  def test_view_for_free_sprite_traversal(self):
+    """View for the zones in free sprite traversal."""
+    img = Image.open('testdata/free-sprites.png')
+    self.args.bg_color = bg_color_spec.build('00=30')
+    self.args.is_sprite = True
+    self.args.traversal = 'free'
+    self.args.clear_views()
+    self.args.free_zone_view = self.args.tmppng('free-zone')
+    self.process_image(img)
+    a = app.Application()
+    a.create_views(self.ppu_memory, self.args, img)
+    self.assert_file_eq(self.args.free_zone_view,
+                        self.golden('free-zone', 'png'))
+
+  def test_view_for_free_sprite_multi_traversal(self):
+    """View for the zones in free sprites with multiple sprites per zone."""
+    img = Image.open('testdata/free-sprites-multi.png')
+    self.args.bg_color = bg_color_spec.build('00=30')
+    self.args.is_sprite = True
+    self.args.traversal = 'free'
+    self.args.clear_views()
+    self.args.free_zone_view = self.args.tmppng('free-zone-multi')
+    self.process_image(img)
+    a = app.Application()
+    a.create_views(self.ppu_memory, self.args, img)
+    self.assert_file_eq(self.args.free_zone_view,
+                        self.golden('free-zone-multi', 'png'))
 
 
 if __name__ == '__main__':
