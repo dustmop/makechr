@@ -82,6 +82,19 @@ class ImageProcessor(object):
     rgb.RGB_XLAT[color_val] = found_nc
     return found_nc
 
+  def get_nes_color(self, y, x):
+    """Get the nes color corresponding to the pixel at position y,x."""
+
+    p = self.pixels[x, y]
+    color_val = (p[0] << 16) + (p[1] << 8) + p[2]
+    if color_val in rgb.RGB_XLAT:
+      return rgb.RGB_XLAT[color_val]
+    else:
+      nc = self.components_to_nescolor(p[0], p[1], p[2])
+      if nc == -1:
+        raise errors.ColorNotAllowedError(p, tile_y, tile_x, i, j)
+      return nc
+
   def collect_error(self, e, block_y, block_x, i, j, is_block=False):
     """Add the exception to the error exception and clear the artifacts entry.
 
@@ -129,7 +142,7 @@ class ImageProcessor(object):
     for i in xrange(TILE_SIZE):
       row = i * TILE_SIZE
       for j in xrange(TILE_SIZE):
-        # Get the current pixel value 'p', convert it to a nescolor 'nc'.
+        # Inlined call to get_nes_color(pixel_y, pixel_x) to get nc.
         p = ps[pixel_x + j, pixel_y + i]
         color_val = (p[0] << 16) + (p[1] << 8) + p[2]
         if color_val in xlat:
@@ -388,7 +401,7 @@ class ImageProcessor(object):
                    x in xrange(self.blocks_x) for i in xrange(2) for
                    j in xrange(2))
     elif traversal == '8x16':
-      raise RuntimeError('Should not be invoked outside of 8x16Processor')
+      raise errors.UnknownLogicFailure()
     for (y,x) in generator:
       (cid, did, bcid) = self._artifacts[y][x]
       pid = self._ppu_memory.gfx_0.colorization[y][x]

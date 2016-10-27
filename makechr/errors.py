@@ -131,6 +131,10 @@ class UnknownStrategy(Exception):
     return 'UnknownStrategy: "%s"' % self.text
 
 
+class UnknownLogicFailure(Exception):
+  pass
+
+
 class NametableOverflow(Exception):
   def __init__(self, chr_num, tile_y=0, tile_x=0):
     self.chr_num = chr_num

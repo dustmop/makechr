@@ -157,6 +157,21 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_not_exist('attribute')
     self.assert_output_result('spritelist')
 
+  def test_output_free_multi_sprite_traversal(self):
+    """Sprite mode using free traversal and regions are taller than one tile."""
+    img = Image.open('testdata/free-sprites-multi.png')
+    self.args.bg_color = bg_color_spec.build('00=30')
+    self.args.is_sprite = True
+    self.args.traversal = 'free'
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'free-sprites'
+    self.assert_output_result('chr', '-multi')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-multi')
+
   def test_error_for_too_many_sprites(self):
     """If there are too many sprites, throw error."""
     img = Image.open('testdata/implied-bg-color.png')
