@@ -132,7 +132,11 @@ class UnknownStrategy(Exception):
 
 
 class UnknownLogicFailure(Exception):
-  pass
+  def __init__(self, text):
+    self.text = text
+
+  def __str__(self):
+    return 'UnknownLogicFailure: "%s"' % self.text
 
 
 class NametableOverflow(Exception):

@@ -149,7 +149,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
       # Combine previous and next spans.
       self._combine_spans(y, spans)
     if len(self._making):
-      raise errors.UnknownLogicFailure()
+      raise errors.UnknownLogicFailure('incomplete zones after span processing')
     zones = self._built
     self._making = self._built = None
     return zones

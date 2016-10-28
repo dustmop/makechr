@@ -22,6 +22,26 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.assert_file_eq(self.args.chr_view, self.golden('chr', 'png'))
     self.assert_file_eq(self.args.grid_view, self.golden('grid', 'png'))
 
+  def test_views_legacy(self):
+    """Create views of the input, using legacy views."""
+    img = Image.open('testdata/full-image.png')
+    self.args.use_legacy_views = True
+    self.process_image(img)
+    a = app.Application()
+    a.create_views(self.ppu_memory, self.args, img)
+    self.assert_file_eq(self.args.palette_view,
+                        self.golden('pal-legacy', 'png'))
+    self.assert_file_eq(self.args.colorization_view,
+                        self.golden('color-legacy', 'png'))
+    self.assert_file_eq(self.args.reuse_view,
+                        self.golden('reuse-legacy', 'png'))
+    self.assert_file_eq(self.args.nametable_view,
+                        self.golden('nt-legacy', 'png'))
+    self.assert_file_eq(self.args.chr_view,
+                        self.golden('chr-legacy', 'png'))
+    self.assert_file_eq(self.args.grid_view,
+                        self.golden('grid', 'png'))
+
   def test_output(self):
     """Basic usage."""
     img = Image.open('testdata/full-image.png')

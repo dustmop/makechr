@@ -66,28 +66,25 @@ class Application(object):
     self.create_views(mem, args, img)
     self.create_output(mem, args, self.get_traversal(None))
 
-  def create_views(self, mem, args, img):
+  def create_views(self, mem, args, img, scale=None):
+    if args.use_legacy_views:
+      renderer = view_renderer.ViewRenderer(is_legacy=True)
+    else:
+      renderer = view_renderer.ViewRenderer(is_legacy=False, scale=scale)
     if args.palette_view:
-      renderer = view_renderer.ViewRenderer()
       renderer.create_palette_view(args.palette_view, mem)
     if args.colorization_view:
-      renderer = view_renderer.ViewRenderer()
       renderer.create_colorization_view(args.colorization_view, mem)
     if args.reuse_view:
       nt_count = self.build_nt_count(mem)
-      renderer = view_renderer.ViewRenderer()
       renderer.create_reuse_view(args.reuse_view, mem, nt_count)
     if args.nametable_view:
-      renderer = view_renderer.ViewRenderer()
       renderer.create_nametable_view(args.nametable_view, mem)
     if args.chr_view:
-      renderer = view_renderer.ViewRenderer()
       renderer.create_chr_view(args.chr_view, mem)
     if args.grid_view:
-      renderer = view_renderer.ViewRenderer()
       renderer.create_grid_view(args.grid_view, img)
     if args.free_zone_view:
-      renderer = view_renderer.ViewRenderer()
       renderer.create_free_zone_view(args.free_zone_view, img, mem)
 
   def create_output(self, mem, args, traversal):

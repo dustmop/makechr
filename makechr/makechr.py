@@ -120,6 +120,10 @@ def run():
                       help=('Output filename for free zone view to output. '
                             'Will show where zones are according to free '
                             'sprite traversal.'))
+  parser.add_argument('--use-legacy-views', dest='use_legacy_views',
+                      action="store_true",
+                      help=('Views created using legacy styles. Default is '
+                            'false.'))
   args = parser.parse_args()
   if args.version:
     sys.stdout.write('makechr ' + __version__ + '\n')

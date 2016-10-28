@@ -401,7 +401,7 @@ class ImageProcessor(object):
                    x in xrange(self.blocks_x) for i in xrange(2) for
                    j in xrange(2))
     elif traversal == '8x16':
-      raise errors.UnknownLogicFailure()
+      raise errors.UnknownLogicFailure('traverse using subclassed processor')
     for (y,x) in generator:
       (cid, did, bcid) = self._artifacts[y][x]
       pid = self._ppu_memory.gfx_0.colorization[y][x]

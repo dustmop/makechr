@@ -23,6 +23,7 @@ class MockArgs(object):
     self.traversal = 'horizontal'
     self.is_sprite = False
     self.is_locked_tiles = False
+    self.use_legacy_views = False
     self.order = None
     self.compile = None
     self.output = self.tmpfile('actual-%s.dat')

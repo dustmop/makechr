@@ -8,16 +8,45 @@ import rgb
 GRAY_COLOR = (64, 64, 64)
 ERROR_GRID_COLOR  = (0xf0, 0x20, 0x20)
 ERROR_GRID_COLOR2 = (0xf0, 0x80, 0x80)
-GRAY_PALETTE = [225, 150, 75, 0]
+GRAY_PALETTE = [30, 105, 180, 255]
+LEGACY_GRAY_PALETTE = [225, 150, 75, 0]
 SCALE_FACTOR = 2
 
 
+REUSE_COLORS = [(0x40, 0x40, 0x40), # dark grey (common)
+                (0xff, 0xff, 0xff), # white (unique)
+                (0xff, 0xff, 0x00), # yellow
+                (0xff, 0xaa, 0x00), # light orange
+                (0x80, 0xff, 0x00), # light green
+                (0x00, 0xff, 0xff), # light blue
+                (0xff, 0x00, 0xff), # light purple
+                (0xff, 0x00, 0x00), # red
+                (0x00, 0x80, 0x00), # dark green
+                (0x00, 0x00, 0xff), # blue
+                (0x80, 0x00, 0x80)] # dark purple
+
+
+LEGACY_REUSE_COLORS = [(0xff, 0xff, 0xff), # white (common)
+                       (0x00, 0x00, 0x00), # black (unique)
+                       (0x00, 0x80, 0x00), # dark green
+                       (0x00, 0xff, 0x00), # light green
+                       (0x00, 0xff, 0xff), # light blue
+                       (0x00, 0x00, 0xff), # blue
+                       (0x80, 0x00, 0x80), # dark purple
+                       (0xff, 0x00, 0xff), # light purple
+                       (0xff, 0x40, 0x40), # red
+                       (0xff, 0x80, 0x00), # orange
+                       (0xff, 0xff, 0x00)] # yellow
+
+
 class ViewRenderer(object):
-  def __init__(self):
+  def __init__(self, is_legacy=False, scale=None):
     self.img = None
     self.draw = None
     self.font = None
     self.empty_tile = None
+    self.is_legacy = is_legacy
+    self.scale = scale or SCALE_FACTOR
 
   def create_file(self, outfile, width, height, color=None):
     if color is None:
@@ -27,7 +56,9 @@ class ViewRenderer(object):
     self.outfile = outfile
 
   def save_file(self):
-    self.img.save(self.outfile)
+    if self.outfile:
+      self.img.save(self.outfile)
+    return self.img
 
   def determine_empty_tile(self, ppu_memory):
     self.empty_tile = None
@@ -46,31 +77,53 @@ class ViewRenderer(object):
   def palette_option_to_colors(self, poption):
     return [self.to_tuple(rgb.RGB_COLORS[p]) for p in poption]
 
-  def count_to_color(self, count):
-    COLORS = [None,               # unused
-              None,               # clear
-              (0x00, 0x80, 0x00), # dark green
-              (0x00, 0xff, 0x00), # light green
-              (0x00, 0xff, 0xff), # light blue
-              (0x00, 0x00, 0xff), # blue
-              (0x80, 0x00, 0x80), # dark purple
-              (0xff, 0x00, 0xff), # light purple
-              (0xff, 0x40, 0x40), # red
-              (0xff, 0x80, 0x00), # orange
-              (0xff, 0xff, 0x00)] # yellow
-    if count < len(COLORS):
-      return COLORS[count]
-    return (0xff, 0xff, 0xff)
-
   def resource(self, rel):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), rel)
 
+  def reuse_count_to_color(self, count, scheme):
+    table = REUSE_COLORS if scheme != 'legacy' else LEGACY_REUSE_COLORS
+    if count == 0:
+      raise errors.UnknownLogicFailure('reuse number should not be 0')
+    if count < len(table):
+      return table[count]
+    # Common is represented by index 0.
+    return table[0]
+
   def load_nt_font(self):
     self.font = [None] * 16
-    font_img = Image.open(self.resource('res/nt_font.png'))
+    if not self.is_legacy:
+      w = self.font_width = 3
+      h = self.font_height = 5
+      filename = 'res/nt_tiny.png'
+    else:
+      w = self.font_width = 7
+      h = self.font_height = 11
+      filename = 'res/nt_font.png'
+    font_img = Image.open(self.resource(filename))
     for n in range(16):
-      self.font[n] = font_img.crop([n*7,0,n*7+7,11])
+      self.font[n] = font_img.crop([n*w,0,n*w+w,h])
     font_img.close()
+
+  def replace_color(self, img, old, new):
+    img = img.copy()
+    pixels = img.load()
+    old_color = (old / 0x10000, (old / 0x100) % 0x100, old % 0x100)
+    new_color = (new / 0x10000, (new / 0x100) % 0x100, new % 0x100)
+    (cols, rows) = img.size
+    for y in xrange(rows):
+      for x in xrange(cols):
+        tuple = pixels[x, y]
+        curr_color = (tuple[0], tuple[1], tuple[2])
+        if curr_color == old_color:
+          pixels[x, y] = new_color
+    return img
+
+  def color_and_scale(self, img, old, new):
+    img = self.replace_color(img, old, new)
+    if self.scale != 1:
+      img = img.resize((img.size[0] * self.scale, img.size[1] * self.scale),
+                       Image.NEAREST)
+    return img
 
   def draw_block(self, block_y, block_x, poption):
     s = self.scale * 8
@@ -103,26 +156,50 @@ class ViewRenderer(object):
       f = offsets[k]
       self.draw.rectangle([j+f[0],f[1],j+f[2],f[3]], c)
 
-  def draw_chr(self, tile, tile_y, tile_x):
+  def draw_poption_square(self, n, poption):
+    if not poption:
+      return
+    j = n * 3 * 8 + 8
+    offsets = [[0,  8,  7, 15],
+               [8,  8, 15, 15],
+               [0, 16,  7, 23],
+               [8, 16, 15, 23]]
+    color = self.palette_option_to_colors(poption)
+    for k, c in enumerate(color):
+      f = offsets[k]
+      self.draw.rectangle([j+f[0],f[1],j+f[2],f[3]], c)
+
+  def draw_chr(self, tile, tile_y, tile_x, scheme):
     s = self.scale * 8
     t = self.scale
+    if scheme != 'legacy':
+      s *= 2
+      t *= 2
     for y in xrange(8):
       for x in xrange(8):
         base_y = tile_y * (s + 1)
         base_x = tile_x * (s + 1)
         pixel = tile.get_pixel(y, x)
-        gray = GRAY_PALETTE[pixel]
+        if scheme != 'legacy':
+          gray = GRAY_PALETTE[pixel]
+        else:
+          gray = LEGACY_GRAY_PALETTE[pixel]
         self.draw.rectangle([base_x + x * t, base_y + y * t,
                              base_x + x * t + t - 1, base_y + y * t + t - 1],
                              (gray, gray, gray))
 
-  def draw_square(self, tile_y, tile_x, count):
+  def draw_reuse_square(self, tile_y, tile_x, count, scheme):
     s = self.scale * 8
     i = tile_y * s
     j = tile_x * s
-    color = self.count_to_color(count)
-    if not color:
-      color = (0x00, 0x00, 0x00)
+    color = self.reuse_count_to_color(count, scheme)
+    self.draw.rectangle([j+0,i+0,j+s,i+s], color)
+
+  def draw_empty_tile(self, tile_y, tile_x):
+    s = self.scale * 8
+    i = tile_y * s
+    j = tile_x * s
+    color = (0x00, 0x00, 0x00)
     self.draw.rectangle([j+0,i+0,j+s,i+s], color)
 
   def draw_empty_block(self, block_y, block_x, bg):
@@ -133,13 +210,28 @@ class ViewRenderer(object):
     self.draw.rectangle([j+0,i+0,j+s*2,i+s*2], (0,0,0,255))
 
   def draw_nt_value(self, tile_y, tile_x, nt):
-    s = self.scale * 8
-    upper = self.font[nt / 16]
-    lower = self.font[nt % 16]
+    if self.is_legacy:
+      s = self.scale * 8
+      x = tile_x * s + 1
+      y = tile_y * s + 3
+      w = 7
+      h = 11
+      offset = 7
+      upper = self.font[nt / 16]
+      lower = self.font[nt % 16]
+    else:
+      s = self.scale * 8
+      x = tile_x * s + 1
+      y = tile_y * s + 1
+      w = self.font_width * self.scale
+      h = self.font_height * self.scale
+      offset = int(3.5 * self.scale)
+      upper = self.color_and_scale(self.font[nt / 16], 0xffffff, 0xc0c0c0)
+      lower = self.color_and_scale(self.font[nt % 16], 0xffffff, 0x909090)
     # Left digit (upper nibble).
-    self.img.paste(upper, [tile_x*s+1,tile_y*s+3,tile_x*s+8,tile_y*s+14])
+    self.img.paste(upper, [x, y, x + w, y + h])
     # Right digit (lower nibble).
-    self.img.paste(lower, [tile_x*s+8,tile_y*s+3,tile_x*s+15,tile_y*s+14])
+    self.img.paste(lower, [x + offset, y, x + offset + w, y + h])
 
   def draw_error(self, y, x, sz):
     # Inner line.
@@ -181,7 +273,6 @@ class ViewRenderer(object):
     outfile: Filename to output the view to.
     ppu_memory: Ppu memory containing colorization and palette.
     """
-    self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.determine_empty_tile(ppu_memory)
     self.create_file(outfile, width, height)
@@ -196,7 +287,7 @@ class ViewRenderer(object):
           self.draw_empty_block(y, x, poption[0])
         else:
           self.draw_block(y, x, poption)
-    self.save_file()
+    return self.save_file()
 
   def create_reuse_view(self, outfile, ppu_memory, nt_count):
     """Create an image that shows tile reuse.
@@ -208,9 +299,9 @@ class ViewRenderer(object):
     ppu_memory: Ppu memory containing nametable.
     nt_count: Dict mapping nametable values to number of times.
     """
-    self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
-    self.create_file(outfile, width, height)
+    self.create_file(outfile, width, height, (0, 0, 0))
+    scheme = 'legacy' if self.is_legacy else 'normal'
     # TODO: Support both graphics pages.
     nametable = ppu_memory.gfx_0.nametable
     for block_y in xrange(NUM_BLOCKS_Y):
@@ -220,8 +311,11 @@ class ViewRenderer(object):
             y = block_y * 2 + i
             x = block_x * 2 + j
             nt = nametable[y][x]
-            self.draw_square(y, x, nt_count[nt])
-    self.save_file()
+            if not self.is_legacy and nt == ppu_memory.empty_tile:
+              self.draw_empty_tile(y, x)
+            else:
+              self.draw_reuse_square(y, x, nt_count[nt], scheme)
+    return self.save_file()
 
   def create_palette_view(self, outfile, ppu_memory):
     """Create an image that shows the palette.
@@ -229,13 +323,19 @@ class ViewRenderer(object):
     outfile: Filename to output the palette to.
     ppu_memory: Ppu memory containing palette.
     """
-    self.create_file(outfile, 168, 24)
+    if self.is_legacy:
+      self.create_file(outfile, 168, 24)
+    else:
+      self.create_file(outfile, 104, 32, (0xa0, 0xa0, 0xa0))
     # TODO: Support sprite palettes.
     palette = ppu_memory.palette_nt
     for i in xrange(4):
       poption = palette.get(i)
-      self.draw_poption(i, poption)
-    self.save_file()
+      if self.is_legacy:
+        self.draw_poption(i, poption)
+      else:
+        self.draw_poption_square(i, poption)
+    return self.save_file()
 
   def create_nametable_view(self, outfile, ppu_memory):
     """Create an image that shows nametable values for each tile.
@@ -243,11 +343,11 @@ class ViewRenderer(object):
     outfile: Filename to output the view to.
     ppu_memory: Ppu memory containing nametable.
     """
-    self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.load_nt_font()
     self.determine_empty_tile(ppu_memory)
-    self.create_file(outfile, width, height, (255, 255, 255))
+    bg_color = (0, 0, 0) if not self.is_legacy else (255, 255, 255)
+    self.create_file(outfile, width, height, bg_color)
     # TODO: Support both graphics pages.
     nametable = ppu_memory.gfx_0.nametable
     for block_y in xrange(NUM_BLOCKS_Y):
@@ -259,8 +359,9 @@ class ViewRenderer(object):
             nt = nametable[y][x]
             if nt != self.empty_tile:
               self.draw_nt_value(y, x, nt)
-    self.draw_grid(width, height)
-    self.save_file()
+    if self.is_legacy:
+      self.draw_grid(width, height)
+    return self.save_file()
 
   def create_chr_view(self, outfile, ppu_memory):
     """Create an image that shows chr tiles.
@@ -272,17 +373,24 @@ class ViewRenderer(object):
     outfile: Filename to output the view to.
     ppu_memory: Ppu memory containing chr.
     """
-    self.scale = SCALE_FACTOR
     s = self.scale * 8
+    if not self.is_legacy:
+      s *= 2
     chr_page = ppu_memory.chr_page
-    rows = int(math.ceil(chr_page.size() / 16.0))
+    if self.is_legacy:
+      rows = int(math.ceil(chr_page.size() / 16.0))
+      color = (255, 255, 255)
+    else:
+      rows = 16
+      color = (0, 0, 0)
     width, height = (16 * (s + 1) - 1, rows * (s + 1) - 1)
-    self.create_file(outfile, width, height, (255, 255, 255))
+    self.create_file(outfile, width, height, color)
+    scheme = 'legacy' if self.is_legacy else 'normal'
     for k, tile in enumerate(chr_page.tiles):
       tile_y = k / 16
       tile_x = k % 16
-      self.draw_chr(tile, tile_y, tile_x)
-    self.save_file()
+      self.draw_chr(tile, tile_y, tile_x, scheme)
+    return self.save_file()
 
   def create_free_zone_view(self, outfile, img, ppu_memory):
     """Create an image that shows zones for free sprite traversal.
@@ -297,20 +405,21 @@ class ViewRenderer(object):
       draw.rectangle(z.rect(), outline=(0xff,0,0))
     create.save(outfile)
 
-  def create_error_view(self, outfile, img, errs):
+  def create_error_view(self, outfile, img, errs, has_grid=True):
     """Create an image that shows the errors.
 
     outfile: Filename to output the error display to.
     img: Input pixel art image.
     errs: List of errors created by processor.
+    has_grid: Whether to draw a grid on the image.
     """
-    self.scale = SCALE_FACTOR
     orig_wide, orig_high = img.size
     make_wide, make_high = (orig_wide * self.scale, orig_high * self.scale)
     self.img = img.resize((make_wide, make_high), Image.NEAREST).convert('RGB')
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
-    self.draw_grid(make_wide, make_high)
+    if has_grid:
+      self.draw_grid(make_wide, make_high)
     s = self.scale * 8
     # Draw errors.
     for e in errs:
@@ -324,7 +433,7 @@ class ViewRenderer(object):
         y = e.block_y * 16 * self.scale
         x = e.block_x * 16 * self.scale
         self.draw_error(y, x, s * 2)
-    self.save_file()
+    return self.save_file()
 
   def create_grid_view(self, outfile, img):
     """Create an image that shows the blocks and tiles.
@@ -332,11 +441,9 @@ class ViewRenderer(object):
     outfile: Filename to output the grid view to.
     img: Input pixel art image.
     """
-    self.scale = SCALE_FACTOR
     width, height = (256 * self.scale, 240 * self.scale)
     self.img = img.resize((width, height), Image.NEAREST).convert('RGB')
     self.draw = ImageDraw.Draw(self.img)
     self.outfile = outfile
     self.draw_grid(width, height)
-    self.save_file()
-
+    return self.save_file()

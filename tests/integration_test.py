@@ -75,10 +75,11 @@ Palette: P/30-38-16-01/30-19/
     nt_view_name = os.path.join(self.tmpdir, 'nt.png')
     reuse_view_name = os.path.join(self.tmpdir, 'reuse.png')
     args = ['-m', 'testdata/full-image.mem', '-o', '/dev/null',
-            '--nametable-view', nt_view_name, '--reuse-view', reuse_view_name]
+            '--nametable-view', nt_view_name, '--reuse-view', reuse_view_name,
+            '--use-legacy-views']
     self.makechr(args)
-    self.assert_file_eq(nt_view_name, self.golden('nt', 'png'))
-    self.assert_file_eq(reuse_view_name, self.golden('reuse', 'png'))
+    self.assert_file_eq(nt_view_name, self.golden('nt-legacy', 'png'))
+    self.assert_file_eq(reuse_view_name, self.golden('reuse-legacy', 'png'))
     self.assertEqual(self.out, '')
 
   def test_sprite_8x16(self):
