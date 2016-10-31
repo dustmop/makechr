@@ -1,4 +1,6 @@
 import collections
+import eight_by_sixteen_processor
+import errors
 import image_processor
 import ppu_memory
 import rgb
@@ -53,18 +55,22 @@ class Zone(object):
     self.left_range = left_range
     self.right_range = right_range
 
-  def each_sprite(self):
+  def each_sprite(self, is_tall):
+    width = 8
+    height = 16 if is_tall else 8
     y = self.top
     while y < self.bottom:
       x = self.left
       while x < self.right:
         yield y,x
-        x += 8
-        if 0 < self.right - x < 8:
-          x = self.right - 8
-      y += 8
-      if 0 < self.bottom - y < 8:
-        y = self.bottom - 8
+        if is_tall:
+          yield y+8,x
+        x += width
+        if 0 < self.right - x < width:
+          x = self.right - width
+      y += height
+      if 0 < self.bottom - y < height:
+        y = self.bottom - height
 
   def rect(self):
     return [self.left, self.top, self.right-1, self.bottom-1]
@@ -81,8 +87,9 @@ class Zone(object):
 class FreeSpriteProcessor(image_processor.ImageProcessor):
   """Converts free sprites image into data structures of the PPU's memory."""
 
-  def __init__(self):
+  def __init__(self, traversal):
     image_processor.ImageProcessor.__init__(self)
+    self.traversal = traversal
     self._built = []
 
   def process_image(self, img, palette_text, bg_color_look, bg_color_fill):
@@ -105,7 +112,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     # Convert zones into artifacts.
     artifacts = []
     for z in zones:
-      for sprite_y, sprite_x in z.each_sprite():
+      for sprite_y, sprite_x in z.each_sprite('8x16' in self.traversal):
         (color_needs, dot_profile) = self.process_tile(
           sprite_y / 8, sprite_x / 8, sprite_y % 8, sprite_x % 8)
         cid = self._color_manifest.id(color_needs)
@@ -115,12 +122,25 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     # Build the palette.
     pal = self.make_palette(palette_text, bg_color_look, True)
     # Build the PPU memory.
-    for y, x, cid, did in artifacts:
-      color_needs = self._color_manifest.at(cid)
-      (pid, palette_option) = pal.select(color_needs)
-      dot_xlat = self.get_dot_xlat(color_needs, palette_option)
-      (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
-      self._ppu_memory.spritelist.append([y - 1, chr_num, pid | flip_bits, x])
+    if not '8x16' in self.traversal:
+      for y, x, cid, did in artifacts:
+        color_needs = self._color_manifest.at(cid)
+        (pid, palette_option) = pal.select(color_needs)
+        dot_xlat = self.get_dot_xlat(color_needs, palette_option)
+        (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
+        self._ppu_memory.spritelist.append([y - 1, chr_num, pid | flip_bits, x])
+    else:
+      ebs_processor = eight_by_sixteen_processor.EightBySixteenProcessor()
+      ebs_processor.link_from(self)
+      for i in xrange(0, len(artifacts), 2):
+        (y, x, cid_u, did_u) = artifacts[i]
+        (unused_y, unused_x, cid_l, did_l) = artifacts[i+1]
+        color_needs = self._color_manifest.at(cid_u)
+        (pid, palette_option) = pal.select(color_needs)
+        chr_num_u, chr_num_l, flip_bits = ebs_processor.store_vert_pair(
+          palette_option, cid_u, did_u, cid_l, did_l, config)
+        chr_num = chr_num_u + 1
+        self._ppu_memory.spritelist.append([y - 1, chr_num, pid | flip_bits, x])
     self._ppu_memory.palette_spr = pal
     # HACK: Assign zones to ppu_memory so that they can be used by the
     # view renderer.

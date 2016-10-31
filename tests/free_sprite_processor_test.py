@@ -6,7 +6,7 @@ from makechr import errors, free_sprite_processor
 
 class FreeSpriteProcessorTests(unittest.TestCase):
   def setUp(self):
-    self.processor = free_sprite_processor.FreeSpriteProcessor()
+    self.processor = free_sprite_processor.FreeSpriteProcessor(None)
     self.processor._making = []
     self.processor._built = []
 

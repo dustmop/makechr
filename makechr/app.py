@@ -15,11 +15,12 @@ import sys
 class Application(object):
   def run(self, img, args):
     traversal = self.get_traversal(args.traversal_strategy)
-    if traversal == 'free':
+    if 'free' in traversal:
       if not args.is_sprite or args.bg_color.fill is None:
-        raise errors.CommandLineArgError('Traversal strategy \'free\' requires '
-                                         '-s and -b `look=fill` flags')
-      processor = free_sprite_processor.FreeSpriteProcessor()
+        raise errors.CommandLineArgError(
+          'Traversal strategy \'%s\' requires -s and -b `look=fill` flags' % (
+            traversal))
+      processor = free_sprite_processor.FreeSpriteProcessor(traversal)
       processor.process_image(img, args.palette, args.bg_color.look,
                               args.bg_color.fill)
     elif traversal == '8x16':
@@ -51,8 +52,10 @@ class Application(object):
       return 'block'
     elif strategy == 'f' or strategy == 'free':
       return 'free'
-    elif strategy == '8x16':
+    elif strategy == '8' or strategy == '8x16':
       return '8x16'
+    elif strategy == 'free-8x16':
+      return 'free-8x16'
     else:
       raise errors.UnknownStrategy(strategy)
 

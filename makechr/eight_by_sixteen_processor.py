@@ -82,27 +82,42 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
       # For 8x16, colorization must be the same for each tile in a vert_pair.
       pid_u = self._ppu_memory.gfx_0.colorization[y][x]
       palette_option = pal.get(pid_u)
-      force_store = ppu_memory.PpuMemoryConfig(is_sprite=config.is_sprite,
-                                               is_locked_tiles=True)
-      # Create upper tile.
-      color_needs = self._color_manifest.at(cid_u)
-      xlat_u = self.get_dot_xlat(color_needs, palette_option)
-      tile_u = self.build_tile(xlat_u, did_u)
-      # Create lower tile.
-      color_needs = self._color_manifest.at(cid_l)
-      xlat_l = self.get_dot_xlat(color_needs, palette_option)
-      tile_l = self.build_tile(xlat_l, did_l)
-      # Check if the cache contains this key.
-      key = str(tile_u) + str(tile_l)
-      if key in self._chrdata_cache and not config.is_locked_tiles:
-        (chr_num_u, chr_num_l) = self._chrdata_cache[key]
-      else:
-        # Otherwise, force both tiles to be created.
-        (chr_num_u, flip_bits) = self.store_chrdata(xlat_u, did_u, force_store)
-        (chr_num_l, flip_bits) = self.store_chrdata(xlat_l, did_l, force_store)
+      # Store chr data and assign tile number to the nametable.
+      chr_num_u, chr_num_l, flip_bits = self.store_vert_pair(
+        palette_option, cid_u, did_u, cid_l, did_l, config)
       self._ppu_memory.gfx_0.nametable[y  ][x] = chr_num_u
       self._ppu_memory.gfx_0.nametable[y+1][x] = chr_num_l
-      self._chrdata_cache[key] = (chr_num_u, chr_num_l)
+
+  def store_vert_pair(self, palette_option, cid_u, did_u, cid_l, did_l, config):
+    """Build vertical tile pair, and either retrieve from cache or add chr data.
+
+    palette_option: Chosen palette option for creating the chr data.
+    cid_u: Color needs id for upper tile.
+    did_u: Dot profile id for upper tile.
+    cid_l: Color needs id for lower tile.
+    did_l: Dot profile id for lower tile.
+    config: Configuration.
+    """
+    # Create upper tile.
+    force = ppu_memory.PpuMemoryConfig(is_sprite=config.is_sprite,
+                                       is_locked_tiles=True)
+    color_needs = self._color_manifest.at(cid_u)
+    xlat_u = self.get_dot_xlat(color_needs, palette_option)
+    tile_u = self.build_tile(xlat_u, did_u)
+    # Create lower tile.
+    color_needs = self._color_manifest.at(cid_l)
+    xlat_l = self.get_dot_xlat(color_needs, palette_option)
+    tile_l = self.build_tile(xlat_l, did_l)
+    # Check if the cache contains this key.
+    key = str(tile_u) + str(tile_l)
+    if key in self._chrdata_cache and not config.is_locked_tiles:
+      (chr_num_u, chr_num_l, flip_bits) = self._chrdata_cache[key]
+    else:
+      # Otherwise, force both tiles to be created.
+      (chr_num_u, flip_bits) = self.store_chrdata(xlat_u, did_u, force)
+      (chr_num_l, flip_bits) = self.store_chrdata(xlat_l, did_l, force)
+      self._chrdata_cache[key] = (chr_num_u, chr_num_l, flip_bits)
+    return chr_num_u, chr_num_l, flip_bits
 
   def make_spritelist(self, traversal, pal, config):
     """Convert data from the nametable to create spritelist.
@@ -134,3 +149,9 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
     return ((y*2,x) for y in xrange(self.blocks_y) for
             x in xrange(self.blocks_x * 2))
 
+  def link_from(self, other_processor):
+    """Alias data from other image_processor to the data in this one."""
+
+    self._color_manifest = other_processor._color_manifest
+    self._dot_manifest = other_processor._dot_manifest
+    self._ppu_memory = other_processor._ppu_memory
