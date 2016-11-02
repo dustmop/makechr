@@ -6,6 +6,10 @@ class ChrTile(object):
     self.low = [0] * 8
     self.hi = [0] * 8
 
+  def get_bytes(self):
+    """Get the bytes representing the chr."""
+    return bytearray(self.low + self.hi)
+
   def put_pixel(self, y, x, val):
     """Set the pixel at y,x to have value val.
 
@@ -65,8 +69,8 @@ class ChrTile(object):
       return 1
     return 0
 
-  def __repr__(self):
-    return '%s' % (self.low + self.hi)
+  def __str__(self):
+    return '<ChrTile ' + bytes(self.get_bytes()) + '>'
 
 
 class ChrPage(object):
@@ -150,3 +154,24 @@ class SortableChrPage(ChrPage):
       last = e
       self.idx.append(i)
 
+
+class VertTilePair(object):
+  def __init__(self, upper, lower):
+    self.upper = upper
+    self.lower = lower
+
+  def get_bytes(self):
+    bytes = self.upper.low + self.upper.hi + self.lower.low + self.lower.hi
+    return bytearray(bytes)
+
+  def flip(self, direction):
+    if direction == 'h':
+      return VertTilePair(self.upper.flip('h'), self.lower.flip('h'))
+    elif direction == 'v':
+      return VertTilePair(self.lower.flip('v'), self.upper.flip('v'))
+    elif direction == 'vh':
+      return VertTilePair(self.lower.flip('vh'), self.upper.flip('vh'))
+    raise RuntimeError('Unknown flip direction "%s"' % direction)
+
+  def __str__(self):
+    return '<VertTilePair ' + bytes(self.get_bytes()) + '>'

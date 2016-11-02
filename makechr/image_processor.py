@@ -10,9 +10,6 @@ import rgb
 from constants import *
 
 
-NULL = 0xff
-
-
 class ImageProcessor(object):
   """Converts pixel art image into data structures in the PPU's memory."""
 
@@ -258,16 +255,22 @@ class ImageProcessor(object):
       raise errors.NametableOverflow(chr_num)
     # Save in the cache.
     if config.is_sprite and not config.is_locked_tiles:
-      horz_tile = tile.flip('h')
-      vert_tile = tile.flip('v')
-      spin_tile = tile.flip('vh')
-      self._chrdata_cache[str(spin_tile)] = (chr_num, 0xc0)
-      self._chrdata_cache[str(vert_tile)] = (chr_num, 0x80)
-      self._chrdata_cache[str(horz_tile)] = (chr_num, 0x40)
-      self._chrdata_cache[str(tile)]      = (chr_num, 0x00)
+      self.assign_tile_flips(tile, [chr_num], self._chrdata_cache)
     elif not config.is_locked_tiles:
       self._chrdata_cache[key] = (chr_num, 0x00)
     return (chr_num, 0x00)
+
+  def assign_tile_flips(self, tile, value_list, storage):
+    """Flip tile each way, generate keys and store them in the storage.
+
+    tile: ChrTile object that can be flipped.
+    value_list: Values in a list to be stored in the storage.
+    storage: A dictionary to store values.
+    """
+    storage[str(tile.flip('vh'))] = tuple(value_list + [0xc0])
+    storage[str(tile.flip('v'))]  = tuple(value_list + [0x80])
+    storage[str(tile.flip('h'))]  = tuple(value_list + [0x40])
+    storage[str(tile)]            = tuple(value_list + [0x00])
 
   def build_tile(self, xlat, did):
     """Lookup dot_profile, and translate it to create tile.

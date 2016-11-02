@@ -1,3 +1,4 @@
+import chr_data
 import collections
 import errors
 import id_manifest
@@ -5,9 +6,6 @@ import image_processor
 import ppu_memory
 import rgb
 from constants import *
-
-
-NULL = 0xff
 
 
 class EightBySixteenProcessor(image_processor.ImageProcessor):
@@ -87,6 +85,7 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
         palette_option, cid_u, did_u, cid_l, did_l, config)
       self._ppu_memory.gfx_0.nametable[y  ][x] = chr_num_u
       self._ppu_memory.gfx_0.nametable[y+1][x] = chr_num_l
+      self._flip_bits[y][x] = flip_bits
 
   def store_vert_pair(self, palette_option, cid_u, did_u, cid_l, did_l, config):
     """Build vertical tile pair, and either retrieve from cache or add chr data.
@@ -109,7 +108,8 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
     xlat_l = self.get_dot_xlat(color_needs, palette_option)
     tile_l = self.build_tile(xlat_l, did_l)
     # Check if the cache contains this key.
-    key = str(tile_u) + str(tile_l)
+    vert = chr_data.VertTilePair(tile_u, tile_l)
+    key = str(vert)
     if key in self._chrdata_cache and not config.is_locked_tiles:
       (chr_num_u, chr_num_l, flip_bits) = self._chrdata_cache[key]
     else:
@@ -117,6 +117,7 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
       (chr_num_u, flip_bits) = self.store_chrdata(xlat_u, did_u, force)
       (chr_num_l, flip_bits) = self.store_chrdata(xlat_l, did_l, force)
       self._chrdata_cache[key] = (chr_num_u, chr_num_l, flip_bits)
+      self.assign_tile_flips(vert, [chr_num_u, chr_num_l], self._chrdata_cache)
     return chr_num_u, chr_num_l, flip_bits
 
   def make_spritelist(self, traversal, pal, config):

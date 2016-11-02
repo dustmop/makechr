@@ -1,4 +1,5 @@
 import collections
+import data
 import eight_by_sixteen_processor
 import errors
 import id_manifest
@@ -6,84 +7,6 @@ import image_processor
 import ppu_memory
 import rgb
 from constants import *
-
-
-NULL = 0xff
-
-
-class Span(object):
-  """Span represents a start side on the left, and finish side on the right."""
-
-  def __init__(self, left, right):
-    self.left = left
-    self.right = right
-
-  def same_as(self, other):
-    return self.left == other.left and self.right == other.right
-
-  def fully_left(self, other):
-    return self.right <= other.left
-
-  def fully_right(self, other):
-    return self.left >= other.right
-
-  def contains(self, num):
-    return self.left <= num <= self.right
-
-  def __repr__(self):
-    return '<Span L=%s R=%s>' % (self.left, self.right)
-
-  def __cmp__(self, other):
-    if self.left < other.left:
-      return -1
-    if self.right < other.right:
-      return -1
-    if self.left > other.left:
-      return 1
-    if self.right > other.right:
-      return 1
-    return 0
-
-
-class Zone(object):
-  """A rectangle which contains 4 sides. May have ambiguous sides."""
-
-  def __init__(self, top=None, left=None, right=None, bottom=None,
-               left_range=None, right_range=None):
-    self.top = top
-    self.left = left
-    self.right = right
-    self.bottom = bottom
-    self.left_range = left_range
-    self.right_range = right_range
-
-  def each_sprite(self, is_tall):
-    width = 8
-    height = 16 if is_tall else 8
-    y = self.top
-    while y < self.bottom:
-      x = self.left
-      while x < self.right:
-        yield y,x
-        if is_tall:
-          yield y+8,x
-        x += width
-        if 0 < self.right - x < width:
-          x = self.right - width
-      y += height
-      if 0 < self.bottom - y < height:
-        y = self.bottom - height
-
-  def rect(self):
-    return [self.left, self.top, self.right-1, self.bottom-1]
-
-  def __repr__(self):
-    maybe_bottom = ''
-    if not self.bottom is None:
-      maybe_bottom = ' B=%s' % self.bottom
-    return ('<Zone T=%s L=%s R=%s%s>' % (
-      self.top, self.left_range or self.left, self.right_range or self.right,
-      maybe_bottom))
 
 
 class FreeSpriteProcessor(image_processor.ImageProcessor):
@@ -178,7 +101,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
         nc = self.get_nes_color(y, x)
         if nc != fill and not is_color:
           is_color = True
-          spans.append(Span(x, None))
+          spans.append(data.Span(x, None))
         elif nc == fill and is_color:
           is_color = False
           spans[-1].right = x
@@ -257,11 +180,11 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
           did_insert = True
       elif below.right == above.right:
         if want_side:
-          want_side.right_range = Span(want_side.right, above.right)
+          want_side.right_range = data.Span(want_side.right, above.right)
       elif below.right > above.right:
         if not did_insert:
           self._insert_zone(top=y, left=above.right, right=below.right,
-                            left_range=Span(below.left, above.right))
+                            left_range=data.Span(below.left, above.right))
           did_insert = True
       # Iterate either a single span, or both spans.
       if below.left < above.left and below.right > above.right:
@@ -302,15 +225,15 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
       if y == elem.top:
         continue
       # Zones that do not exist in the current spans get assigned a bottom.
-      L = elem.left.right if isinstance(elem.left, Span) else elem.left
-      R = elem.right.left if isinstance(elem.right, Span) else elem.right
+      L = elem.left.right if isinstance(elem.left, data.Span) else elem.left
+      R = elem.right.left if isinstance(elem.right, data.Span) else elem.right
       if span.left <= L and span.right >= R:
         elem.bottom = y
 
   def _insert_zone(self, top=None, left=None, right=None, bottom=None,
                    left_range=None, right_range=None):
-    make = Zone(top=top, left=left, right=right, bottom=bottom,
-                left_range=left_range, right_range=right_range)
+    make = data.Zone(top=top, left=left, right=right, bottom=bottom,
+                     left_range=left_range, right_range=right_range)
     i = 0
     for i,elem in enumerate(self._making):
       if elem.left >= make.left:

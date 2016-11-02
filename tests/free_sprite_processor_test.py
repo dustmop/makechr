@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import errors, free_sprite_processor
+from makechr import data, errors, free_sprite_processor
 
 
 class FreeSpriteProcessorTests(unittest.TestCase):
@@ -11,13 +11,12 @@ class FreeSpriteProcessorTests(unittest.TestCase):
     self.processor._built = []
 
   def add_making(self, top, left, right):
-    zone = free_sprite_processor.Zone(top, left, right)
+    zone = data.Zone(top, left, right)
     self.processor._making.append(zone)
-    self.processor._previous = [
-      free_sprite_processor.Span(left=left, right=right)]
+    self.processor._previous = [data.Span(left=left, right=right)]
 
   def insert_span(self, y, left, right):
-    span = free_sprite_processor.Span(left, right)
+    span = data.Span(left, right)
     self.processor._combine_spans(y, [span])
 
   def making_string(self):
