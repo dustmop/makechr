@@ -4,10 +4,10 @@ import id_manifest
 import image_processor
 import ppu_memory
 import rgb
+from constants import *
 
 
 NULL = 0xff
-ARTIFACT_VCID = 2
 
 
 class EightBySixteenProcessor(image_processor.ImageProcessor):

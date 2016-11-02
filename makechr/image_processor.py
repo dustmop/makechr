@@ -231,7 +231,7 @@ class ImageProcessor(object):
           dot_xlat.append(i)
           break
       else:
-        raise IndexError
+        raise errors.PalettesUnsuitable(color_needs, palette_option)
     return dot_xlat
 
   def store_chrdata(self, xlat, did, config):

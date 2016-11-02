@@ -1,9 +1,11 @@
 import collections
 import eight_by_sixteen_processor
 import errors
+import id_manifest
 import image_processor
 import ppu_memory
 import rgb
+from constants import *
 
 
 NULL = 0xff
@@ -91,6 +93,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     image_processor.ImageProcessor.__init__(self)
     self.traversal = traversal
     self._built = []
+    self._vert_color_manifest = id_manifest.IdManifest()
 
   def process_image(self, img, palette_text, bg_color_look, bg_color_fill):
     """Process free sprites image, creating the ppu_memory it represents.
@@ -107,23 +110,39 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     """
     self.load_image(img)
     config = ppu_memory.PpuMemoryConfig(is_sprite=True, is_locked_tiles=False)
+    is_tall = '8x16' in self.traversal
     # Scan the image, find corners of each tile based upon region merging.
     zones = self._find_zones(bg_color_fill)
+    # HACK: Assign zones to ppu_memory so that they can be used by the
+    # view renderer.
+    self._ppu_memory.zones = zones
     # Convert zones into artifacts.
     artifacts = []
     for z in zones:
-      for sprite_y, sprite_x in z.each_sprite('8x16' in self.traversal):
+      vert_color_needs = None
+      for sprite_y, sprite_x in z.each_sprite(is_tall):
         (color_needs, dot_profile) = self.process_tile(
           sprite_y / 8, sprite_x / 8, sprite_y % 8, sprite_x % 8)
         cid = self._color_manifest.id(color_needs)
         did = self._dot_manifest.id(dot_profile)
-        artifacts.append([sprite_y, sprite_x, cid, did])
+        artifacts.append([cid, did, None, sprite_y, sprite_x])
+        if not is_tall:
+          continue
+        elif vert_color_needs is None:
+          vert_color_needs = color_needs
+        else:
+          self.combine_color_needs(vert_color_needs, color_needs)
+          vcid = self._vert_color_manifest.id(vert_color_needs)
+          artifacts[-1][ARTIFACT_VCID] = vcid
+          vert_color_needs = None
     self._needs_provider = self._color_manifest
+    if is_tall:
+      self._needs_provider = self._vert_color_manifest
     # Build the palette.
     pal = self.make_palette(palette_text, bg_color_look, True)
     # Build the PPU memory.
-    if not '8x16' in self.traversal:
-      for y, x, cid, did in artifacts:
+    if not is_tall:
+      for cid, did, unused, y, x in artifacts:
         color_needs = self._color_manifest.at(cid)
         (pid, palette_option) = pal.select(color_needs)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
@@ -133,18 +152,16 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
       ebs_processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       ebs_processor.link_from(self)
       for i in xrange(0, len(artifacts), 2):
-        (y, x, cid_u, did_u) = artifacts[i]
-        (unused_y, unused_x, cid_l, did_l) = artifacts[i+1]
-        color_needs = self._color_manifest.at(cid_u)
+        (cid_u, did_u, unused, y, x) = artifacts[i]
+        (cid_l, did_l, vcid, unused_y, unused_x) = artifacts[i+1]
+        color_needs = self._vert_color_manifest.at(vcid)
         (pid, palette_option) = pal.select(color_needs)
         chr_num_u, chr_num_l, flip_bits = ebs_processor.store_vert_pair(
           palette_option, cid_u, did_u, cid_l, did_l, config)
+        # TODO: Only add this 1 if the sprite chr order is 1.
         chr_num = chr_num_u + 1
         self._ppu_memory.spritelist.append([y - 1, chr_num, pid | flip_bits, x])
     self._ppu_memory.palette_spr = pal
-    # HACK: Assign zones to ppu_memory so that they can be used by the
-    # view renderer.
-    self._ppu_memory.zones = zones
 
   def _find_zones(self, fill):
     """Scan the entire image. Calculate the positions of tile corners."""
@@ -213,6 +230,9 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
             zone.left = below.left
             did_insert = True
             break
+          elif below.contains(zone.left) and below.contains(zone.right):
+            did_insert = True
+            continue
           elif zone.top != y:
             zone.bottom = y
         if not did_insert:
@@ -227,6 +247,9 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
             zone.right_range = None
             zone.right = below.right
             did_insert = True
+          elif below.contains(zone.left) and below.contains(zone.right):
+            did_insert = True
+            continue
           elif zone.top != y:
             zone.bottom = y
         if not did_insert:

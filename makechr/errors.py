@@ -62,6 +62,15 @@ class PaletteNoChoiceError(Exception):
     return 'at (%dy,%dx) for %s' % (self.tile_y, self.tile_x, needs)
 
 
+class PalettesUnsuitable(Exception):
+  def __init__(self, color_needs, palette_option):
+    self.needs = ','.join(['$%02x' % e for e in color_needs])
+    self.option = '/'.join(['$%02x' % e for e in palette_option])
+
+  def __str__(self):
+    return 'needs=%s option=%s' % (self.needs, self.option)
+
+
 class PaletteParseError(Exception):
   def __init__(self, input, i, msg):
     self.input = input

@@ -100,7 +100,7 @@ class FreeSpriteProcessorTests(unittest.TestCase):
     self.add_making(top=3, left=40, right=48)
     self.insert_span(y=6,  left=38, right=46)
     self.assertEqual(self.making_string(),
-                     '[<Zone T=6 L=38 R=46>, <Zone T=6 L=38 R=40>]')
+                     '[<Zone T=6 L=38 R=40>]')
     self.assertEqual(self.built_string(), '[<Zone T=3 L=40 R=48 B=6>]')
 
 
