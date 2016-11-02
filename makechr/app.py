@@ -22,7 +22,7 @@ class Application(object):
             traversal))
       processor = free_sprite_processor.FreeSpriteProcessor(traversal)
       processor.process_image(img, args.palette, args.bg_color.look,
-                              args.bg_color.fill)
+                              args.bg_color.fill, args.is_locked_tiles)
     elif traversal == '8x16':
       if not args.is_sprite:
         raise errors.CommandLineArgError('Traversal strategy \'8x16\' requires '

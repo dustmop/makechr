@@ -18,7 +18,8 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     self._built = []
     self._vert_color_manifest = id_manifest.IdManifest()
 
-  def process_image(self, img, palette_text, bg_color_look, bg_color_fill):
+  def process_image(self, img, palette_text, bg_color_look, bg_color_fill,
+                    is_locked_tiles):
     """Process free sprites image, creating the ppu_memory it represents.
 
     The image represents the entire screen, and is mostly filled with
@@ -32,7 +33,8 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     bg_color_fill: Background color which fills up the outside space.
     """
     self.load_image(img)
-    config = ppu_memory.PpuMemoryConfig(is_sprite=True, is_locked_tiles=False)
+    config = ppu_memory.PpuMemoryConfig(is_sprite=True,
+                                        is_locked_tiles=is_locked_tiles)
     is_tall = '8x16' in self.traversal
     # Scan the image, find corners of each tile based upon region merging.
     zones = self._find_zones(bg_color_fill)

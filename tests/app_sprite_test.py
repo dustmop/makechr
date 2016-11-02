@@ -218,7 +218,7 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('spritelist')
 
   def test_output_free_sprite_colors_8x16_traversal(self):
-    """TODO"""
+    """Sprite mode using free traversal, palette is decided based on pair."""
     img = Image.open('testdata/free-sprites-colors.png')
     self.args.bg_color = bg_color_spec.build('00=30')
     self.args.is_sprite = True
@@ -231,6 +231,22 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('palette')
     self.assert_not_exist('attribute')
     self.assert_output_result('spritelist')
+
+  def test_output_free_sprite_colors_locked_8x16_traversal(self):
+    """Sprite mode using free traversal, locked flag disables flip bits."""
+    img = Image.open('testdata/free-sprites-colors.png')
+    self.args.bg_color = bg_color_spec.build('00=30')
+    self.args.is_sprite = True
+    self.args.is_locked_tiles = True
+    self.args.traversal = 'free-8x16'
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'free-sprites-8x16-colors'
+    self.assert_output_result('chr', '-locked')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-locked')
 
   def test_error_for_too_many_sprites(self):
     """If there are too many sprites, throw error."""
