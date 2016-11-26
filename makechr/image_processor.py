@@ -446,17 +446,18 @@ class ImageProcessor(object):
       if empty_cid == cid and empty_did == did:
         continue
       tile = self._ppu_memory.gfx_0.nametable[y][x]
-      if len(self._ppu_memory.spritelist) == 0x40:
-        if not config.is_locked_tiles:
-          self._err.add(errors.SpritelistOverflow(y, x))
-        continue
+      if not config.allow_overflow or not 's' in config.allow_overflow:
+        if len(self._ppu_memory.spritelist) >= 0x40:
+          if not config.is_locked_tiles:
+            self._err.add(errors.SpritelistOverflow(y, x))
+          continue
       y_pos = y * 8 - 1 if y > 0 else 0
       x_pos = x * 8
       attr = self._ppu_memory.gfx_0.colorization[y][x] | self._flip_bits[y][x]
       self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
 
   def process_image(self, img, palette_text, bg_color, traversal,
-                    is_sprite, is_locked_tiles):
+                    is_sprite, is_locked_tiles, allow_overflow):
     """Process an image, creating the ppu_memory necessary to display it.
 
     img: Pixel art image.
@@ -472,7 +473,8 @@ class ImageProcessor(object):
     self.blocks_x = NUM_BLOCKS_X
     # Assign configuration.
     config = ppu_memory.PpuMemoryConfig(is_sprite=is_sprite,
-                                        is_locked_tiles=is_locked_tiles)
+                                        is_locked_tiles=is_locked_tiles,
+                                        allow_overflow=allow_overflow)
     # TODO: Not being used anywhere.
     self._ppu_memory.nt_width = NUM_BLOCKS_X * 2
     # If image is exactly 128x128 and uses locked tiles, treat it as though it
@@ -488,10 +490,14 @@ class ImageProcessor(object):
     self.process_to_artifacts(config)
     if self._err.has():
       return
-    # Make the palette.
+    # Make the palette, and store it.
     pal = self.make_palette(palette_text, bg_color, config.is_sprite)
     if not pal:
       return
+    if not config.is_sprite:
+      self._ppu_memory.palette_nt = pal
+    else:
+      self._ppu_memory.palette_spr = pal
     # Make colorization for each block and tile.
     self.make_colorization(pal, config)
     if self._err.has():
@@ -500,9 +506,6 @@ class ImageProcessor(object):
     self.traverse_artifacts(traversal, pal, config)
     if self._err.has():
       return
-    # Store palette, and build spritelist, is necessary.
-    if not config.is_sprite:
-      self._ppu_memory.palette_nt = pal
-    else:
-      self._ppu_memory.palette_spr = pal
+    # Build spritelist if necessary.
+    if config.is_sprite:
       self.make_spritelist(traversal, pal, config)

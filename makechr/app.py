@@ -22,24 +22,27 @@ class Application(object):
             traversal))
       processor = free_sprite_processor.FreeSpriteProcessor(traversal)
       processor.process_image(img, args.palette, args.bg_color.look,
-                              args.bg_color.fill, args.is_locked_tiles)
+                              args.bg_color.fill, args.is_locked_tiles,
+                              args.allow_overflow)
     elif traversal == '8x16':
       if not args.is_sprite:
         raise errors.CommandLineArgError('Traversal strategy \'8x16\' requires '
                                          '-s flag')
       processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       processor.process_image(img, args.palette, args.bg_color.look,
-                              traversal, args.is_sprite, args.is_locked_tiles)
+                              traversal, args.is_sprite, args.is_locked_tiles,
+                              args.allow_overflow)
     else:
       processor = image_processor.ImageProcessor()
       processor.process_image(img, args.palette, args.bg_color.look,
-                              traversal, args.is_sprite, args.is_locked_tiles)
-    if processor.err().has():
-      self.handle_errors(processor.err(), img, args)
-      return False
+                              traversal, args.is_sprite, args.is_locked_tiles,
+                              args.allow_overflow)
     if args.bg_color.fill:
       processor.ppu_memory().override_bg_color(args.bg_color.fill)
     self.create_views(processor.ppu_memory(), args, img)
+    if processor.err().has():
+      self.handle_errors(processor.err(), img, args)
+      return False
     self.create_output(processor.ppu_memory(), args, traversal)
     if args.show_stats:
       self.show_stats(processor.ppu_memory(), processor, args)

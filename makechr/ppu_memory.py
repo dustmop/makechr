@@ -16,12 +16,13 @@ class GraphicsPage(object):
 
 class PpuMemoryConfig(object):
   def __init__(self, chr_order=None, palette_order=None, traversal=None,
-               is_sprite=None, is_locked_tiles=None):
+               is_sprite=None, is_locked_tiles=None, allow_overflow=None):
     self.chr_order = chr_order
     self.palette_order = palette_order
     self.traversal = traversal
     self.is_sprite = is_sprite
     self.is_locked_tiles = is_locked_tiles
+    self.allow_overflow = allow_overflow or []
 
 
 class PpuMemory(object):
@@ -139,8 +140,7 @@ class PpuMemory(object):
       fout.write(chr(attr))
       fout.write(chr(x_pos))
       n += 1
-    if n < 64:
-      fout.write(chr(0xff))
+    fout.write(chr(0xff))
 
   def _get_bg_color(self, palette_1, palette_2):
     bg_color = None

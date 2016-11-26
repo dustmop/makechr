@@ -10,6 +10,16 @@ import sys
 __version__ = '1.2'
 
 
+def allow_overflow_build(text):
+  if text == '':
+    return []
+  elif text == 's':
+    return ['s']
+  else:
+    # TODO: Support more types of components.
+    raise errors.CommandLineArgError('--allow_overflow only usable with "s"')
+
+
 def run():
   usage = ''
   parser = argparse.ArgumentParser(
@@ -79,6 +89,10 @@ def run():
                             'CHR data appears at 0x1000.'))
   parser.add_argument('-z', dest='show_stats', action='store_true',
                       help='Whether to show statistics before exiting.')
+  parser.add_argument('--allow-overflow', dest='allow_overflow',
+                      type=allow_overflow_build,
+                      help=('Set of components for which to ignore overflow '
+                            'errors. Only "s" is supported.'))
 
   # Input
   parser.add_argument('-m', dest='memimport', metavar='memory_dump',

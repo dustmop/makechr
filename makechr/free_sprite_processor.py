@@ -19,7 +19,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     self._vert_color_manifest = id_manifest.IdManifest()
 
   def process_image(self, img, palette_text, bg_color_look, bg_color_fill,
-                    is_locked_tiles):
+                    is_locked_tiles, allow_overflow):
     """Process free sprites image, creating the ppu_memory it represents.
 
     The image represents the entire screen, and is mostly filled with
@@ -31,6 +31,8 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     palette_text: Optional string representing a palette to be parsed.
     bg_color_look: Background color usable in existing free sprite tiles.
     bg_color_fill: Background color which fills up the outside space.
+    is_locked_tiles: Whether tiles are locked or not.
+    allow_overflow: List of components for which to allow overflows.
     """
     self.load_image(img)
     config = ppu_memory.PpuMemoryConfig(is_sprite=True,
@@ -56,10 +58,18 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
         elif vert_color_needs is None:
           vert_color_needs = color_needs
         else:
-          self.combine_color_needs(vert_color_needs, color_needs)
+          try:
+            self.combine_color_needs(vert_color_needs, color_needs)
+          except errors.PaletteOverflowError as e:
+            e.tile_y = sprite_y / 8
+            e.tile_x = sprite_x / 8
+            self._err.add(e)
+            continue
           vcid = self._vert_color_manifest.id(vert_color_needs)
           artifacts[-1][ARTIFACT_VCID] = vcid
           vert_color_needs = None
+    if self._err.has():
+      return
     self._needs_provider = self._color_manifest
     if is_tall:
       self._needs_provider = self._vert_color_manifest
@@ -85,6 +95,10 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
           palette_option, cid_u, did_u, cid_l, did_l, config)
         # TODO: Only add this 1 if the sprite chr order is 1.
         chr_num = chr_num_u + 1
+        if not allow_overflow or not 's' in allow_overflow:
+          if len(self._ppu_memory.spritelist) >= 0x40:
+            self._err.add(errors.SpritelistOverflow(y, x))
+            continue
         self._ppu_memory.spritelist.append([y - 1, chr_num, pid | flip_bits, x])
     self._ppu_memory.palette_spr = pal
 

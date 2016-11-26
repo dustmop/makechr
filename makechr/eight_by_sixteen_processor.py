@@ -136,10 +136,11 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
           empty_cid == cid_l and empty_did == did_l):
         continue
       tile = self._ppu_memory.gfx_0.nametable[y][x]
-      if len(self._ppu_memory.spritelist) == 0x40:
-        if not config.is_locked_tiles:
-          self._err.add(errors.SpritelistOverflow(y, x))
-        continue
+      if not config.allow_overflow or not 's' in config.allow_overflow:
+        if len(self._ppu_memory.spritelist) == 0x40:
+          if not config.is_locked_tiles:
+            self._err.add(errors.SpritelistOverflow(y, x))
+          continue
       y_pos = y * 8 - 1 if y > 0 else 0
       x_pos = x * 8
       attr = self._ppu_memory.gfx_0.colorization[y][x] | self._flip_bits[y][x]

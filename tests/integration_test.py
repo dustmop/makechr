@@ -90,6 +90,19 @@ Palette: P/30-38-16-01/30-19/
     self.assert_file_eq(self.output_name, self.golden('8x16', 'o'))
     self.assertEqual(self.out, '')
 
+  def test_allow_too_many_tiles(self):
+    output_tmpl = os.path.join(self.tmpdir, '%s.dat')
+    args = ['testdata/257tiles.png', '-o', output_tmpl, '-s',
+            '--allow-overflow', 's']
+    self.makechr(args)
+    self.assertEquals(self.returncode, 0)
+    self.assert_file_eq(output_tmpl.replace('%s', 'chr'),
+                        'testdata/allow_overflow_chr.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'spritelist'),
+                        'testdata/allow_overflow_spritelist.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'palette'),
+                        'testdata/allow_overflow_palette.dat')
+
   def test_error_too_many_tiles(self):
     args = ['testdata/257tiles.png', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
@@ -125,6 +138,18 @@ Errors displayed in "%s"
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Command-line error: Traversal strategy \'8x16\' requires -s flag\n""")
     self.assertEquals(self.returncode, 1)
+
+  def test_error_too_many_tiles_but_view(self):
+    palette_view = os.path.join(self.tmpdir, 'palette_view.png')
+    args = ['testdata/257tiles.png', '-o', self.output_name,
+            '--palette-view', palette_view]
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Found 1 error:
+NametableOverflow 256 at tile (8y,0x)
+To see errors visually, use -e command-line option.
+""")
+    self.assertEquals(self.returncode, 1)
+    self.assert_file_eq(palette_view, 'testdata/too-many-tiles-pal.png')
 
   def golden(self, name, ext):
     if name:
