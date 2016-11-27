@@ -6,6 +6,7 @@ from makechr import eight_by_sixteen_processor
 
 import filecmp
 import os
+import sys
 import tempfile
 
 
@@ -55,6 +56,7 @@ class GeneralAppTests(unittest.TestCase):
     if 'free' in self.args.traversal:
       self.processor = free_sprite_processor.FreeSpriteProcessor(
         self.args.traversal)
+      self.processor.set_verbose('--verbose' in sys.argv)
       self.processor.process_image(img, palette_text,
                                    self.args.bg_color.look,
                                    self.args.bg_color.fill,

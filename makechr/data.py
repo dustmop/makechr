@@ -1,7 +1,7 @@
 class Span(object):
-  """Span represents a start side on the left, and finish side on the right."""
+  """Span has a start side on the left, and finish side on the right."""
 
-  def __init__(self, left, right):
+  def __init__(self, left=None, right=None):
     self.left = left
     self.right = right
 
@@ -16,6 +16,10 @@ class Span(object):
 
   def contains(self, num):
     return self.left <= num <= self.right
+
+  def overlap(self, other):
+    return (self.contains(other.left) or self.contains(other.right) or
+            other.contains(self.left) or other.contains(self.right))
 
   def __repr__(self):
     return '<Span L=%s R=%s>' % (self.left, self.right)
@@ -32,17 +36,16 @@ class Span(object):
     return 0
 
 
-class Zone(object):
+class Zone(Span):
   """A rectangle which contains 4 sides. May have ambiguous sides."""
 
-  def __init__(self, top=None, left=None, right=None, bottom=None,
-               left_range=None, right_range=None):
+  def __init__(self, left=None, right=None, top=None, bottom=None,
+               maybe_left=None, maybe_right=None):
+    Span.__init__(self, left, right)
     self.top = top
-    self.left = left
-    self.right = right
     self.bottom = bottom
-    self.left_range = left_range
-    self.right_range = right_range
+    self.maybe_left = maybe_left
+    self.maybe_right = maybe_right
 
   def each_sprite(self, is_tall):
     width = 8
@@ -68,6 +71,25 @@ class Zone(object):
     maybe_bottom = ''
     if not self.bottom is None:
       maybe_bottom = ' B=%s' % self.bottom
-    return ('<Zone T=%s L=%s R=%s%s>' % (
-      self.top, self.left_range or self.left, self.right_range or self.right,
-      maybe_bottom))
+    return ('<Zone L=%s R=%s T=%s%s>' % (
+      [self.left, self.maybe_left] if self.maybe_left else self.left,
+      [self.maybe_right, self.right] if self.maybe_right else self.right,
+      self.top, maybe_bottom))
+
+
+class Region(Span):
+  """A span which also contains a list of zones."""
+
+  def __init__(self, left, right):
+    Span.__init__(self, left, right)
+    self.zones = []
+
+  @staticmethod
+  def make_from(y, span):
+    make = Region(span.left, span.right)
+    make.zones.append(Zone(left=span.left, right=span.right, top=y))
+    return make
+
+  def __repr__(self):
+    return '<Region L=%s R=%s>' % (self.left, self.right)
+

@@ -30,6 +30,7 @@ def run():
                       help='Filename for pixel art image. Should by 256x240.')
   parser.add_argument('--version', dest='version', action='store_true',
                       help=('Show the version number and exit.'))
+  parser.add_argument('--verbose', dest='verbose', action='store_true')
 
   # Output.
   parser.add_argument('-o', dest='output', metavar='output',

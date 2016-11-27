@@ -21,6 +21,7 @@ class Application(object):
           'Traversal strategy \'%s\' requires -s and -b `look=fill` flags' % (
             traversal))
       processor = free_sprite_processor.FreeSpriteProcessor(traversal)
+      processor.set_verbose('--verbose' in sys.argv)
       processor.process_image(img, args.palette, args.bg_color.look,
                               args.bg_color.fill, args.is_locked_tiles,
                               args.allow_overflow)

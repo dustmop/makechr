@@ -6,6 +6,7 @@ import id_manifest
 import image_processor
 import ppu_memory
 import rgb
+import span_list_delta
 from constants import *
 
 
@@ -15,8 +16,13 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
   def __init__(self, traversal):
     image_processor.ImageProcessor.__init__(self)
     self.traversal = traversal
-    self._built = []
+    self._verbose = False
+    self._min_width = 8
+    self._regions = []
     self._vert_color_manifest = id_manifest.IdManifest()
+
+  def set_verbose(self, verbose):
+    self._verbose = verbose
 
   def process_image(self, img, palette_text, bg_color_look, bg_color_fill,
                     is_locked_tiles, allow_overflow):
@@ -104,9 +110,10 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
 
   def _find_zones(self, fill):
     """Scan the entire image. Calculate the positions of tile corners."""
-    self._making = []
-    self._built = []
-    self._previous = []
+    if self._verbose:
+      print('')
+    self._regions = []
+    zones = []
     # For each line of the image, starting from the top.
     for y in xrange(self.image_y):
       is_color = False
@@ -123,137 +130,210 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
           spans[-1].right = x
         x += 1
       # Combine previous and next spans.
-      self._combine_spans(y, spans)
-    if len(self._making):
-      raise errors.UnknownLogicFailure('incomplete zones after span processing')
-    zones = self._built
-    self._making = self._built = None
+      zones += self._combine_spans(y, spans)
+    # Display the zones in verbose mode.
+    if self._verbose:
+      print('----------------------------------------')
+      last_bottom = 0
+      for z in zones:
+        if z.top > last_bottom:
+          print('****')
+        last_bottom = z.bottom
+        print('%r' % z)
+      print('****************************************')
     return zones
 
   def _combine_spans(self, y, spans):
-    # If previous and next spans are the same, nothing to do.
-    if spans == self._previous:
-      return
-    # Zip the previous and next spans, combining them as we go along.
-    i = j = 0
-    while i < len(self._previous) and j < len(spans):
-      above = self._previous[i]
-      below = spans[j]
-      # Check if either completely the same, or completely separate.
-      if below.same_as(above):
-        i += 1
-        j += 1
-        continue
-      elif below.fully_left(above):
-        j += 1
-        self._insert_zone(top=y, left=below.left, right=below.right)
-        continue
-      elif below.fully_right(above):
-        i += 1
-        self._finish_span(y, above)
-        continue
-      # Some partial overlap between above and below.
-      did_insert = False
-      want_side = None
-      # Check how the left sides of the spans compare to each other.
-      if below.left < above.left:
-        want_side = self._insert_zone(top=y, left=below.left, right=above.left)
-      elif below.left == above.left:
-        pass
-      elif below.left > above.left:
-        for zone in self._making:
-          if not above.contains(zone.left) and not above.contains(zone.right):
-            continue
-          if zone.left_range and zone.left_range.contains(below.left):
-            zone.left_range = None
-            zone.left = below.left
-            did_insert = True
-            break
-          elif below.contains(zone.left) and below.contains(zone.right):
-            did_insert = True
-            continue
-          elif zone.top != y:
-            zone.bottom = y
-        if not did_insert:
-          self._insert_zone(top=y, left=below.left, right=below.right)
-          did_insert = True
-      # Check how the right sides of the spans compare to each other.
-      if below.right < above.right:
-        for zone in self._making:
-          if not above.contains(zone.left) and not above.contains(zone.right):
-            continue
-          if zone.right_range and zone.right_range.contains(below.right):
-            zone.right_range = None
-            zone.right = below.right
-            did_insert = True
-          elif below.contains(zone.left) and below.contains(zone.right):
-            did_insert = True
-            continue
-          elif zone.top != y:
-            zone.bottom = y
-        if not did_insert:
-          self._insert_zone(top=y, left=below.left, right=below.right)
-          did_insert = True
-      elif below.right == above.right:
-        if want_side:
-          want_side.right_range = data.Span(want_side.right, above.right)
-      elif below.right > above.right:
-        if not did_insert:
-          self._insert_zone(top=y, left=above.right, right=below.right,
-                            left_range=data.Span(below.left, above.right))
-          did_insert = True
-      # Iterate either a single span, or both spans.
-      if below.left < above.left and below.right > above.right:
-        i += 1
-        continue
-      elif below.left > above.left and below.right < above.right:
-        j += 1
-        continue
-      else:
-        i += 1
-        j += 1
-        continue
-    # Handle spans from previous line, to the right of anything on this line,
-    # which are now all finished.
-    while i < len(self._previous):
-      above = self._previous[i]
-      self._finish_span(y, above)
-      i += 1
-    # Handle spans from this new line, which are new zones.
-    while j < len(spans):
-      below = spans[j]
-      self._insert_zone(top=y, left=below.left, right=below.right)
-      j += 1
-    # Collect completed zones.
-    i = 0
-    while i < len(self._making):
-      if self._making[i].bottom is None:
-        i += 1
-      else:
-        self._built.append(self._making[i])
-        self._making = self._making[:i] + self._making[i + 1:]
-    # Next line.
-    self._previous = spans
+    built = []
+    test_prev = str(self._regions)
+    delta = span_list_delta.get_delta(spans, self._regions)
+    if self._verbose and delta.keys() and delta.keys() != ['same']:
+      print('')
+      print('* Y=%d Spans: %r, Regions: %r' % (y, spans, self._regions))
+      print('* Zones: %r' % ([r.zones for r in self._regions]))
+      print('* Delta: %r' % (delta,))
+    delta_include = delta.get('include')
+    delta_exclude = delta.get('exclude')
+    delta_same = delta.get('same')
+    delta_merge = delta.get('merge')
+    delta_split = delta.get('split')
+    delta_diff = delta.get('diff')
+    if delta_include:
+      self._insert_spans_as_regions(y, delta_include)
+    if delta_exclude:
+      built += self._exclude_regions_and_make_zones(y, delta_exclude)
+    if delta_same:
+      pass
+    if delta_merge:
+      built += self._merge_region_changes(y, delta_merge, )
+    if delta_split:
+      raise NotImplementedError('TODO: split %r' % delta_split)
+    if delta_diff:
+      raise NotImplementedError('TODO: diff %r' % delta_diff)
+    self._add_zones_to_empty_regions(y)
+    built = self._fixup_edges(built)
+    if self._verbose and len(built):
+      print('> Built: %r' % built)
+    return built
 
-  def _finish_span(self, y, span):
-    for i,elem in enumerate(self._making):
-      # Skip zones that were just created.
-      if y == elem.top:
-        continue
-      # Zones that do not exist in the current spans get assigned a bottom.
-      L = elem.left.right if isinstance(elem.left, data.Span) else elem.left
-      R = elem.right.left if isinstance(elem.right, data.Span) else elem.right
-      if span.left <= L and span.right >= R:
-        elem.bottom = y
+  def _insert_spans_as_regions(self, y, include):
+    """Insert new regions."""
+    for edge in include:
+      self._insert_into(data.Region.make_from(y, edge), self._regions)
 
-  def _insert_zone(self, top=None, left=None, right=None, bottom=None,
-                   left_range=None, right_range=None):
-    make = data.Zone(top=top, left=left, right=right, bottom=bottom,
-                     left_range=left_range, right_range=right_range)
-    i = 0
-    for i,elem in enumerate(self._making):
-      if elem.left >= make.left:
-        self._making.insert(i, make)
-        return make
-    self._making.append(make)
-    return make
+  def _exclude_regions_and_make_zones(self, y, exclude):
+    """Remove the excluded zones and collect their zones."""
+    built = []
+    k = 0
+    for elem in exclude:
+      # Finish the zones from any excluded regions.
+      zones = elem.zones
+      for z in zones:
+        z.bottom = y
+      built += zones
+      # Remove excluded regions.
+      while k < len(self._regions):
+        region = self._regions[k]
+        if elem == region:
+          self._regions = self._regions[0:k] + self._regions[k+1:]
+          break
+        else:
+          k += 1
+    return built
+
+  def _merge_region_changes(self, y, merge):
+    """Handle changes caused by one or more regions being merged into one."""
+    built = []
+    once = False
+    for change in merge:
+      old = change['old']
+      new = change['new']
+      below = new[0]
+      collect = []
+      if old[0].left == below.left and old[-1].right == below.right:
+        for above in old:
+          collect += above.zones
+          self._regions.remove(above)
+        zone = data.Zone(left=below.left, right=below.right, top=y,
+                         maybe_left=old[0].right, maybe_right=old[-1].left)
+        collect.append(zone)
+      else:
+        for above in old:
+          if below.left < above.left and below.right == above.right:
+            zone = data.Zone(left=below.left, right=below.right, top=y,
+                             maybe_right=above.left)
+            self._insert_into(zone, collect)
+          elif below.left == above.left and below.right > above.right:
+            zone = data.Zone(left=below.left, right=below.right, top=y,
+                             maybe_left=above.right)
+            self._insert_into(zone, collect)
+          elif below.left == above.left and below.right < above.right:
+            built += self._finish_zones_on_the_right(y, above, below.right)
+          elif below.left > above.left and below.right == above.right:
+            built += self._finish_zones_on_the_left(y, above, below.left)
+          elif below.left < above.left and below.right < above.right:
+            built += self._cull_static_zones(y, above)
+          elif below.left > above.left and below.right > above.right:
+            built += self._cull_static_zones(y, above)
+          else:
+            raise RuntimeError('TODO unknown above=%r below=%r' %
+                               (above, below))
+          collect += above.zones
+          self._regions.remove(above)
+      region = data.Region(below.left, below.right)
+      region.zones = collect
+      self._insert_into(region, self._regions)
+    return built
+
+  def _insert_into(self, item, target):
+    """Insert an element into a sorted list."""
+    for i,each in enumerate(target):
+      if item.left < each.left:
+        target.insert(i, item)
+        return
+    else:
+      target.append(item)
+
+  def _fixup_edges(self, zones):
+    """For each complete zone, pull in ambiguous sides if they overlap."""
+    zones.sort(key=lambda x:(x.left,x.maybe_left or x.left))
+    limit = None
+    for z in zones:
+      if limit is None:
+        limit = z.right
+      elif z.maybe_left and z.left < limit:
+        z.left = limit
+      limit = z.right
+    limit = None
+    for z in zones[::-1]:
+      if limit is None:
+        limit = z.left
+      elif z.maybe_right and z.right > limit:
+        z.right = limit
+      limit = z.left
+    return zones
+
+  def _finish_zones_on_the_right(self, y, region, cutoff):
+    """Either remove regions or resize their edges based upon the cuttoff."""
+    built = []
+    j = 0
+    while j < len(region.zones):
+      z = region.zones[j]
+      if cutoff < z.right:
+        if z.maybe_right is None or cutoff - z.left < self._min_width:
+          if z.maybe_left:
+            z.left, z.maybe_left = (z.maybe_left, None)
+          z.bottom = y
+          built.append(z)
+          region.zones = region.zones[0:j] + region.zones[j+1:]
+          continue
+        else:
+          z.right = cutoff
+          if z.right == z.maybe_right:
+            z.maybe_right = None
+          j += 1
+          continue
+      else:
+        j += 1
+    return built
+
+  def _finish_zones_on_the_left(self, y, region, cutoff):
+    """Either remove regions or resize their edges based upon the cuttoff."""
+    built = []
+    j = 0
+    while j < len(region.zones):
+      z = region.zones[j]
+      if cutoff > z.left:
+        if z.maybe_left is None or z.right - cutoff < self._min_width:
+          if z.maybe_right:
+            z.right, z.maybe_right = (z.maybe_right, None)
+          z.bottom = y
+          built.append(z)
+          region.zones = region.zones[0:j] + region.zones[j+1:]
+          continue
+        else:
+          z.left = cutoff
+          if z.left == z.maybe_left:
+            z.maybe_left = None
+          j += 1
+          continue
+      else:
+        j += 1
+    return built
+
+  def _cull_static_zones(self, y, region):
+    """Remove any zones that have no ambiguous sides."""
+    built = []
+    for z in region.zones:
+      if z.maybe_left or z.maybe_right:
+        raise RuntimeError('Dont know what to do')
+      z.bottom = y
+    built = region.zones
+    region.zones = []
+    return built
+
+  def _add_zones_to_empty_regions(self, y):
+    """Regions without zones have a single zone added."""
+    for r in self._regions:
+      if r.zones == []:
+        r.zones.append(data.Zone(left=r.left, right=r.right, top=y))
