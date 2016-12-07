@@ -33,7 +33,7 @@ class ObjectFileWriter(object):
     self.file_obj = valiant.ObjectFile()
     self.file_obj.magic1 = MAGIC_NUM % 100
     self.file_obj.magic2 = MAGIC_NUM / 100
-    self.obj_data = self.file_obj.data
+    self.obj_body = self.file_obj.body
     self.buffer = None
     self.info = DataInfo()
     self.component_req = {}
@@ -66,13 +66,12 @@ class ObjectFileWriter(object):
 
   def write_bg_color(self, bg_color):
     """Write the bg_color metadata to the valiant object."""
-    settings = self.obj_data.settings
+    settings = self.obj_body.settings
     settings.bg_color = bg_color
 
   def write_chr_info(self, chr_data):
     """Write size of chr data."""
-    settings = self.obj_data.settings
-    chr_metadata = self._get_chr_metadata(settings)
+    chr_metadata = self._get_chr_metadata()
     chr_metadata.size = chr_data.size()
 
   def write_extra_settings(self, config):
@@ -80,8 +79,7 @@ class ObjectFileWriter(object):
     if (config.traversal == 'horizontal' and not config.chr_order and
         not config.palette_order and not config.is_locked_tiles):
       return
-    settings = self.obj_data.settings
-    chr_metadata = self._get_chr_metadata(settings)
+    chr_metadata = self._get_chr_metadata()
     if config.chr_order:
       chr_metadata.order = config.chr_order
     if config.is_locked_tiles:
@@ -89,7 +87,7 @@ class ObjectFileWriter(object):
     if config.traversal and config.traversal != 'horizontal':
       chr_metadata.traversal = config.traversal
     if config.is_sprite:
-      palette_metadata = self._get_palette_metadata(settings)
+      palette_metadata = self._get_palette_metadata()
       palette_metadata.order = 1
 
   def add_component(self, bytes, info):
@@ -99,8 +97,7 @@ class ObjectFileWriter(object):
     else:
       pre_pad = padding = 0
     role = valiant.DataRole.Value(info.name.upper())
-    idx = len(self.obj_data.binaries)
-    binary = self.obj_data.binaries.add()
+    binary = valiant.DirectBinary()
     binary.bin = bytes
     if info.null_value:
       binary.null_value = info.null_value
@@ -108,9 +105,9 @@ class ObjectFileWriter(object):
       binary.pre_pad = pre_pad
     if not padding is None:
       binary.padding = padding
-    component = self.obj_data.components.add()
-    component.role = role
-    component.binary_index = idx
+    packet = self.obj_body.packets.add()
+    packet.role = role
+    packet.binary.CopyFrom(binary)
 
   # TODO: Test.
   def _condense(self, bytes, align, extra_padding):
@@ -137,17 +134,17 @@ class ObjectFileWriter(object):
       last_width = None
     return (first_width, last_width, bytes)
 
-  def _get_chr_metadata(self, settings):
-    if len(settings.chr_metadata) > 0:
-      return settings.chr_metadata[0]
-    else:
-      return settings.chr_metadata.add()
+  def _get_chr_metadata(self):
+    for packet in self.obj_body.packets:
+      if packet.role == valiant.CHR:
+        return packet.metadata.chr_metadata
+    raise RuntimeError('Could not find CHR packet')
 
-  def _get_palette_metadata(self, settings):
-    if len(settings.palette_metadata) > 0:
-      return settings.palette_metadata[0]
-    else:
-      return settings.palette_metadata.add()
+  def _get_palette_metadata(self):
+    for packet in self.obj_body.packets:
+      if packet.role == valiant.PALETTE:
+        return packet.metadata.palette_metadata
+    raise RuntimeError('Could not find PALETTE packet')
 
   def save(self, filename):
     serialized = self.file_obj.SerializeToString()
