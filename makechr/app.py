@@ -65,7 +65,17 @@ class Application(object):
 
   def read_memory(self, filename, args):
     importer = memory_importer.MemoryImporter()
-    mem = importer.read(filename)
+    mem = importer.read_ram(filename)
+    img = None
+    if args.grid_view:
+      renderer = pixel_art_renderer.PixelArtRenderer()
+      img = renderer.render(mem)
+    self.create_views(mem, args, img)
+    self.create_output(mem, args, self.get_traversal(None))
+
+  def read_valiant(self, filename, args):
+    importer = memory_importer.MemoryImporter()
+    mem = importer.read_valiant(filename)
     img = None
     if args.grid_view:
       renderer = pixel_art_renderer.PixelArtRenderer()

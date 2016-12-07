@@ -29,7 +29,7 @@ class MemoryImporterTests(unittest.TestCase):
 
   def test_import(self):
     importer = memory_importer.MemoryImporter()
-    mem = importer.read('testdata/full-image.mem')
+    mem = importer.read_ram('testdata/full-image.mem')
     a = app.Application()
     a.create_output(mem, self.args, 'horizontal')
     self.assert_output_result('chr')
@@ -39,7 +39,7 @@ class MemoryImporterTests(unittest.TestCase):
 
   def test_import_and_render(self):
     importer = memory_importer.MemoryImporter()
-    mem = importer.read('testdata/full-image.mem')
+    mem = importer.read_ram('testdata/full-image.mem')
     self.args.output = self.args.tmpfile('full-image.png')
     a = app.Application()
     a.create_output(mem, self.args, 'horizontal')
@@ -48,7 +48,7 @@ class MemoryImporterTests(unittest.TestCase):
   def test_import_error_bad_size(self):
     importer = memory_importer.MemoryImporter()
     with self.assertRaises(errors.FileFormatError) as e:
-      importer.read('testdata/full-image-chr.dat')
+      importer.read_ram('testdata/full-image-chr.dat')
       self.assertEqual(e.file_size, 0x2000)
 
   def assert_output_result(self, name, golden_suffix=''):

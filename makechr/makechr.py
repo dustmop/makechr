@@ -20,6 +20,13 @@ def allow_overflow_build(text):
     raise errors.CommandLineArgError('--allow_overflow only usable with "s"')
 
 
+def is_valiant(filename):
+  fp = open(filename, 'rb')
+  content = fp.read()
+  fp.close()
+  return content.startswith('(VALIANT)')
+
+
 def run():
   usage = ''
   parser = argparse.ArgumentParser(
@@ -149,6 +156,8 @@ def run():
     sys.exit(1)
   elif args.memimport:
     application.read_memory(args.memimport, args)
+  elif is_valiant(args.input):
+    application.read_valiant(args.input, args)
   elif args.input:
     try:
       img = Image.open(args.input)

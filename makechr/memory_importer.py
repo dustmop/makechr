@@ -6,7 +6,7 @@ import ppu_memory
 from constants import *
 
 class MemoryImporter(object):
-  def read(self, filename):
+  def read_ram(self, filename):
     # Check file size
     fp = open(filename, 'rb')
     file_size = os.fstat(fp.fileno()).st_size
@@ -55,3 +55,70 @@ class MemoryImporter(object):
         pal.set_bg_color(bg_color)
         pal.add(opt)
     return mem
+
+  def read_valiant(self, filename):
+    import gen.valiant_pb2 as valiant
+    fp = open(filename)
+    content = fp.read()
+    fp.close()
+    mem = ppu_memory.PpuMemory()
+    obj_file = valiant.ObjectFile()
+    obj_file.ParseFromString(content)
+    binary_map = {}
+    for packet in obj_file.body.packets:
+      if packet.role == valiant.CHR:
+        binary_map['chr'] = packet.binary
+      if packet.role == valiant.NAMETABLE:
+        binary_map['nametable'] = packet.binary
+      if packet.role == valiant.ATTRIBUTE:
+        binary_map['attribute'] = packet.binary
+      if packet.role == valiant.PALETTE:
+        binary_map['palette'] = packet.binary
+    chr_bin = self._expand_binary(binary_map['chr'])
+    nt_bin = self._expand_binary(binary_map['nametable'])
+    at_bin = self._expand_binary(binary_map['attribute'])
+    pal_bin = self._expand_binary(binary_map['palette'])
+    # Parse chr data.
+    mem.chr_page = chr_data.ChrPage.from_binary(bytes(bytearray(chr_bin)))
+    # Parse nametable data.
+    for y in xrange(30):
+      for x in xrange(32):
+        mem.gfx_0.nametable[y][x] = nt_bin[y*32 + x]
+    # Parse attributes data.
+    for a in xrange(64):
+      p0 = (at_bin[a] >> 0) & 0x03
+      p1 = (at_bin[a] >> 2) & 0x03
+      p2 = (at_bin[a] >> 4) & 0x03
+      p3 = (at_bin[a] >> 6) & 0x03
+      y = (a / 8) * 4
+      x = (a % 8) * 4
+      mem.gfx_0.colorization[y + 0][x + 0] = p0
+      mem.gfx_0.colorization[y + 0][x + 2] = p1
+      if y < (7 * 4):
+        mem.gfx_0.colorization[y + 2][x + 0] = p2
+        mem.gfx_0.colorization[y + 2][x + 2] = p3
+    # Parse palette data.
+    pal = palette.Palette()
+    pal.set_bg_color(pal_bin[0])
+    for i in xrange(4):
+      p = []
+      for j in xrange(4):
+        p.append(pal_bin[i*4 + j])
+      pal.add(p)
+    mem.palette_nt = pal
+    return mem
+
+  def _expand_binary(self, binary, req_align=0):
+    prepad = binary.pre_pad if binary.pre_pad else None
+    padding = binary.padding if binary.padding else None
+    nullval = binary.null_value if binary.null_value else 0
+    if req_align:
+      size = (prepad or 0) + len(binary.bin) + (padding or 0)
+      padding = (padding or 0) + req_align - size
+    bytes = bytearray()
+    if not prepad is None:
+      bytes += (chr(nullval) * prepad)
+    bytes += binary.bin
+    if not padding is None:
+      bytes += (chr(nullval) * padding)
+    return bytes

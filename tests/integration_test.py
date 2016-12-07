@@ -82,6 +82,13 @@ Palette: P/30-38-16-01/30-19/
     self.assert_file_eq(reuse_view_name, self.golden('reuse-legacy', 'png'))
     self.assertEqual(self.out, '')
 
+  def test_import_valiant_produce_image(self):
+    render_name = os.path.join(self.tmpdir, 'render.png')
+    args = ['testdata/full-image.o', '-o', render_name]
+    self.makechr(args)
+    self.assert_file_eq(render_name, self.golden(None, 'png'))
+    self.assertEqual(self.out, '')
+
   def test_sprite_8x16(self):
     self.output_name = os.path.join(self.tmpdir, 'reticule.o')
     self.golden_file_prefix = 'reticule'
