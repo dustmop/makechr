@@ -19,7 +19,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='valiant.proto',
   package='valiant',
-  serialized_pb=_b('\n\rvaliant.proto\x12\x07valiant\"\x99\x01\n\nObjectFile\x12\x0e\n\x06magic1\x18\x05 \x01(\x05\x12\x0e\n\x06magic2\x18\x08 \x01(\x06\x12%\n\x06header\x18\r \x01(\x0b\x32\x15.valiant.ObjectHeader\x12!\n\x04\x64\x61ta\x18\x0e \x01(\x0b\x32\x13.valiant.ObjectData\x12!\n\x04\x62ody\x18\x0f \x01(\x0b\x32\x13.valiant.ObjectBody\"\x1e\n\x0cObjectHeader\x12\x0e\n\x06module\x18\x01 \x01(\t\"\x88\x01\n\nObjectData\x12\'\n\x08\x62inaries\x18\x01 \x03(\x0b\x32\x15.valiant.DirectBinary\x12&\n\x08settings\x18\x02 \x01(\x0b\x32\x14.valiant.GfxSettings\x12)\n\ncomponents\x18\x03 \x03(\x0b\x32\x15.valiant.GfxComponent\"Y\n\nObjectBody\x12&\n\x08settings\x18\x01 \x01(\x0b\x32\x14.valiant.GfxSettings\x12#\n\x07packets\x18\x02 \x03(\x0b\x32\x12.valiant.GfxPacket\"\x94\x01\n\x0bGfxSettings\x12\x10\n\x08\x62g_color\x18\x01 \x01(\x05\x12*\n\x0c\x63hr_metadata\x18\x05 \x03(\x0b\x32\x14.valiant.ChrMetadata\x12\x32\n\x10palette_metadata\x18\x06 \x03(\x0b\x32\x18.valiant.PaletteMetadata\x12\x13\n\x0bimage_width\x18\x07 \x01(\x05\"p\n\x0ePacketSettings\x12*\n\x0c\x63hr_metadata\x18\x05 \x01(\x0b\x32\x14.valiant.ChrMetadata\x12\x32\n\x10palette_metadata\x18\x06 \x01(\x0b\x32\x18.valiant.PaletteMetadata\"\x8c\x01\n\tGfxPacket\x12\x1f\n\x04role\x18\x01 \x01(\x0e\x32\x11.valiant.DataRole\x12\x0c\n\x04name\x18\x02 \x01(\t\x12)\n\x08metadata\x18\x03 \x01(\x0b\x32\x17.valiant.PacketSettings\x12%\n\x06\x62inary\x18\x04 \x01(\x0b\x32\x15.valiant.DirectBinary\"S\n\x0cGfxComponent\x12\x1f\n\x04role\x18\x01 \x01(\x0e\x32\x11.valiant.DataRole\x12\x14\n\x0c\x62inary_index\x18\x02 \x01(\x05\x12\x0c\n\x04name\x18\x03 \x01(\t\"j\n\x0b\x43hrMetadata\x12\r\n\x05order\x18\x01 \x01(\x05\x12\x12\n\nsorted_idx\x18\x02 \x03(\x05\x12\x0c\n\x04size\x18\x03 \x01(\x05\x12\x17\n\x0fis_locked_tiles\x18\x04 \x01(\x05\x12\x11\n\ttraversal\x18\x05 \x01(\t\".\n\x0fPaletteMetadata\x12\r\n\x05order\x18\x01 \x01(\x05\x12\x0c\n\x04size\x18\x03 \x01(\x05\"Q\n\x0c\x44irectBinary\x12\x0b\n\x03\x62in\x18\x01 \x01(\x0c\x12\x0f\n\x07padding\x18\x02 \x01(\x05\x12\x0f\n\x07pre_pad\x18\x03 \x01(\x05\x12\x12\n\nnull_value\x18\x04 \x01(\x05*X\n\x08\x44\x61taRole\x12\x08\n\x04NONE\x10\x00\x12\x07\n\x03\x43HR\x10\x01\x12\r\n\tNAMETABLE\x10\x02\x12\r\n\tATTRIBUTE\x10\x03\x12\x0b\n\x07PALETTE\x10\x04\x12\x0e\n\nSPRITELIST\x10\x05')
+  serialized_pb=_b('\n\rvaliant.proto\x12\x07valiant\"\x99\x01\n\nObjectFile\x12\x0e\n\x06magic1\x18\x05 \x01(\x05\x12\x0e\n\x06magic2\x18\x08 \x01(\x06\x12%\n\x06header\x18\r \x01(\x0b\x32\x15.valiant.ObjectHeader\x12!\n\x04\x64\x61ta\x18\x0e \x01(\x0b\x32\x13.valiant.ObjectData\x12!\n\x04\x62ody\x18\x0f \x01(\x0b\x32\x13.valiant.ObjectBody\"5\n\x0cObjectHeader\x12\x0e\n\x06module\x18\x01 \x01(\t\x12\x15\n\rshort_palette\x18\x02 \x01(\x08\"\x88\x01\n\nObjectData\x12\'\n\x08\x62inaries\x18\x01 \x03(\x0b\x32\x15.valiant.DirectBinary\x12&\n\x08settings\x18\x02 \x01(\x0b\x32\x14.valiant.GfxSettings\x12)\n\ncomponents\x18\x03 \x03(\x0b\x32\x15.valiant.GfxComponent\"Y\n\nObjectBody\x12&\n\x08settings\x18\x01 \x01(\x0b\x32\x14.valiant.GfxSettings\x12#\n\x07packets\x18\x02 \x03(\x0b\x32\x12.valiant.GfxPacket\"\x7f\n\x0bGfxSettings\x12\x10\n\x08\x62g_color\x18\x01 \x01(\x05\x12*\n\x0c\x63hr_metadata\x18\x05 \x03(\x0b\x32\x14.valiant.ChrMetadata\x12\x32\n\x10palette_metadata\x18\x06 \x03(\x0b\x32\x18.valiant.PaletteMetadata\"p\n\x0ePacketSettings\x12*\n\x0c\x63hr_metadata\x18\x05 \x01(\x0b\x32\x14.valiant.ChrMetadata\x12\x32\n\x10palette_metadata\x18\x06 \x01(\x0b\x32\x18.valiant.PaletteMetadata\"\x8c\x01\n\tGfxPacket\x12\x1f\n\x04role\x18\x01 \x01(\x0e\x32\x11.valiant.DataRole\x12\x0c\n\x04name\x18\x02 \x01(\t\x12)\n\x08metadata\x18\x03 \x01(\x0b\x32\x17.valiant.PacketSettings\x12%\n\x06\x62inary\x18\x04 \x01(\x0b\x32\x15.valiant.DirectBinary\"S\n\x0cGfxComponent\x12\x1f\n\x04role\x18\x01 \x01(\x0e\x32\x11.valiant.DataRole\x12\x14\n\x0c\x62inary_index\x18\x02 \x01(\x05\x12\x0c\n\x04name\x18\x03 \x01(\t\"j\n\x0b\x43hrMetadata\x12\r\n\x05order\x18\x01 \x01(\x05\x12\x12\n\nsorted_idx\x18\x02 \x03(\x05\x12\x0c\n\x04size\x18\x03 \x01(\x05\x12\x17\n\x0fis_locked_tiles\x18\x04 \x01(\x05\x12\x11\n\ttraversal\x18\x05 \x01(\t\".\n\x0fPaletteMetadata\x12\r\n\x05order\x18\x01 \x01(\x05\x12\x0c\n\x04size\x18\x03 \x01(\x05\"Q\n\x0c\x44irectBinary\x12\x0b\n\x03\x62in\x18\x01 \x01(\x0c\x12\x0f\n\x07padding\x18\x02 \x01(\x05\x12\x0f\n\x07pre_pad\x18\x03 \x01(\x05\x12\x12\n\nnull_value\x18\x04 \x01(\x05*X\n\x08\x44\x61taRole\x12\x08\n\x04NONE\x10\x00\x12\x07\n\x03\x43HR\x10\x01\x12\r\n\tNAMETABLE\x10\x02\x12\r\n\tATTRIBUTE\x10\x03\x12\x0b\n\x07PALETTE\x10\x04\x12\x0e\n\nSPRITELIST\x10\x05')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -56,8 +56,8 @@ _DATAROLE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=1176,
-  serialized_end=1264,
+  serialized_start=1177,
+  serialized_end=1265,
 )
 _sym_db.RegisterEnumDescriptor(_DATAROLE)
 
@@ -143,6 +143,13 @@ _OBJECTHEADER = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='short_palette', full_name='valiant.ObjectHeader.short_palette', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -155,7 +162,7 @@ _OBJECTHEADER = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=182,
-  serialized_end=212,
+  serialized_end=235,
 )
 
 
@@ -198,8 +205,8 @@ _OBJECTDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=215,
-  serialized_end=351,
+  serialized_start=238,
+  serialized_end=374,
 )
 
 
@@ -235,8 +242,8 @@ _OBJECTBODY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=353,
-  serialized_end=442,
+  serialized_start=376,
+  serialized_end=465,
 )
 
 
@@ -268,13 +275,6 @@ _GFXSETTINGS = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
-    _descriptor.FieldDescriptor(
-      name='image_width', full_name='valiant.GfxSettings.image_width', index=3,
-      number=7, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
   ],
   extensions=[
   ],
@@ -286,8 +286,8 @@ _GFXSETTINGS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=445,
-  serialized_end=593,
+  serialized_start=467,
+  serialized_end=594,
 )
 
 
@@ -323,8 +323,8 @@ _PACKETSETTINGS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=595,
-  serialized_end=707,
+  serialized_start=596,
+  serialized_end=708,
 )
 
 
@@ -374,8 +374,8 @@ _GFXPACKET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=710,
-  serialized_end=850,
+  serialized_start=711,
+  serialized_end=851,
 )
 
 
@@ -418,8 +418,8 @@ _GFXCOMPONENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=852,
-  serialized_end=935,
+  serialized_start=853,
+  serialized_end=936,
 )
 
 
@@ -476,8 +476,8 @@ _CHRMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=937,
-  serialized_end=1043,
+  serialized_start=938,
+  serialized_end=1044,
 )
 
 
@@ -513,8 +513,8 @@ _PALETTEMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1045,
-  serialized_end=1091,
+  serialized_start=1046,
+  serialized_end=1092,
 )
 
 
@@ -564,8 +564,8 @@ _DIRECTBINARY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1093,
-  serialized_end=1174,
+  serialized_start=1094,
+  serialized_end=1175,
 )
 
 _OBJECTFILE.fields_by_name['header'].message_type = _OBJECTHEADER

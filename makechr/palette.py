@@ -31,6 +31,15 @@ class Palette(object):
     self.pals.append(p)
     self.pal_as_sets.append(set(p))
 
+  def ensure_alignment(self):
+    i = 0
+    # Don't do anything to the last element, only those before it.
+    while i < len(self.pals) - 1:
+      p = self.pals[i]
+      if len(p) < 4:
+        self.pals[i] += [self.bg_color] * (4 - len(p))
+      i += 1
+
   def select(self, color_needs):
     want = set([c for c in color_needs if not c is 0xff])
     for i,p in enumerate(self.pal_as_sets):

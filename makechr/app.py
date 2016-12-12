@@ -1,8 +1,5 @@
 import collections
-import eight_by_sixteen_processor
 import errors
-import free_sprite_processor
-import image_processor
 import memory_importer
 import os
 import pixel_art_renderer
@@ -12,14 +9,31 @@ import view_renderer
 import sys
 
 
+eight_by_sixteen_processor = None
+free_sprite_processor = None
+image_processor = None
+makepal_processor = None
+
+
 class Application(object):
   def run(self, img, args):
     traversal = self.get_traversal(args.traversal_strategy)
-    if 'free' in traversal:
+    if args.makepal:
+      global makepal_processor
+      if not makepal_processor:
+        import makepal_processor
+      processor = makepal_processor.MakepalProcessor()
+      processor.process_image(img, args)
+      processor.create_output(args.output)
+      return True
+    elif 'free' in traversal:
       if not args.is_sprite or args.bg_color.fill is None:
         raise errors.CommandLineArgError(
           'Traversal strategy \'%s\' requires -s and -b `look=fill` flags' % (
             traversal))
+      global free_sprite_processor
+      if not free_sprite_processor:
+        import free_sprite_processor
       processor = free_sprite_processor.FreeSpriteProcessor(traversal)
       processor.set_verbose('--verbose' in sys.argv)
       processor.process_image(img, args.palette, args.bg_color.look,
@@ -29,11 +43,17 @@ class Application(object):
       if not args.is_sprite:
         raise errors.CommandLineArgError('Traversal strategy \'8x16\' requires '
                                          '-s flag')
+      global eight_by_sixteen_processor
+      if not eight_by_sixteen_processor:
+        import eight_by_sixteen_processor
       processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       processor.process_image(img, args.palette, args.bg_color.look,
                               traversal, args.is_sprite, args.is_locked_tiles,
                               args.allow_overflow)
     else:
+      global image_processor
+      if not image_processor:
+        import image_processor
       processor = image_processor.ImageProcessor()
       processor.process_image(img, args.palette, args.bg_color.look,
                               traversal, args.is_sprite, args.is_locked_tiles,

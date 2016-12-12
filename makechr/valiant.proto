@@ -12,6 +12,7 @@ message ObjectFile {
 
 message ObjectHeader {
   optional string module = 1;
+  optional bool short_palette = 2;
 }
 
 message ObjectData { // DEPRECATED
