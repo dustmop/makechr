@@ -54,9 +54,11 @@ def run():
 
   # Graphics.
   parser.add_argument('-p', dest='palette', metavar='palette',
-                      help=('Palette for the pixel art image. Syntax looks '
-                            'like this: "P/30-16-1c-02/30-2a/". Each value '
-                            'is in hexadecimal.'))
+                      help=('Palette for the pixel art image, either a '
+                            'literal value or a file created by --makepal. '
+                            'Syntax for a literal palette looks like this: '
+                            '"P/30-16-1c-02/30-2a/", each value is in '
+                            'hexadecimal.'))
   parser.add_argument('-b', dest='bg_color', metavar='background_color',
                       type=bg_color_spec.build, default=bg_color_spec.default(),
                       help=('Background color spec. Either a single color in '
@@ -102,7 +104,7 @@ def run():
                       help=('Set of components for which to ignore overflow '
                             'errors. Only "s" is supported.'))
   parser.add_argument('--makepal', dest='makepal', action='store_true',
-                      help=('Make palette from an image.'))
+                      help=('Make palette object file from an image.'))
 
   # Input
   parser.add_argument('-m', dest='memimport', metavar='memory_dump',

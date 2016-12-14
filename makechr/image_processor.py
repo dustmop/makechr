@@ -4,6 +4,7 @@ import errors
 import guess_best_palette
 import id_manifest
 import itertools
+import os
 import palette
 import ppu_memory
 import rgb
@@ -296,10 +297,16 @@ class ImageProcessor(object):
     """
     pal = None
     if palette_text:
-      # If palette argument was passed, use that palette.
+      # If palette argument was passed, use as either a literal or a file.
       try:
-        parser = palette.PaletteParser()
-        pal = parser.parse(palette_text)
+        if palette_text.startswith('P/'):
+          # Literal palette string.
+          parser = palette.PaletteParser()
+          pal = parser.parse(palette_text)
+        elif os.path.isfile(palette_text):
+          # File containing a palette.
+          reader = palette.PaletteFileReader()
+          pal = reader.read(palette_text)
       except errors.PaletteParseError as e:
         self._err.add(e)
         return None

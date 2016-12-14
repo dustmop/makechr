@@ -42,7 +42,7 @@ class AppPaletteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('palette', golden_suffix='-black-color')
     self.assert_output_result('attribute')
 
-  def test_output_palette(self):
+  def test_output_explicit_palette(self):
     """Explicit palette can be set with palette option."""
     img = Image.open('testdata/full-image.png')
     palette_text = 'P/30-38-16-01/30-19-16-16/'
@@ -51,6 +51,17 @@ class AppPaletteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('chr')
     self.assert_output_result('nametable')
     self.assert_output_result('palette', golden_suffix='-explicit-text')
+    self.assert_output_result('attribute')
+
+  def test_output_with_palette_file(self):
+    """Explicit palette can be set with palette option."""
+    img = Image.open('testdata/full-image.png')
+    palette_text = 'testdata/bigger_palette.o'
+    self.process_image(img, palette_text=palette_text)
+    self.create_output()
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette', golden_suffix='-object-file')
     self.assert_output_result('attribute')
 
   def test_output_extract_palette(self):

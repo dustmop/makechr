@@ -31,10 +31,11 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
 
     -e [error_file]  Output errors to an image file.
 
-    -p [palette]     Palette to use for the input image. If not set, makechr
-                     will attempt to automatically derive a palette, or
-                     extract a palette if the image uses indexed color. See
-                     below for the palette syntax.
+    -p [palette]     Palette to use for the input image, either a literal
+                     representation, or a file made by --makepal. If not set,
+                     makechr will attempt to automatically derive a palette,
+                     or extract a palette if the image uses indexed color. See
+                     below for the syntax for literal palettes.
 
     -b [background_color] | [background_look=background_fill]
                      Background color for the palette. If the palette is not
@@ -83,6 +84,11 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
                      instead of a pixel art image as a graphics source. Can
                      be obtained by dumping the memory of an NES emulator.
 
+    --makepal        Generate a palette object file from an image.
+
+    --allow-overflow    [comps]  Components that allow overflow. Only "s" for
+                                 "spritelist" is currently implemented.
+
     --palette-view      [image]  Output the palette to an image file.
 
     --colorization-view [image]  Output an image file with the palette for
@@ -114,7 +120,10 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
     --grid-view         [image]  Output an image file showing the input
                                  pixel art with the grid applied.
 
-# Palette syntax
+    --free-zone-view    [image]  Output an image file showing the zones
+                                 created by free sprite traversal.
+
+# Palette literal syntax
 
     palette  = "P/" + (option + "/"){1-4}
     option   = hexcolor + ("-" hexcolor){1-3}

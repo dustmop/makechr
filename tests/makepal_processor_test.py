@@ -28,6 +28,12 @@ class MakepalProcessorTests(general_app_test_util.GeneralAppTests):
     self.golden_file_prefix = 'partial_palette'
     self.assert_file_eq(self.args.output, 'testdata/partial_palette.o')
 
+  def test_bigger_palette(self):
+    img = Image.open('testdata/bigger_palette.png')
+    self.args.makepal = True
+    self.process_image(img)
+    self.golden_file_prefix = 'bigger_palette'
+    self.assert_file_eq(self.args.output, 'testdata/bigger_palette.o')
 
 if __name__ == '__main__':
   unittest.main()
