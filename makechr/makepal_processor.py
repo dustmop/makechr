@@ -82,8 +82,11 @@ class MakepalProcessor(object):
     return obj
 
   def create_output(self, out_file):
-    obj = self._build_vobject(self.pal)
-    serialized = obj.SerializeToString()
+    if out_file.endswith('.bin') or out_file.endswith('.dat'):
+      serialized = self.pal.to_bytes()
+    else:
+      obj = self._build_vobject(self.pal)
+      serialized = obj.SerializeToString()
     fp = open(out_file, 'wb')
     fp.write(serialized)
     fp.close()

@@ -104,7 +104,9 @@ def run():
                       help=('Set of components for which to ignore overflow '
                             'errors. Only "s" is supported.'))
   parser.add_argument('--makepal', dest='makepal', action='store_true',
-                      help=('Make palette object file from an image.'))
+                      help=('Make palette object file from an image, or '
+                            'just output binary data if the file name ends '
+                            'in .bin or .dat.'))
 
   # Input
   parser.add_argument('-m', dest='memimport', metavar='memory_dump',

@@ -84,7 +84,8 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
                      instead of a pixel art image as a graphics source. Can
                      be obtained by dumping the memory of an NES emulator.
 
-    --makepal        Generate a palette object file from an image.
+    --makepal        Generate a palette object file from an image, or just
+                     output binary data if the file name ends in .bin or .dat.
 
     --allow-overflow    [comps]  Components that allow overflow. Only "s" for
                                  "spritelist" is currently implemented.
