@@ -171,6 +171,14 @@ class SpritelistOverflow(Exception):
     return 'at tile (%dy,%dx)' % (self.tile_y, self.tile_x)
 
 
+class MakepalBorderNotFound(Exception):
+  pass
+
+
+class MakepalInvalidFormat(Exception):
+  pass
+
+
 class ErrorCollector(object):
   def __init__(self):
     self.e = []

@@ -1,3 +1,4 @@
+import errors
 import image_processor
 import gen.valiant_pb2 as valiant
 import palette
@@ -8,12 +9,20 @@ MAGIC_NUM = 7210303610482106886
 
 class MakepalProcessor(object):
   def process_image(self, img, args):
+    self._err = errors.ErrorCollector()
     self.width, self.height = img.size
     self.pixels = img.load()
     self.base = image_processor.ImageProcessor()
     self.base.pixels = self.pixels
-    self.unit_size = self._find_unit_size()
-    self.pal = self._build_palette()
+    try:
+      self.unit_size = self._find_unit_size()
+      self.pal = self._build_palette()
+    except Exception as e:
+      self._err.add(e)
+      return
+
+  def err(self):
+    return self._err
 
   def _find_unit_size(self):
     self.border_color = self.pixels[0,0]
@@ -23,7 +32,7 @@ class MakepalProcessor(object):
         unit_size = k
         break
     else:
-      raise errors.BorderNotFound()
+      raise errors.MakepalBorderNotFound()
     # Validate border.
     for x in xrange(self.width):
       # Top border
@@ -66,8 +75,22 @@ class MakepalProcessor(object):
     color = self.pixels[col * self.unit_size, row * self.unit_size]
     if color == self.border_color:
       return -1
-    nc = self.base.get_nes_color(row * self.unit_size, col * self.unit_size)
-    # TODO: Make sure outside pixels all match nc.
+    y = row * self.unit_size
+    x = col * self.unit_size
+    nc = self.base.get_nes_color(y, x)
+    for i in xrange(self.unit_size):
+      # Top
+      if nc != self.base.get_nes_color(y, x + i):
+        raise errors.MakepalInvalidFormat()
+      # Bottom
+      if nc != self.base.get_nes_color(y + self.unit_size - 1, x + i):
+        raise errors.MakepalInvalidFormat()
+      # Left
+      if nc != self.base.get_nes_color(y + i, x):
+        raise errors.MakepalInvalidFormat()
+      # Right
+      if nc != self.base.get_nes_color(y + i, x + self.unit_size - 1):
+        raise errors.MakepalInvalidFormat()
     return nc
 
   def _build_vobject(self, palette):

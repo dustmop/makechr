@@ -158,6 +158,16 @@ To see errors visually, use -e command-line option.
     self.assertEquals(self.returncode, 1)
     self.assert_file_eq(palette_view, 'testdata/too-many-tiles-pal.png')
 
+  def test_error_makepal_border_not_found(self):
+    args = ['testdata/error_border_not_found.png', '-o', self.output_name,
+            '--makepal']
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Found 1 error:
+MakepalBorderNotFound 
+To see errors visually, use -e command-line option.
+""")
+    self.assertEquals(self.returncode, 1)
+
   def golden(self, name, ext):
     if name:
       return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)

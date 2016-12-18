@@ -24,6 +24,9 @@ class Application(object):
         import makepal_processor
       processor = makepal_processor.MakepalProcessor()
       processor.process_image(img, args)
+      if processor.err().has():
+        self.handle_errors(processor.err(), img, args)
+        return False
       processor.create_output(args.output)
       return True
     elif 'free' in traversal:
