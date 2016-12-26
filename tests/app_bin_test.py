@@ -135,6 +135,17 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_output_traverse_vertical(self):
+    """Travere vertically to change the way CHR and nametables are created."""
+    img = Image.open('testdata/full-image.png')
+    self.args.traversal = 'vertical'
+    self.process_image(img)
+    self.create_output()
+    self.assert_output_result('chr', golden_suffix='-traverse-vertical')
+    self.assert_output_result('nametable', golden_suffix='-traverse-vertical')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_error_too_many_tiles(self):
     """If there are more tiles than can fit in CHR, throw error."""
     img = Image.open('testdata/257tiles.png')

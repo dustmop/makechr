@@ -75,6 +75,8 @@ class Application(object):
   def get_traversal(self, strategy):
     if not strategy or strategy == 'h' or strategy == 'horizontal':
       return 'horizontal'
+    elif strategy == 'v' or strategy == 'vertical':
+      return 'vertical'
     elif strategy == 'b' or strategy == 'block':
       return 'block'
     elif strategy == 'f' or strategy == 'free':

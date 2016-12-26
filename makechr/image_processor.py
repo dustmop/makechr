@@ -406,6 +406,9 @@ class ImageProcessor(object):
     if traversal == 'horizontal':
       generator = ((y,x) for y in xrange(self.blocks_y * 2) for
                    x in xrange(self.blocks_x * 2))
+    elif traversal == 'vertical':
+      generator = ((y,x) for x in xrange(self.blocks_x * 2) for
+                   y in xrange(self.blocks_y * 2))
     elif traversal == 'block':
       generator = ((y*2+i,x*2+j) for y in xrange(self.blocks_y) for
                    x in xrange(self.blocks_x) for i in xrange(2) for
