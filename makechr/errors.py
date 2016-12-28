@@ -179,6 +179,14 @@ class SpritelistOverflow(Exception):
     return 'at tile (%dy,%dx)' % (self.tile_y, self.tile_x)
 
 
+class NametableNotFoundError(Exception):
+  def __init__(self, name):
+    self.name = name
+
+  def __str__(self):
+    return 'Not found: "%s"' % self.name
+
+
 class MakepalBorderNotFound(Exception):
   pass
 

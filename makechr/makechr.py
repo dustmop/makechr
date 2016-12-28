@@ -162,7 +162,7 @@ def run():
     sys.exit(1)
   elif args.memimport:
     application.read_memory(args.memimport, 'ram', args)
-  elif is_valiant(args.input):
+  elif args.input and is_valiant(args.input):
     application.read_memory(args.input, 'valiant', args)
   elif args.input:
     try:
@@ -181,6 +181,8 @@ def run():
       sys.exit(1)
   else:
     parser.print_usage()
+    sys.exit(1)
+  sys.exit(0)
 
 
 if __name__ == '__main__':

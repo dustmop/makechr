@@ -40,6 +40,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     is_locked_tiles: Whether tiles are locked or not.
     allow_overflow: List of components for which to allow overflows.
     """
+    self.initialize()
     self.load_image(img)
     config = ppu_memory.PpuMemoryConfig(is_sprite=True,
                                         is_locked_tiles=is_locked_tiles)

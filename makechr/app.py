@@ -108,8 +108,8 @@ class Application(object):
     if args.colorization_view:
       renderer.create_colorization_view(args.colorization_view, mem)
     if args.reuse_view:
-      nt_count = self.build_nt_count(mem)
-      renderer.create_reuse_view(args.reuse_view, mem, nt_count)
+      nt_inverter = mem.build_nt_inverter()
+      renderer.create_reuse_view(args.reuse_view, mem, nt_inverter)
     if args.nametable_view:
       renderer.create_nametable_view(args.nametable_view, mem)
     if args.chr_view:
@@ -151,14 +151,6 @@ class Application(object):
     if args.compile:
       builder = rom_builder.RomBuilder()
       builder.build(mem, args.compile)
-
-  def build_nt_count(self, mem):
-    nametable = mem.gfx_0.nametable
-    nt_count = collections.defaultdict(int)
-    for y in xrange(30):
-      for x in xrange(32):
-        nt_count[nametable[y][x]] += 1
-    return nt_count
 
   def show_stats(self, mem, processor, args):
     print('Number of dot-profiles: {0}'.format(len(processor.dot_manifest())))

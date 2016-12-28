@@ -1,4 +1,5 @@
 import binary_file_writer
+import collections
 import chr_data
 from constants import *
 import os
@@ -148,6 +149,7 @@ class PpuMemory(object):
       bg_color = palette_1.bg_color
     if palette_2:
       if bg_color and bg_color != palette_2.bg_color:
+        # TODO: Add test.
         raise errors.PaletteInconsistentError(bg_color, palette_2.bg_color)
       bg_color = palette_2.bg_color
     return bg_color
@@ -176,6 +178,22 @@ class PpuMemory(object):
           fout.write(chr(palette_option[j]))
         else:
           fout.write(chr(bg_color))
+
+  def get_nametable(self, i):
+    # TOOD: Support mulitple nametables.
+    if i == 0:
+      return self.gfx_0.nametable
+    else:
+      raise errors.NametableNotFound(i)
+
+  def build_nt_inverter(self):
+    """Build a table that maps tile numbers to lists of positions."""
+    nametable = self.gfx_0.nametable
+    lookup = collections.defaultdict(list)
+    for y in xrange(NUM_BLOCKS_Y * 2):
+      for x in xrange(NUM_BLOCKS_X * 2):
+        lookup[nametable[y][x]].append([y,x])
+    return lookup
 
   def get_bytes(self, role):
     if role == 'nametable':

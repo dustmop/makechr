@@ -289,7 +289,7 @@ class ViewRenderer(object):
           self.draw_block(y, x, poption)
     return self.save_file()
 
-  def create_reuse_view(self, outfile, ppu_memory, nt_count):
+  def create_reuse_view(self, outfile, ppu_memory, nt_inverter):
     """Create an image that shows tile reuse.
 
     Create an image that shows which tiles are reused, color coded by how many
@@ -297,7 +297,7 @@ class ViewRenderer(object):
 
     outfile: Filename to output the view to.
     ppu_memory: Ppu memory containing nametable.
-    nt_count: Dict mapping nametable values to number of times.
+    nt_inverter: Dict mapping nametable tiles to list of positions.
     """
     width, height = (256 * self.scale, 240 * self.scale)
     self.create_file(outfile, width, height, (0, 0, 0))
@@ -314,7 +314,7 @@ class ViewRenderer(object):
             if not self.is_legacy and nt == ppu_memory.empty_tile:
               self.draw_empty_tile(y, x)
             else:
-              self.draw_reuse_square(y, x, nt_count[nt], scheme)
+              self.draw_reuse_square(y, x, len(nt_inverter[nt]), scheme)
     return self.save_file()
 
   def create_palette_view(self, outfile, ppu_memory):

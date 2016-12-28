@@ -1,4 +1,5 @@
 import chr_data
+import collections
 import extract_indexed_image_palette
 import errors
 import guess_best_palette
@@ -15,13 +16,17 @@ class ImageProcessor(object):
   """Converts pixel art image into data structures in the PPU's memory."""
 
   def __init__(self):
+    self.initialize()
+    # A flag only used by tests, whether sprites auto detect background color.
+    self._test_only_auto_sprite_bg = False
+
+  def initialize(self):
     self._ppu_memory = ppu_memory.PpuMemory()
     self._chrdata_cache = {}
     self._color_manifest = id_manifest.IdManifest()
     self._dot_manifest = id_manifest.IdManifest()
     self._block_color_manifest = id_manifest.IdManifest()
     self._needs_provider = None
-    self._test_only_auto_sprite_bg = False
     self._artifacts = [row[:] for row in
                        [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     self._flip_bits = [row[:] for row in
@@ -478,6 +483,7 @@ class ImageProcessor(object):
     is_locked_tiles: Whether tiles are locked into place. If so, do not
         merge duplicates, and only handle first 256 tiles.
     """
+    self.initialize()
     self.load_image(img)
     self.blocks_y = NUM_BLOCKS_Y
     self.blocks_x = NUM_BLOCKS_X

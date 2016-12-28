@@ -37,6 +37,11 @@ class IntegrationTests(unittest.TestCase):
     self.assertEquals(self.returncode, 0)
     self.assertEqual(self.out, '')
 
+  def test_usage(self):
+    args = ['-o', self.output_name]
+    self.makechr(args)
+    self.assertTrue(self.out.startswith('usage:'))
+
   def test_order(self):
     # Order 0.
     args = ['testdata/full-image.png', '-o', self.output_name, '-r', '0']
