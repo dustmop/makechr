@@ -161,9 +161,9 @@ def run():
     sys.stderr.write('Cannot both import memory and process input file')
     sys.exit(1)
   elif args.memimport:
-    application.read_memory(args.memimport, args)
+    application.read_memory(args.memimport, 'ram', args)
   elif is_valiant(args.input):
-    application.read_valiant(args.input, args)
+    application.read_memory(args.input, 'valiant', args)
   elif args.input:
     try:
       img = Image.open(args.input)

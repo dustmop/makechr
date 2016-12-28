@@ -37,6 +37,16 @@ class MemoryImporterTests(unittest.TestCase):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_import_by_kind(self):
+    importer = memory_importer.MemoryImporter()
+    mem = importer.read('testdata/full-image.mem', 'ram')
+    a = app.Application()
+    a.create_output(mem, self.args, 'horizontal')
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_import_and_render(self):
     importer = memory_importer.MemoryImporter()
     mem = importer.read_ram('testdata/full-image.mem')
@@ -50,6 +60,11 @@ class MemoryImporterTests(unittest.TestCase):
     with self.assertRaises(errors.FileFormatError) as e:
       importer.read_ram('testdata/full-image-chr.dat')
       self.assertEqual(e.file_size, 0x2000)
+
+  def test_import_error_unknown_kind(self):
+    importer = memory_importer.MemoryImporter()
+    with self.assertRaises(errors.UnknownMemoryKind) as e:
+      importer.read('testdata/full-image-chr.dat', 'data')
 
   def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name

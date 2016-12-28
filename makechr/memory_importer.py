@@ -6,6 +6,13 @@ import ppu_memory
 from constants import *
 
 class MemoryImporter(object):
+  def read(self, filename, kind):
+    if kind == 'ram':
+      return self.read_ram(filename)
+    elif kind == 'valiant':
+      return self.read_valiant(filename)
+    raise errors.UnknownMemoryKind(kind)
+
   def read_ram(self, filename):
     # Check file size
     fp = open(filename, 'rb')

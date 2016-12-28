@@ -107,7 +107,7 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     """Memory can be imported then split into components."""
     memfile = 'testdata/full-image-mem.bin'
     a = app.Application()
-    a.read_memory(memfile, self.args)
+    a.read_memory(memfile, 'ram', self.args)
     self.assert_output_result('chr')
     self.assert_output_result('nametable')
     self.assert_output_result('palette')

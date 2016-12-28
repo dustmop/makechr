@@ -148,6 +148,14 @@ class UnknownLogicFailure(Exception):
     return 'UnknownLogicFailure: "%s"' % self.text
 
 
+class UnknownMemoryKind(Exception):
+  def __init__(self, text):
+    self.text = text
+
+  def __str__(self):
+    return 'UnknownMemoryType: "%s"' % self.text
+
+
 class NametableOverflow(Exception):
   def __init__(self, chr_num, tile_y=0, tile_x=0):
     self.chr_num = chr_num
