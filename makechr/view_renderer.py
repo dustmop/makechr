@@ -5,6 +5,9 @@ import os
 import rgb
 
 
+pkg_resources = None
+
+
 GRAY_COLOR = (64, 64, 64)
 ERROR_GRID_COLOR  = (0xf0, 0x20, 0x20)
 ERROR_GRID_COLOR2 = (0xf0, 0x80, 0x80)
@@ -77,9 +80,6 @@ class ViewRenderer(object):
   def palette_option_to_colors(self, poption):
     return [self.to_tuple(rgb.RGB_COLORS[p]) for p in poption]
 
-  def resource(self, rel):
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), rel)
-
   def reuse_count_to_color(self, count, scheme):
     table = REUSE_COLORS if scheme != 'legacy' else LEGACY_REUSE_COLORS
     if count == 0:
@@ -90,16 +90,19 @@ class ViewRenderer(object):
     return table[0]
 
   def load_nt_font(self):
+    global pkg_resources
+    if not pkg_resources:
+      import pkg_resources
     self.font = [None] * 16
     if not self.is_legacy:
       w = self.font_width = 3
       h = self.font_height = 5
-      filename = 'res/nt_tiny.png'
+      rel = 'res/nt_tiny.png'
     else:
       w = self.font_width = 7
       h = self.font_height = 11
-      filename = 'res/nt_font.png'
-    font_img = Image.open(self.resource(filename))
+      rel = 'res/nt_font.png'
+    font_img = Image.open(pkg_resources.resource_stream('makechr', rel))
     for n in range(16):
       self.font[n] = font_img.crop([n*w,0,n*w+w,h])
     font_img.close()
