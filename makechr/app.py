@@ -104,7 +104,7 @@ class Application(object):
     else:
       renderer = view_renderer.ViewRenderer(is_legacy=False, scale=scale)
     if args.palette_view:
-      renderer.create_palette_view(args.palette_view, mem)
+      renderer.create_palette_view(args.palette_view, mem, args.is_sprite)
     if args.colorization_view:
       renderer.create_colorization_view(args.colorization_view, mem)
     if args.reuse_view:

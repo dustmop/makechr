@@ -8,6 +8,22 @@ from makechr import app, bg_color_spec
 
 
 class AppSpriteTests(general_app_test_util.GeneralAppTests):
+  def test_views_sprite(self):
+    """Create views for a sprite image."""
+    img = Image.open('testdata/reticule.png')
+    self.args.bg_color = bg_color_spec.build('30')
+    self.args.is_sprite = True
+    self.args.nametable_view = None
+    self.args.colorization_view = None
+    self.process_image(img)
+    a = app.Application()
+    a.create_views(self.ppu_memory, self.args, img)
+    self.golden_file_prefix = 'reticule'
+    self.assert_file_eq(self.args.palette_view, self.golden('pal-view', 'png'))
+    self.assert_file_eq(self.args.reuse_view, self.golden('reuse-view', 'png'))
+    self.assert_file_eq(self.args.chr_view, self.golden('chr-view', 'png'))
+    self.assert_file_eq(self.args.grid_view, self.golden('grid-view', 'png'))
+
   def test_output_sprite(self):
     """Sprite mode."""
     img = Image.open('testdata/reticule.png')

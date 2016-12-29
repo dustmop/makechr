@@ -317,18 +317,21 @@ class ViewRenderer(object):
               self.draw_reuse_square(y, x, len(nt_inverter[nt]), scheme)
     return self.save_file()
 
-  def create_palette_view(self, outfile, ppu_memory):
+  def create_palette_view(self, outfile, ppu_memory, is_sprite):
     """Create an image that shows the palette.
 
     outfile: Filename to output the palette to.
     ppu_memory: Ppu memory containing palette.
+    is_sprite: Whether sprite mode or not.
     """
     if self.is_legacy:
       self.create_file(outfile, 168, 24)
     else:
       self.create_file(outfile, 104, 32, (0xa0, 0xa0, 0xa0))
-    # TODO: Support sprite palettes.
-    palette = ppu_memory.palette_nt
+    if not is_sprite:
+      palette = ppu_memory.palette_nt
+    else:
+      palette = ppu_memory.palette_spr
     for i in xrange(4):
       poption = palette.get(i)
       if self.is_legacy:
