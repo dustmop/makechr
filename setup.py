@@ -4,10 +4,12 @@ from setuptools import setup
 
 long_description = """Makechr is a tool for generating NES graphics from pixel art images. It creates the NES graphical components as separate files, letting you easily include these are binaries into homebrew ROMs. There are many options for handling different types of input images, check the README for more information."""
 
+__version__ = '1.2'
+
 if sys.argv[1] == 'py2exe':
 
   import py2exe
-  from makechr import res_collector, makechr
+  import res_collector
 
   sys.path.append('makechr')
 
@@ -18,7 +20,7 @@ if sys.argv[1] == 'py2exe':
              }
 
   setup(name='Makechr',
-        version=makechr.__version__,
+        version=__version__,
         data_files=DATA_FILES,
         options={
           'py2exe': OPTIONS,
@@ -33,14 +35,19 @@ if sys.argv[1] == 'py2exe':
         packages=['makechr'],
         zipfile=None,
         cmdclass={'py2exe': res_collector.ResCollector},
+        install_requires=[
+          'argparse',
+          'Pillow',
+          'protobuf',
+          'watchdog',
+          # wx
+        ],
   )
 
 else:
 
-  from makechr import makechr
-
   setup(name='Makechr',
-        version=makechr.__version__,
+        version=__version__,
         description='Makechr tool for generating NES graphics',
         long_description=long_description,
         author='Dustin Long',
@@ -48,15 +55,16 @@ else:
         scripts=['bin/makechr'],
         url='http://dustmop.io/software/makechr',
         download_url=('https://github.com/dustmop/makechr/tarball/' +
-                      makechr.__version__),
+                      __version__),
         license='GPL3',
         packages=['makechr'],
         keywords='NES graphics gamedev',
         install_requires=[
-            'argparse',
-            'Pillow',
-            'protobuf',
+          'argparse',
+          'Pillow',
+          'protobuf',
+          'watchdog',
         ],
-        package_data={'makechr': glob.glob('res/*')},
+        package_data={'makechr': [p[8:] for p in glob.glob('makechr/res/*')]},
   )
 
