@@ -59,7 +59,7 @@ class PpuMemory(object):
     config: Configuration for how memory is represented.
     """
     self._writer = binary_file_writer.BinaryFileWriter(tmpl)
-    self._save_components(config)
+    return self._save_components(config)
 
   def save_valiant(self, output_filename, config):
     """Save the ppu memory as a protocal buffer based object file.
@@ -73,13 +73,14 @@ class PpuMemory(object):
     if object_file_writer is None:
       import object_file_writer
     self._writer = object_file_writer.ObjectFileWriter()
-    self._save_components(config)
+    ret = self._save_components(config)
     module_name = os.path.splitext(os.path.basename(output_filename))[0]
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
     self._writer.write_chr_info(self.chr_page)
     self._writer.write_extra_settings(config)
     self._writer.save(output_filename)
+    return ret
 
   def _save_components(self, config):
     self._bg_color = self._get_bg_color(self.palette_nt, self.palette_spr)
@@ -105,6 +106,7 @@ class PpuMemory(object):
       self._save_spritelist(fout, self.spritelist,
                             self.gfx_0.colorization)
     self._writer.close()
+    return components
 
   def _save_nametable(self, fout, nametable):
     for y in xrange(NUM_BLOCKS_Y * 2):

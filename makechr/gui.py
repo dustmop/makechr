@@ -11,6 +11,7 @@ import binary_file_writer
 import color_cycler
 import errors
 import image_processor
+import eight_by_sixteen_processor
 import makechr
 import memory_importer
 import pixel_art_renderer
@@ -175,15 +176,18 @@ class DrawCursorManager(object):
   Mediates mouse movement, telling each component how to draw the current
   cursor. Also handles cursor animation.
   """
-  def __init__(self, parent, processor):
+  def __init__(self, parent):
     self.cursor = None
     self.components = []
     self.cursorTimer = None
     self.tileSet = False
     self.reusableCursor = Cursor()
     self.parent = parent
-    self.processor = processor
+    self.processor = None
     self.CreateCursorTimer()
+
+  def setProcessor(self, processor):
+    self.processor = processor
 
   def addCursor(self, cursor):
     self.cursor = cursor
@@ -245,7 +249,7 @@ class DrawCursorManager(object):
     self.tileSet = y * 16 + x
     try:
       elems = self.parent.nt_inverter[self.tileSet]
-    except KeyError:
+    except AttributeError, KeyError:
       elems = None
     if elems:
       (y,x) = elems[0]
@@ -258,7 +262,7 @@ class DrawCursorManager(object):
       self.DrawCursorToComponents(clear, self.cursor)
       try:
         elems = self.parent.nt_inverter[self.tileSet]
-      except KeyError:
+      except AttributeError, KeyError:
         elems = None
       if elems and len(elems) <= TILE_REUSE_LIMIT:
         for y,x in elems:
@@ -378,7 +382,7 @@ class MakechrGui(wx.Frame):
     img = wx.EmptyImage(252, 72)
     self.sysColorCtrl = wx.StaticBitmap(self.panel, wx.ID_ANY,
                                         wx.BitmapFromImage(img),
-                                        pos=(0x20,0x170), size=(0xfc,0x48))
+                                        pos=(0x20,0x160), size=(0xfc,0x48))
     self.SetBitmapResource(self.sysColorCtrl, 'res/systemcolors.png')
 
     # Key for reuse.
@@ -393,6 +397,36 @@ class MakechrGui(wx.Frame):
     self.gridCheckBox = wx.CheckBox(self.panel, wx.ID_ANY, 'Grid',
                                     pos=(0x20,0x128))
     self.Bind(wx.EVT_CHECKBOX, self.OnGridCheckboxClicked, self.gridCheckBox)
+
+    # Locked tiles.
+    self.lockedTilesCheckBox = wx.CheckBox(self.panel, wx.ID_ANY,
+                                           'Locked tiles',
+                                           pos=(0x20,0x1d4))
+    self.Bind(wx.EVT_CHECKBOX, self.OnLockedTilesCheckboxClicked,
+              self.lockedTilesCheckBox)
+    # Sprite mode.
+    self.spriteModeCheckBox = wx.CheckBox(self.panel, wx.ID_ANY, 'Sprite mode',
+                                          pos=(0x20,0x1e8))
+    self.Bind(wx.EVT_CHECKBOX, self.OnSpriteModeCheckboxClicked,
+              self.spriteModeCheckBox)
+    # Allow overflow.
+    self.allowOverflowCheckBox = wx.CheckBox(self.panel, wx.ID_ANY,
+                                             'Allow overflow',
+                                             pos=(0x30,0x1fc))
+    self.Bind(wx.EVT_CHECKBOX, self.OnAllowOverflowCheckboxClicked,
+              self.allowOverflowCheckBox)
+    self.allowOverflowCheckBox.Enable(False)
+    # Traversal
+    self.traversalChoices = ['horizontal', 'vertical', 'block', '8x16']
+    traversal_vals = [e.title() + ' traversal' for e in self.traversalChoices]
+    self.traversalComboBox = wx.ComboBox(self.panel, wx.ID_ANY,
+                                         traversal_vals[0],
+                                         pos=(0x20,0x210),
+                                         size=(0x100,0x1a),
+                                         choices=traversal_vals,
+                                         style=wx.CB_READONLY)
+    self.Bind(wx.EVT_COMBOBOX, self.OnTraversalComboBoxChosen,
+              self.traversalComboBox)
 
   def CreateMessageTimer(self):
     self.messageTimer = wx.Timer(self, wx.ID_ANY)
@@ -409,7 +443,9 @@ class MakechrGui(wx.Frame):
   def CreateLabels(self):
     wx.StaticText(self.panel, wx.ID_ANY, label='Pixel art', pos=(0x20, 0x1c))
     wx.StaticText(self.panel, wx.ID_ANY, label='System colors',
-                  pos=(0x20, 0x15c))
+                  pos=(0x20, 0x14c))
+    wx.StaticText(self.panel, wx.ID_ANY, label='Options',
+                  pos=(0x20, 0x1c0))
     wx.StaticText(self.panel, wx.ID_ANY, label='Nametable', pos=(0x170, 0x1c))
     wx.StaticText(self.panel, wx.ID_ANY, label='CHR', pos=(0x290, 0x12c))
     wx.StaticText(self.panel, wx.ID_ANY, label='Attribute', pos=(0x170, 0x12c))
@@ -441,7 +477,8 @@ class MakechrGui(wx.Frame):
 
   def CreateCursorManager(self):
     self.cursor = Cursor()
-    self.manager = DrawCursorManager(self, self.processor)
+    self.manager = DrawCursorManager(self)
+    #self.manager.setProcessor(self.processor)
     self.manager.addCursor(self.cursor)
     self.manager.addComponent(self.inputComp)
     self.manager.addComponent(self.ntComp)
@@ -463,6 +500,8 @@ class MakechrGui(wx.Frame):
     return 'image'
 
   def LoadImage(self):
+    if self.inputImagePath is None:
+      return
     kind = self.IdentifyFileKind(self.inputImagePath)
     if kind == 'image':
       self.ReassignImage()
@@ -514,6 +553,8 @@ class MakechrGui(wx.Frame):
     self.ShowMessage('Opened "%s"' % path, 4.0)
 
   def ReassignImage(self):
+    if not self.inputImagePath:
+      return
     if self.gridCheckBox.GetValue():
       renderer = self.renderer
       input = Image.open(self.inputImagePath)
@@ -525,11 +566,24 @@ class MakechrGui(wx.Frame):
     self.inputComp.load(bitmap)
 
   def ProcessMakechr(self):
+    config = self.BuildConfigFromOptions()
+    # TODO: It might be inefficient to reconstruct every time.
+    if config.traversal != '8x16':
+      self.processor = image_processor.ImageProcessor()
+      self.manager.setProcessor(self.processor)
+    else:
+      self.processor = eight_by_sixteen_processor.EightBySixteenProcessor()
+      self.manager.setProcessor(self.processor)
     input = Image.open(self.inputImagePath)
-    self.processor.process_image(input, '', None, 'horizontal',
-                                 False, False, False)
+    self.processor.process_image(input, '', None, config.traversal,
+                                 config.is_sprite, config.is_locked_tiles,
+                                 config.allow_overflow)
+    if self.processor.err().has():
+      for e in self.processor.err().get():
+        sys.stderr.write('{0} {1}\n'.format(type(e).__name__, e))
 
   def CreateViews(self):
+    config = self.BuildConfigFromOptions()
     renderer = self.renderer
     if self.processor.err().has():
       self.ClearViews()
@@ -541,7 +595,8 @@ class MakechrGui(wx.Frame):
       return
     self.nt_inverter = self.processor.ppu_memory().build_nt_inverter()
     # Colorization.
-    view = renderer.create_colorization_view(None, self.processor.ppu_memory())
+    view = renderer.create_colorization_view(None, self.processor.ppu_memory(),
+                                             config.is_sprite)
     self.colorsComp.load(self.PilImgToBitmap(view))
     # Nametable.
     view = renderer.create_nametable_view(None, self.processor.ppu_memory())
@@ -552,7 +607,7 @@ class MakechrGui(wx.Frame):
     self.reuseComp.load(self.PilImgToBitmap(view))
     # Palette.
     view = renderer.create_palette_view(None, self.processor.ppu_memory(),
-                                        False)
+                                        config.is_sprite)
     wx.CallAfter(self.paletteCtrl.SetBitmap, self.PilImgToBitmap(view))
     # Chr.
     view = renderer.create_chr_view(None, self.processor.ppu_memory())
@@ -574,6 +629,15 @@ class MakechrGui(wx.Frame):
     img.SetAlphaData(pilImg.convert('RGBA').tobytes()[3::4])
     return wx.BitmapFromImage(img)
 
+  def BuildConfigFromOptions(self):
+    config = ppu_memory.PpuMemoryConfig()
+    config.is_locked_tiles = self.lockedTilesCheckBox.GetValue()
+    config.is_sprite = self.spriteModeCheckBox.GetValue()
+    config.allow_overflow = 's' if self.allowOverflowCheckBox.GetValue() else ''
+    config.traversal = self.traversalChoices[
+      self.traversalComboBox.GetCurrentSelection()]
+    return config
+
   def OnOpen(self, e):
     dlg = wx.FileDialog(self, 'Choose project or input image', '', '',
                         '*.bmp;*.png;*.gif;*.mchr', wx.OPEN)
@@ -591,7 +655,7 @@ class MakechrGui(wx.Frame):
     path = dlg.GetPath()
     dlg.Destroy()
     if not path is None:
-      config = ppu_memory.PpuMemoryConfig()
+      config = self.BuildConfigFromOptions()
       self.processor.ppu_memory().save_valiant(path, config)
       self.ShowMessage('Saved to "%s"' % path, 4.0)
 
@@ -615,9 +679,9 @@ class MakechrGui(wx.Frame):
       if not '%s' in path:
         self.ShowMessage('ERROR: Export path must have "%s" in filename', 8.0)
         return
-      config = ppu_memory.PpuMemoryConfig()
-      self.processor.ppu_memory().save_template(path, config)
-      output_set = path.replace('%s', '{chr|nametable|attribute|palette}')
+      config = self.BuildConfigFromOptions()
+      components = self.processor.ppu_memory().save_template(path, config)
+      output_set = path.replace('%s', '{' + '|'.join(components) + '}')
       self.ShowMessage('Exported binaries to "%s"' % output_set, 8.0)
 
   def OnCompileRom(self, e):
@@ -637,9 +701,24 @@ class MakechrGui(wx.Frame):
   def OnGridCheckboxClicked(self, e):
     self.ReassignImage()
 
+  def OnLockedTilesCheckboxClicked(self, e):
+    self.LoadImage()
+
+  def OnSpriteModeCheckboxClicked(self, e):
+    self.allowOverflowCheckBox.Enable(self.spriteModeCheckBox.GetValue())
+    self.LoadImage()
+
+  def OnAllowOverflowCheckboxClicked(self, e):
+    self.LoadImage()
+
+  def OnTraversalComboBoxChosen(self, e):
+    self.LoadImage()
+
   def ReloadFile(self):
     self.ReassignImage()
-    self.MakechrViews()
+    self.ProcessMakechr()
+    self.CreateViews()
+    self.OnImageLoaded()
 
   def OnReloadTimer(self, e):
     self.reloadTimer.Stop()

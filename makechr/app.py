@@ -106,7 +106,8 @@ class Application(object):
     if args.palette_view:
       renderer.create_palette_view(args.palette_view, mem, args.is_sprite)
     if args.colorization_view:
-      renderer.create_colorization_view(args.colorization_view, mem)
+      renderer.create_colorization_view(args.colorization_view, mem,
+                                        args.is_sprite)
     if args.reuse_view:
       nt_inverter = mem.build_nt_inverter()
       renderer.create_reuse_view(args.reuse_view, mem, nt_inverter)

@@ -482,6 +482,7 @@ class ImageProcessor(object):
     is_sprite: Whether the image is of sprites.
     is_locked_tiles: Whether tiles are locked into place. If so, do not
         merge duplicates, and only handle first 256 tiles.
+    allow_overflow: Characters representing components. Only 's' is supported.
     """
     self.initialize()
     self.load_image(img)

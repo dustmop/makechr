@@ -213,28 +213,31 @@ class ViewRenderer(object):
     self.draw.rectangle([j+0,i+0,j+s*2,i+s*2], (0,0,0,255))
 
   def draw_nt_value(self, tile_y, tile_x, nt):
-    if self.is_legacy:
-      s = self.scale * 8
-      x = tile_x * s + 1
-      y = tile_y * s + 3
-      w = 7
-      h = 11
-      offset = 7
-      upper = self.font[nt / 16]
-      lower = self.font[nt % 16]
-    else:
-      s = self.scale * 8
-      x = tile_x * s + 1
-      y = tile_y * s + 1
-      w = self.font_width * self.scale
-      h = self.font_height * self.scale
-      offset = int(3.5 * self.scale)
-      upper = self.color_and_scale(self.font[nt / 16], 0xffffff, 0xc0c0c0)
-      lower = self.color_and_scale(self.font[nt % 16], 0xffffff, 0x909090)
-    # Left digit (upper nibble).
-    self.img.paste(upper, [x, y, x + w, y + h])
-    # Right digit (lower nibble).
-    self.img.paste(lower, [x + offset, y, x + offset + w, y + h])
+    try:
+      if self.is_legacy:
+        s = self.scale * 8
+        x = tile_x * s + 1
+        y = tile_y * s + 3
+        w = 7
+        h = 11
+        offset = 7
+        upper = self.font[nt / 16]
+        lower = self.font[nt % 16]
+      else:
+        s = self.scale * 8
+        x = tile_x * s + 1
+        y = tile_y * s + 1
+        w = self.font_width * self.scale
+        h = self.font_height * self.scale
+        offset = int(3.5 * self.scale)
+        upper = self.color_and_scale(self.font[nt / 16], 0xffffff, 0xc0c0c0)
+        lower = self.color_and_scale(self.font[nt % 16], 0xffffff, 0x909090)
+      # Left digit (upper nibble).
+      self.img.paste(upper, [x, y, x + w, y + h])
+      # Right digit (lower nibble).
+      self.img.paste(lower, [x + offset, y, x + offset + w, y + h])
+    except IndexError:
+      pass
 
   def draw_error(self, y, x, sz):
     # Inner line.
@@ -270,16 +273,20 @@ class ViewRenderer(object):
     for row in xrange(1, 15):
       self.draw.line([0, row*2*s, width, row*2*s], block_grid_color)
 
-  def create_colorization_view(self, outfile, ppu_memory):
+  def create_colorization_view(self, outfile, ppu_memory, is_sprite):
     """Create an image that shows which palette is used for each block.
 
     outfile: Filename to output the view to.
     ppu_memory: Ppu memory containing colorization and palette.
+    is_sprite: Whether sprite mode or not.
     """
     width, height = (256 * self.scale, 240 * self.scale)
     self.determine_empty_tile(ppu_memory)
     self.create_file(outfile, width, height)
-    palette = ppu_memory.palette_nt
+    if not is_sprite:
+      palette = ppu_memory.palette_nt
+    else:
+      palette = ppu_memory.palette_spr
     # TODO: Support both graphics pages.
     colorization = ppu_memory.gfx_0.colorization
     for y in xrange(NUM_BLOCKS_Y):
