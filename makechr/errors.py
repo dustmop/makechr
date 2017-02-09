@@ -197,7 +197,7 @@ class MakepalInvalidFormat(Exception):
 
 class ErrorCollector(object):
   def __init__(self):
-    self.e = []
+    self.errs = []
     self.dup = []
     self.color_not_allowed_dups = {}
     self.nametable_overflow_idx = None
@@ -208,28 +208,43 @@ class ErrorCollector(object):
       c = error.get_color()
       if c in self.color_not_allowed_dups:
         idx = self.color_not_allowed_dups[c]
-        self.e[idx].count += 1
+        self.errs[idx].count += 1
         self.dup.append(error)
         return
-      self.color_not_allowed_dups[c] = len(self.e)
+      self.color_not_allowed_dups[c] = len(self.errs)
     if isinstance(error, NametableOverflow):
       if self.nametable_overflow_idx is None:
-        self.nametable_overflow_idx = len(self.e)
+        self.nametable_overflow_idx = len(self.errs)
       else:
         idx = self.nametable_overflow_idx
-        self.e[idx].chr_num = error.chr_num
+        self.errs[idx].chr_num = error.chr_num
         return
     if isinstance(error, SpritelistOverflow):
       if self.spritelist_overflow_idx is None:
-        self.spritelist_overflow_idx = len(self.e)
+        self.spritelist_overflow_idx = len(self.errs)
       else:
         return
-    self.e.append(error)
+    self.errs.append(error)
 
   def has(self):
-    return len(self.e)
+    return len(self.errs)
 
   def get(self, include_dups=False):
     if include_dups:
-      return self.e + self.dup
-    return self.e
+      return self.errs + self.dup
+    return self.errs
+
+  def find(self, y, x):
+    if y is None or x is None:
+      return None
+    for e in self.errs:
+      tile_y, tile_x = (getattr(e, 'tile_y', None), getattr(e, 'tile_x', None))
+      if not tile_y is None and not tile_x is None:
+        if y == tile_y and x == tile_x:
+          return e
+      block_y, block_x = (getattr(e, 'block_y', None),
+                          getattr(e, 'block_x', None))
+      if not block_y is None and not block_x is None:
+        if y / 2 == block_y and x / 2 == block_x:
+          return e
+    return None

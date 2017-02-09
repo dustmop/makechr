@@ -3,6 +3,7 @@ import wx
 import collections
 import os
 from PIL import Image
+import StringIO
 import sys
 import tempfile
 
@@ -29,7 +30,7 @@ APP_TITLE = 'Makechr'
 
 
 MousePos = collections.namedtuple('MousePos',
-                                  ['clear', 'y', 'x', 'size', 'reuse'])
+                                  ['clear', 'y', 'x', 'size', 'meta'])
 
 
 class ComponentView(object):
@@ -105,7 +106,17 @@ class TileBasedComponentView(ComponentView):
     if self.manager:
       y = y / 8 if y else None
       x = x / 8 if x else None
-      self.manager.MouseEvent(MousePos(clear, y, x, 8, False))
+      self.manager.MouseEvent(MousePos(clear, y, x, 8, None))
+
+
+class InputImageComponentView(TileBasedComponentView):
+  """A component showing the input image."""
+
+  def emitMouse(self, clear, y, x):
+    if self.manager:
+      y = y / 8 if y else None
+      x = x / 8 if x else None
+      self.manager.MouseEvent(MousePos(clear, y, x, 8, 'input'))
 
 
 class BlockBasedComponentView(ComponentView):
@@ -115,7 +126,7 @@ class BlockBasedComponentView(ComponentView):
     if self.manager:
       y = y / 16 if y else None
       x = x / 16 if x else None
-      self.manager.MouseEvent(MousePos(clear, y, x, 16, False))
+      self.manager.MouseEvent(MousePos(clear, y, x, 16, None))
 
   def drawBox(self, clear, y, x, size, color):
     if y is None or x is None or size is None:
@@ -134,7 +145,7 @@ class ReuseBasedComponentView(ComponentView):
     if self.manager:
       y = y / 8 if y else None
       x = x / 8 if x else None
-      self.manager.MouseEvent(MousePos(clear, y, x, 8, True))
+      self.manager.MouseEvent(MousePos(clear, y, x, 8, 'reuse'))
 
 
 class ChrBasedComponentView(ComponentView):
@@ -144,7 +155,7 @@ class ChrBasedComponentView(ComponentView):
     if self.manager:
       y = y / 17 if y else None
       x = x / 17 if x else None
-      self.manager.ChrMouseEvent(MousePos(clear, y, x, 17, False))
+      self.manager.ChrMouseEvent(MousePos(clear, y, x, 17, None))
 
 
 class Cursor(object):
@@ -226,23 +237,29 @@ class DrawCursorManager(object):
     if not self.cursor.enabled:
       return
     self.tileSet = None
-    clear, y, x, size, reuse = (pos.clear, pos.y, pos.x, pos.size, pos.reuse)
+    clear, y, x, size, meta = (pos.clear, pos.y, pos.x, pos.size, pos.meta)
     if clear:
       self.cursor.set(None, None, None)
     if not y is None and not x is None and not size is None:
       self.cursor.set(y, x, size)
-    if reuse:
+    if meta == 'reuse':
       nt = self.processor.ppu_memory().get_nametable(0)
       try:
         self.tileSet = nt[self.cursor.y][self.cursor.x]
       except TypeError:
         self.tileSet = None
+    if meta == 'input':
+      e = self.processor.err().find(y, x)
+      if e:
+        self.parent.ShowMessage('{0} {1}'.format(type(e).__name__, e), 6)
+      else:
+        self.parent.ShowMessage('', 1)
     self.OnCursor(clear)
 
   def ChrMouseEvent(self, pos):
     if not self.cursor.enabled:
       return
-    clear, y, x, size, reuse = (pos.clear, pos.y, pos.x, pos.size, pos.reuse)
+    clear, y, x, size, meta = (pos.clear, pos.y, pos.x, pos.size, pos.meta)
     if x is None or y is None:
       self.parent.UpdateNumTileMsg(None, None)
       return
@@ -361,8 +378,8 @@ class MakechrGui(wx.Frame):
                                      pos=(0x20,0x288))
 
     # Component views.
-    self.inputComp = TileBasedComponentView(self.panel,
-                                            pos=(0x20,0x30), size=(0x100,0xf0))
+    self.inputComp = InputImageComponentView(self.panel,
+                                             pos=(0x20,0x30), size=(0x100,0xf0))
     self.ntComp = TileBasedComponentView(self.panel,
                                          pos=(0x170,0x30), size=(0x100,0xf0))
     self.colorsComp = BlockBasedComponentView(self.panel,
@@ -578,9 +595,6 @@ class MakechrGui(wx.Frame):
     self.processor.process_image(input, '', None, config.traversal,
                                  config.is_sprite, config.is_locked_tiles,
                                  config.allow_overflow)
-    if self.processor.err().has():
-      for e in self.processor.err().get():
-        sys.stderr.write('{0} {1}\n'.format(type(e).__name__, e))
 
   def CreateViews(self):
     config = self.BuildConfigFromOptions()
@@ -763,5 +777,7 @@ if __name__ == '__main__':
   if len(sys.argv) > 1:
     makechr.run()
     sys.exit(0)
+  if hasattr(sys, "frozen"):
+    sys.stderr = StringIO.StringIO()
   app = MakechrGuiApp()
   app.MainLoop()
