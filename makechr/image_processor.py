@@ -155,14 +155,33 @@ class ImageProcessor(object):
           if nc == -1:
             raise errors.ColorNotAllowedError(p, tile_y, tile_x, i, j)
         # Add the nescolor 'nc' to the 'color_needs'. Insert it into the first
-        # position that is equal to NULL, otherwise append it to the end.
-        for idx in xrange(4):
+        # position that is equal to NULL, otherwise raise an error. Loop is
+        # unrolled for performance.
+        while True:
+          idx = 0
           if color_needs[idx] == nc:
             break
-          if color_needs[idx] == NULL:
+          elif color_needs[idx] == NULL:
             color_needs[idx] = nc
             break
-        else:
+          idx = 1
+          if color_needs[idx] == nc:
+            break
+          elif color_needs[idx] == NULL:
+            color_needs[idx] = nc
+            break
+          idx = 2
+          if color_needs[idx] == nc:
+            break
+          elif color_needs[idx] == NULL:
+            color_needs[idx] = nc
+            break
+          idx = 3
+          if color_needs[idx] == nc:
+            break
+          elif color_needs[idx] == NULL:
+            color_needs[idx] = nc
+            break
           raise errors.PaletteOverflowError(tile_y, tile_x)
         dot_profile[row + j] = idx
     return color_needs, dot_profile
