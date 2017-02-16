@@ -121,16 +121,7 @@ class Application(object):
       renderer.create_free_zone_view(args.free_zone_view, img, mem)
 
   def create_output(self, mem, args, traversal):
-    if args.order is None and args.is_sprite:
-      chr_order = 1
-    else:
-      chr_order = args.order
-    if args.is_sprite:
-      palette_order = 1
-    else:
-      palette_order = 0
-    config = ppu_memory.PpuMemoryConfig(chr_order=chr_order,
-                                        palette_order=palette_order,
+    config = ppu_memory.PpuMemoryConfig(chr_order=args.order,
                                         traversal=traversal,
                                         is_sprite=args.is_sprite,
                                         is_locked_tiles=args.is_locked_tiles)

@@ -644,12 +644,14 @@ class MakechrGui(wx.Frame):
     return wx.BitmapFromImage(img)
 
   def BuildConfigFromOptions(self):
-    config = ppu_memory.PpuMemoryConfig()
-    config.is_locked_tiles = self.lockedTilesCheckBox.GetValue()
-    config.is_sprite = self.spriteModeCheckBox.GetValue()
-    config.allow_overflow = 's' if self.allowOverflowCheckBox.GetValue() else ''
-    config.traversal = self.traversalChoices[
+    is_locked_tiles = self.lockedTilesCheckBox.GetValue()
+    is_sprite = self.spriteModeCheckBox.GetValue()
+    allow_overflow = 's' if self.allowOverflowCheckBox.GetValue() else ''
+    traversal = self.traversalChoices[
       self.traversalComboBox.GetCurrentSelection()]
+    config = ppu_memory.PpuMemoryConfig(
+      traversal=traversal, is_sprite=is_sprite, is_locked_tiles=is_locked_tiles,
+      allow_overflow=allow_overflow)
     return config
 
   def OnOpen(self, e):
