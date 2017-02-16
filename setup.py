@@ -4,7 +4,7 @@ from setuptools import setup
 
 long_description = """Makechr is a tool for generating NES graphics from pixel art images. It creates the NES graphical components as separate files, letting you easily include these are binaries into homebrew ROMs. There are many options for handling different types of input images, check the README for more information."""
 
-__version__ = '1.3'
+__version__ = '1.3.1'
 
 if sys.argv[1] == 'py2exe':
 
