@@ -2,6 +2,8 @@ import errors
 
 
 class ChrTile(object):
+  """Single chr tile, 16 bytes, stored in a planar format."""
+
   def __init__(self):
     self.low = [0] * 8
     self.hi = [0] * 8
@@ -74,6 +76,8 @@ class ChrTile(object):
 
 
 class ChrPage(object):
+  """One page of chr tiles, 0x1000 bytes, enough for 256 tiles."""
+
   def __init__(self):
     self.tiles = []
 
@@ -110,7 +114,28 @@ class ChrPage(object):
     return bytes
 
 
+class ChrBank(ChrPage):
+  """Two pages of chr tiles, 0x2000 bytes, enough for 2*256 tiles."""
+
+  def add(self, tile):
+    return ChrPage.add(self, tile) % 0x100
+
+  def is_full(self):
+    return len(self.tiles) >= 0x200
+
+  @staticmethod
+  def from_binary(bytes):
+    make = ChrBank()
+    for k in xrange(len(bytes) / 0x10):
+      tile = ChrTile()
+      tile.set(bytes[k*0x10:k*0x10+0x10])
+      make.add(tile)
+    return make
+
+
 class SortableChrPage(ChrPage):
+  """ChrPage with a sorted view, easier to merge or compare."""
+
   def __init__(self):
     ChrPage.__init__(self)
     self.idx = []
@@ -156,6 +181,8 @@ class SortableChrPage(ChrPage):
 
 
 class VertTilePair(object):
+  """A pair of 8x8 tiles, vertically oriented."""
+
   def __init__(self, upper, lower):
     self.upper = upper
     self.lower = lower

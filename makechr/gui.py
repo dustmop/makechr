@@ -426,13 +426,13 @@ class MakechrGui(wx.Frame):
                                           pos=(0x20,0x1e8))
     self.Bind(wx.EVT_CHECKBOX, self.OnSpriteModeCheckboxClicked,
               self.spriteModeCheckBox)
-    # Allow overflow.
-    self.allowOverflowCheckBox = wx.CheckBox(self.panel, wx.ID_ANY,
-                                             'Allow overflow',
-                                             pos=(0x30,0x1fc))
-    self.Bind(wx.EVT_CHECKBOX, self.OnAllowOverflowCheckboxClicked,
-              self.allowOverflowCheckBox)
-    self.allowOverflowCheckBox.Enable(False)
+    # Allow sprite overflow.
+    self.allowSpriteOverflowCheckBox = wx.CheckBox(self.panel, wx.ID_ANY,
+                                                   'Allow sprite overflow',
+                                                   pos=(0x30,0x1fc))
+    self.Bind(wx.EVT_CHECKBOX, self.OnAllowSpriteOverflowCheckboxClicked,
+              self.allowSpriteOverflowCheckBox)
+    self.allowSpriteOverflowCheckBox.Enable(False)
     # Traversal
     self.traversalChoices = ['horizontal', 'vertical', 'block', '8x16']
     traversal_vals = [e.title() + ' traversal' for e in self.traversalChoices]
@@ -444,6 +444,12 @@ class MakechrGui(wx.Frame):
                                          style=wx.CB_READONLY)
     self.Bind(wx.EVT_COMBOBOX, self.OnTraversalComboBoxChosen,
               self.traversalComboBox)
+    # Allow chr overflow.
+    self.allowChrOverflowCheckBox = wx.CheckBox(self.panel, wx.ID_ANY,
+                                                'Allow chr overflow',
+                                                pos=(0x20,0x22c))
+    self.Bind(wx.EVT_CHECKBOX, self.OnAllowChrOverflowCheckboxClicked,
+              self.allowChrOverflowCheckBox)
 
   def CreateMessageTimer(self):
     self.messageTimer = wx.Timer(self, wx.ID_ANY)
@@ -627,7 +633,7 @@ class MakechrGui(wx.Frame):
     view = renderer.create_chr_view(None, self.processor.ppu_memory())
     self.chrComp.load(self.PilImgToBitmap(view))
     # Num tiles.
-    num = self.processor.ppu_memory().chr_page.size()
+    num = self.processor.ppu_memory().chr_set.size()
     self.UpdateNumTileMsg(num, None)
 
   def ClearViews(self):
@@ -646,12 +652,13 @@ class MakechrGui(wx.Frame):
   def BuildConfigFromOptions(self):
     is_locked_tiles = self.lockedTilesCheckBox.GetValue()
     is_sprite = self.spriteModeCheckBox.GetValue()
-    allow_overflow = 's' if self.allowOverflowCheckBox.GetValue() else ''
+    allow_s = 's' if self.allowSpriteOverflowCheckBox.GetValue() else ''
     traversal = self.traversalChoices[
       self.traversalComboBox.GetCurrentSelection()]
+    allow_c = 'c' if self.allowChrOverflowCheckBox.GetValue() else ''
     config = ppu_memory.PpuMemoryConfig(
       traversal=traversal, is_sprite=is_sprite, is_locked_tiles=is_locked_tiles,
-      allow_overflow=allow_overflow)
+      allow_overflow=[allow_s, allow_c])
     return config
 
   def OnOpen(self, e):
@@ -721,13 +728,16 @@ class MakechrGui(wx.Frame):
     self.LoadImage()
 
   def OnSpriteModeCheckboxClicked(self, e):
-    self.allowOverflowCheckBox.Enable(self.spriteModeCheckBox.GetValue())
+    self.allowSpriteOverflowCheckBox.Enable(self.spriteModeCheckBox.GetValue())
     self.LoadImage()
 
-  def OnAllowOverflowCheckboxClicked(self, e):
+  def OnAllowSpriteOverflowCheckboxClicked(self, e):
     self.LoadImage()
 
   def OnTraversalComboBoxChosen(self, e):
+    self.LoadImage()
+
+  def OnAllowChrOverflowCheckboxClicked(self, e):
     self.LoadImage()
 
   def ReloadFile(self):

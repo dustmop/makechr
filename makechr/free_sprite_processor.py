@@ -102,7 +102,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
           palette_option, cid_u, did_u, cid_l, did_l, config)
         # TODO: Only add this 1 if the sprite chr order is 1.
         chr_num = chr_num_u + 1
-        if not allow_overflow or not 's' in allow_overflow:
+        if not 's' in allow_overflow:
           if len(self._ppu_memory.spritelist) >= 0x40:
             self._err.add(errors.SpritelistOverflow(y, x))
             continue

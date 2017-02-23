@@ -41,7 +41,7 @@ class PpuMemory(object):
     self.gfx_1 = GraphicsPage() # unused
     self.palette_nt = None
     self.palette_spr = None
-    self.chr_page = chr_data.ChrPage()
+    self.chr_set = chr_data.ChrPage()
     self._writer = None
     self._bg_color = None
     self.empty_tile = None
@@ -56,6 +56,9 @@ class PpuMemory(object):
       self.palette_nt.set_bg_color(self._bg_color)
     if self.palette_spr:
       self.palette_spr.set_bg_color(self._bg_color)
+
+  def upgrade_chr_set_to_bank(self):
+    self.chr_set = chr_data.ChrBank()
 
   def save_template(self, tmpl, config):
     """Save binary files representing the ppu memory.
@@ -82,7 +85,7 @@ class PpuMemory(object):
     module_name = os.path.splitext(os.path.basename(output_filename))[0]
     self._writer.write_module(module_name)
     self._writer.write_bg_color(self._bg_color)
-    self._writer.write_chr_info(self.chr_page)
+    self._writer.write_chr_info(self.chr_set)
     self._writer.write_extra_settings(config)
     self._writer.save(output_filename)
     return ret
@@ -97,7 +100,7 @@ class PpuMemory(object):
       fout = self._writer.get_writable('chr', True)
       self._writer.configure(null_value=0, size=0x1000, order=config.chr_order,
                              align=0x10, extract=0x2000)
-      self._save_chr(fout, self.chr_page)
+      self._save_chr(fout, self.chr_set)
     if 'palette' in components:
       fout = self._writer.get_writable('palette', True)
       self._writer.configure(null_value=self._bg_color, size=0x10,
@@ -119,8 +122,8 @@ class PpuMemory(object):
         nt = nametable[y][x]
         fout.write(chr(nt))
 
-  def _save_chr(self, fout, chr_page):
-    fout.write(chr_page.to_bytes())
+  def _save_chr(self, fout, chr_set):
+    fout.write(chr_set.to_bytes())
 
   def _save_palette(self, fout, palette_1, palette_2):
     self._write_single_palette(fout, palette_1, self._bg_color)
@@ -241,7 +244,7 @@ class PpuMemory(object):
         bytes += bytearray([self._bg_color] * 0x10)
       return bytes
     elif role == 'chr':
-      bytes = self.chr_page.to_bytes()
+      bytes = self.chr_set.to_bytes()
       bytes += bytearray([0] * (0x2000 - len(bytes)))
       return bytes
     else:

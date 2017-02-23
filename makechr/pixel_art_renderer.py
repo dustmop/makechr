@@ -8,7 +8,7 @@ class PixelArtRenderer(object):
     for y in xrange(30):
       for x in xrange(32):
         nt_num = mem.gfx_0.nametable[y][x]
-        tile = mem.chr_page.get(nt_num)
+        tile = mem.chr_set.get(nt_num)
         attr = mem.gfx_0.colorization[y & 0xfe][x & 0xfe]
         pal = mem.palette_nt.get(attr)
         pixels = self.create_pixels(tile, pal)

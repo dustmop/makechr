@@ -146,7 +146,7 @@ class Application(object):
 
   def show_stats(self, mem, processor, args):
     print('Number of dot-profiles: {0}'.format(len(processor.dot_manifest())))
-    print('Number of tiles: {0}'.format(mem.chr_page.size()))
+    print('Number of tiles: {0}'.format(mem.chr_set.size()))
     pal = mem.palette_spr if args.is_sprite else mem.palette_nt
     print('Palette: {0}'.format(pal))
 

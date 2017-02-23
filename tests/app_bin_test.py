@@ -146,6 +146,18 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('palette')
     self.assert_output_result('attribute')
 
+  def test_output_allow_chr_overflow(self):
+    """Allow chr overflow so that it uses second page in the bank."""
+    img = Image.open('testdata/257tiles.png')
+    self.args.allow_overflow = ['c']
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = '257tiles'
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_error_too_many_tiles(self):
     """If there are more tiles than can fit in CHR, throw error."""
     img = Image.open('testdata/257tiles.png')

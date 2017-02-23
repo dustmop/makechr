@@ -263,7 +263,7 @@ class ImageProcessor(object):
     did: Id for the dot_profile.
     config: Configuration containing ppu_memory flags.
     """
-    if config.is_locked_tiles and self._ppu_memory.chr_page.is_full():
+    if config.is_locked_tiles and self._ppu_memory.chr_set.is_full():
       return (0, 0)
     key = str([did] + xlat)
     if key in self._chrdata_cache:
@@ -273,7 +273,7 @@ class ImageProcessor(object):
       return self._chrdata_cache[str(tile)]
     # Add the tile to the chr collection.
     try:
-      chr_num = self._ppu_memory.chr_page.add(tile)
+      chr_num = self._ppu_memory.chr_set.add(tile)
     except errors.ChrPageFull:
       chr_num = len(self._chrdata_cache)
       self._chrdata_cache[key] = (0, 0x00)
@@ -511,6 +511,8 @@ class ImageProcessor(object):
     config = ppu_memory.PpuMemoryConfig(is_sprite=is_sprite,
                                         is_locked_tiles=is_locked_tiles,
                                         allow_overflow=allow_overflow)
+    if 'c' in config.allow_overflow:
+      self._ppu_memory.upgrade_chr_set_to_bank()
     # TODO: Not being used anywhere.
     self._ppu_memory.nt_width = NUM_BLOCKS_X * 2
     # If image is exactly 128x128 and uses locked tiles, treat it as though it

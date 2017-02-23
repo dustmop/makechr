@@ -65,9 +65,9 @@ class ViewRenderer(object):
 
   def determine_empty_tile(self, ppu_memory):
     self.empty_tile = None
-    chr_page = ppu_memory.chr_page
-    for i in xrange(chr_page.size()):
-      if chr_page.get(i).is_empty():
+    chr_set = ppu_memory.chr_set
+    for i in xrange(chr_set.size()):
+      if chr_set.get(i).is_empty():
         self.empty_tile = i
         return
 
@@ -389,9 +389,9 @@ class ViewRenderer(object):
     s = self.scale * 8
     if not self.is_legacy:
       s *= 2
-    chr_page = ppu_memory.chr_page
+    chr_set = ppu_memory.chr_set
     if self.is_legacy:
-      rows = int(math.ceil(chr_page.size() / 16.0))
+      rows = int(math.ceil(chr_set.size() / 16.0))
       color = (255, 255, 255)
     else:
       rows = 16
@@ -399,7 +399,7 @@ class ViewRenderer(object):
     width, height = (16 * (s + 1) - 1, rows * (s + 1) - 1)
     self.create_file(outfile, width, height, color)
     scheme = 'legacy' if self.is_legacy else 'normal'
-    for k, tile in enumerate(chr_page.tiles):
+    for k, tile in enumerate(chr_set.tiles):
       tile_y = k / 16
       tile_x = k % 16
       self.draw_chr(tile, tile_y, tile_x, scheme)

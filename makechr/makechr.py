@@ -15,9 +15,12 @@ def allow_overflow_build(text):
     return []
   elif text == 's':
     return ['s']
+  elif text == 'c':
+    return ['c']
   else:
     # TODO: Support more types of components.
-    raise errors.CommandLineArgError('--allow_overflow only usable with "s"')
+    raise errors.CommandLineArgError(
+      '--allow_overflow only usable with "s" or "c"')
 
 
 def is_valiant(filename):

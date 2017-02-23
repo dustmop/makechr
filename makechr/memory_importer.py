@@ -21,8 +21,7 @@ class MemoryImporter(object):
       raise errors.FileFormatError(file_size, size=0x4000)
     mem = ppu_memory.PpuMemory()
     # Read CHR from $0000-$2000
-    mem.chr_page = chr_data.ChrPage.from_binary(fp.read(0x1000))
-    mem.chr_page2 = chr_data.ChrPage.from_binary(fp.read(0x1000))
+    mem.chr_set = chr_data.ChrBank.from_binary(fp.read(0x2000))
     # TODO: Handle chr order (background / sprite at $0000 / $1000).
     # For each graphics page, read nametable & attribute.
     for loop_num in xrange(2):
@@ -86,7 +85,7 @@ class MemoryImporter(object):
     at_bin = self._expand_binary(binary_map['attribute'])
     pal_bin = self._expand_binary(binary_map['palette'])
     # Parse chr data.
-    mem.chr_page = chr_data.ChrPage.from_binary(bytes(bytearray(chr_bin)))
+    mem.chr_set = chr_data.ChrBank.from_binary(bytes(bytearray(chr_bin)))
     # Parse nametable data.
     for y in xrange(30):
       for x in xrange(32):
