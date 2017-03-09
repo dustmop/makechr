@@ -598,9 +598,9 @@ class MakechrGui(wx.Frame):
       self.processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       self.manager.setProcessor(self.processor)
     input = Image.open(self.inputImagePath)
-    self.processor.process_image(input, '', None, config.traversal,
+    self.processor.process_image(input, '', None, None, config.traversal,
                                  config.is_sprite, config.is_locked_tiles,
-                                 config.allow_overflow)
+                                 None, config.allow_overflow)
 
   def CreateViews(self):
     config = self.BuildConfigFromOptions()

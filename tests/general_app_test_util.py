@@ -59,7 +59,7 @@ class GeneralAppTests(unittest.TestCase):
         self.args.traversal)
       self.processor.set_verbose('--verbose' in sys.argv)
       self.processor.process_image(img, palette_text,
-                                   self.args.bg_color.look,
+                                   self.args.bg_color.mask,
                                    self.args.bg_color.fill,
                                    self.args.is_locked_tiles,
                                    self.args.lock_sprite_flips,
@@ -67,7 +67,8 @@ class GeneralAppTests(unittest.TestCase):
     elif self.args.traversal == '8x16':
       self.processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       self.processor.process_image(img, palette_text,
-                                   self.args.bg_color.look,
+                                   self.args.bg_color.mask,
+                                   self.args.bg_color.fill,
                                    self.args.traversal, self.args.is_sprite,
                                    self.args.is_locked_tiles,
                                    self.args.lock_sprite_flips,
@@ -77,7 +78,8 @@ class GeneralAppTests(unittest.TestCase):
       if auto_sprite_bg:
         self.processor._test_only_auto_sprite_bg = auto_sprite_bg
       self.processor.process_image(img, palette_text,
-                                   self.args.bg_color.look,
+                                   self.args.bg_color.mask,
+                                   self.args.bg_color.fill,
                                    self.args.traversal, self.args.is_sprite,
                                    self.args.is_locked_tiles,
                                    self.args.lock_sprite_flips,

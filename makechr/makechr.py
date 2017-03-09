@@ -68,7 +68,7 @@ def run():
                       type=bg_color_spec.build, default=bg_color_spec.default(),
                       help=('Background color spec. Either a single color in '
                             'hexadecimal, or a pair separated by an equals, '
-                            'which specify the look (used in the pixel art) '
+                            'which specify the mask (masking the pixel art) '
                             'then the fill (output to the palette).'))
   parser.add_argument('-s', dest='is_sprite', action='store_true',
                       help=('Sprite mode, has 3 effects. 1) Nametable and '

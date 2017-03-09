@@ -24,7 +24,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
   def set_verbose(self, verbose):
     self._verbose = verbose
 
-  def process_image(self, img, palette_text, bg_color_look, bg_color_fill,
+  def process_image(self, img, palette_text, bg_color_mask, bg_color_fill,
                     is_locked_tiles, lock_sprite_flips, allow_overflow):
     """Process free sprites image, creating the ppu_memory it represents.
 
@@ -35,7 +35,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
 
     img: Pixel art image.
     palette_text: Optional string representing a palette to be parsed.
-    bg_color_look: Background color usable in existing free sprite tiles.
+    bg_color_mask: Background color that masks existing free sprite tiles.
     bg_color_fill: Background color which fills up the outside space.
     is_locked_tiles: Whether tiles are locked or not.
     allow_overflow: List of components for which to allow overflows.
@@ -83,7 +83,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     if is_tall:
       self._needs_provider = self._vert_color_manifest
     # Build the palette.
-    pal = self.make_palette(palette_text, bg_color_look, True)
+    pal = self.make_palette(palette_text, bg_color_mask, True)
     # Build the PPU memory.
     if not is_tall:
       for cid, did, unused, y, x in artifacts:

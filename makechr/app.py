@@ -32,14 +32,14 @@ class Application(object):
     elif 'free' in traversal:
       if not args.is_sprite or args.bg_color.fill is None:
         raise errors.CommandLineArgError(
-          'Traversal strategy \'%s\' requires -s and -b `look=fill` flags' % (
+          'Traversal strategy \'%s\' requires -s and -b `mask=fill` flags' % (
             traversal))
       global free_sprite_processor
       if not free_sprite_processor:
         import free_sprite_processor
       processor = free_sprite_processor.FreeSpriteProcessor(traversal)
       processor.set_verbose('--verbose' in sys.argv)
-      processor.process_image(img, args.palette, args.bg_color.look,
+      processor.process_image(img, args.palette, args.bg_color.mask,
                               args.bg_color.fill, args.is_locked_tiles,
                               args.lock_sprite_flips, args.allow_overflow)
     elif traversal == '8x16':
@@ -50,17 +50,19 @@ class Application(object):
       if not eight_by_sixteen_processor:
         import eight_by_sixteen_processor
       processor = eight_by_sixteen_processor.EightBySixteenProcessor()
-      processor.process_image(img, args.palette, args.bg_color.look,
-                              traversal, args.is_sprite, args.is_locked_tiles,
-                              args.lock_sprite_flips, args.allow_overflow)
+      processor.process_image(img, args.palette, args.bg_color.mask,
+                              args.bg_color.fill, traversal, args.is_sprite,
+                              args.is_locked_tiles, args.lock_sprite_flips,
+                              args.allow_overflow)
     else:
       global image_processor
       if not image_processor:
         import image_processor
       processor = image_processor.ImageProcessor()
-      processor.process_image(img, args.palette, args.bg_color.look,
-                              traversal, args.is_sprite, args.is_locked_tiles,
-                              args.lock_sprite_flips, args.allow_overflow)
+      processor.process_image(img, args.palette, args.bg_color.mask,
+                              args.bg_color.fill, traversal, args.is_sprite,
+                              args.is_locked_tiles, args.lock_sprite_flips,
+                              args.allow_overflow)
     if args.bg_color.fill:
       processor.ppu_memory().override_bg_color(args.bg_color.fill)
     self.create_views(processor.ppu_memory(), args, img)

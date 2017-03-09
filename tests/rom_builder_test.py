@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import app, image_processor, view_renderer
+from makechr import app, bg_color_spec, image_processor, view_renderer
 
 import filecmp
 import os
@@ -18,7 +18,7 @@ class MockArgs(object):
     self.nametable_view = None
     self.chr_view = None
     self.grid_view = None
-    self.bg_color = None
+    self.bg_color = bg_color_spec.default()
     self.is_sprite = False
     self.is_locked_tiles = False
     self.lock_sprite_flips = False,
@@ -39,7 +39,8 @@ class RomBuilderTests(unittest.TestCase):
     if not traversal:
       traversal = 'horizontal'
     self.processor = image_processor.ImageProcessor()
-    self.processor.process_image(img, palette_text, self.args.bg_color,
+    self.processor.process_image(img, palette_text, self.args.bg_color.mask,
+                                 self.args.bg_color.fill,
                                  traversal, self.args.is_sprite,
                                  self.args.is_locked_tiles,
                                  self.args.lock_sprite_flips,

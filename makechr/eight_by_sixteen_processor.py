@@ -15,12 +15,17 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
     image_processor.ImageProcessor.__init__(self)
     self._vert_color_manifest = id_manifest.CountingIdManifest()
 
-  def process_block(self, block_y, block_x, is_sprite):
+  def process_block(self, block_y, block_x, bg_mask, bg_fill, is_sprite):
     """Process the block by treating it as two vertical pairs."""
     y = block_y * 2
     x = block_x * 2
     process_tile_func = self.process_tile
     combine_color_needs_func = self.combine_color_needs
+    if bg_mask:
+      inner_func = combine_color_needs_func
+      # TODO: Test this.
+      combine_color_needs_func = (
+        lambda a,b: self.filter_bg(a, b, bg_mask, bg_fill, inner_func))
     for j in xrange(2):
       # Collect color_needs for vertical pair.
       vert_color_needs = bytearray([NULL, NULL, NULL, NULL])
@@ -44,9 +49,10 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
       self._artifacts[y    ][x + j][ARTIFACT_VCID] = vcid
       self._artifacts[y + 1][x + j][ARTIFACT_VCID] = vcid
 
-  def process_to_artifacts(self, config):
+  def process_to_artifacts(self, bg_mask, bg_fill, config):
     """Wrap process_to_artifacts, just to set needs_provider."""
-    image_processor.ImageProcessor.process_to_artifacts(self, config)
+    image_processor.ImageProcessor.process_to_artifacts(
+      self, bg_mask, bg_fill, config)
     self._needs_provider = self._vert_color_manifest
 
   def make_colorization(self, pal, config):

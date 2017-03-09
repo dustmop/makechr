@@ -186,11 +186,13 @@ class ImageProcessor(object):
         dot_profile[row + j] = idx
     return color_needs, dot_profile
 
-  def process_block(self, block_y, block_x, is_sprite):
+  def process_block(self, block_y, block_x, bg_mask, bg_fill, is_sprite):
     """Process the individual tiles in the block.
 
     block_y: The y position of the block, 0..15.
     block_x: The x position of the block, 0..14.
+    bg_mask: Background color mask, if mask is being used.
+    bg_fill: Background color fill.
     is_sprite: Whether this is sprite mode.
     """
     block_color_needs = bytearray([NULL, NULL, NULL, NULL])
@@ -200,6 +202,10 @@ class ImageProcessor(object):
     combine_color_needs_func = self.combine_color_needs
     if is_sprite:
       combine_color_needs_func = self.null_func
+    if bg_mask:
+      inner_func = combine_color_needs_func
+      combine_color_needs_func = (
+        lambda a,b: self.filter_bg(a, b, bg_mask, bg_fill, inner_func))
     for i in xrange(2):
       for j in xrange(2):
         try:
@@ -220,6 +226,12 @@ class ImageProcessor(object):
     if not is_sprite:
       bcid = self._block_color_manifest.id(block_color_needs)
       self._artifacts[y][x][ARTIFACT_BCID] = bcid
+
+  def filter_bg(self, target, source, bg_mask, bg_fill, inner_func):
+    for i in xrange(len(source)):
+      if source[i] == bg_mask:
+        source[i] = bg_fill
+    inner_func(target, source)
 
   def combine_color_needs(self, target, source):
     """Combine by filling in null elements. Raise an error if full."""
@@ -364,24 +376,37 @@ class ImageProcessor(object):
       return None
     return pal
 
-  def process_to_artifacts(self, config):
+  def process_to_artifacts(self, bg_mask, bg_fill, config):
     """Process the image and store data in the artifact table.
 
     For each block, look at each tile and get their color needs and
     dot profile. Save the ids in the artifact table.
 
+    bg_mask: Background color mask, if mask is used.
+    bg_fill: Background color fill.
     config: Configuration of ppu_memory
     """
     for block_y in xrange(self.blocks_y):
       for block_x in xrange(self.blocks_x):
         try:
-          self.process_block(block_y, block_x, config.is_sprite)
+          self.process_block(block_y, block_x, bg_mask, bg_fill,
+                             config.is_sprite)
         except errors.PaletteOverflowError as e:
+          print 'palette error'
           self.collect_error(e, block_y, block_x, 0, 0, is_block=True)
           continue
     self._needs_provider = self._block_color_manifest
     if config.is_sprite:
       self._needs_provider = self._color_manifest
+
+  def replace_mask_with_fill(self, bg_color_mask, bg_color_fill):
+    """Replace the mask color by the fill color in the color manifest."""
+    if bg_color_mask:
+      for i in xrange(len(self._color_manifest)):
+        colors = self._color_manifest.at(i)
+        for j in xrange(len(colors)):
+          if colors[j] == bg_color_mask:
+            colors[j] = bg_color_fill
 
   def make_colorization(self, pal, config):
     """Select colorization for each position in the image.
@@ -491,14 +516,15 @@ class ImageProcessor(object):
       attr = self._ppu_memory.gfx_0.colorization[y][x] | self._flip_bits[y][x]
       self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
 
-  def process_image(self, img, palette_text, bg_color, traversal,
-                    is_sprite, is_locked_tiles, lock_sprite_flips,
+  def process_image(self, img, palette_text, bg_color_mask, bg_color_fill,
+                    traversal, is_sprite, is_locked_tiles, lock_sprite_flips,
                     allow_overflow):
     """Process an image, creating the ppu_memory necessary to display it.
 
     img: Pixel art image.
     palette_text: Optional string representing a palette to be parsed.
-    bg_color: Background color of the image.
+    bg_color_mask: Background color mask, if a mask is begin used.
+    bg_color_fill: Background color fill.
     traversal: Strategy for traversing the nametable.
     is_sprite: Whether the image is of sprites.
     is_locked_tiles: Whether tiles are locked into place. If so, do not
@@ -526,20 +552,22 @@ class ImageProcessor(object):
       self.blocks_x = NUM_BLOCKS_SMALL_SQUARE
       self._ppu_memory.nt_width = NUM_BLOCKS_SMALL_SQUARE * 2
     # In order to auto detect the background color, have to count color needs.
-    if config.is_sprite and bg_color is None:
+    if config.is_sprite and bg_color_fill is None:
       self._color_manifest = id_manifest.CountingIdManifest()
     # Process each block and tile to build artifacts.
-    self.process_to_artifacts(config)
+    self.process_to_artifacts(bg_color_mask, bg_color_fill, config)
     if self._err.has():
       return
     # Make the palette, and store it.
-    pal = self.make_palette(palette_text, bg_color, config.is_sprite)
+    pal = self.make_palette(palette_text, bg_color_fill, config.is_sprite)
     if not pal:
       return
     if not config.is_sprite:
       self._ppu_memory.palette_nt = pal
     else:
       self._ppu_memory.palette_spr = pal
+    # Replace mask with fill.
+    self.replace_mask_with_fill(bg_color_mask, bg_color_fill)
     # Make colorization for each block and tile.
     self.make_colorization(pal, config)
     if self._err.has():

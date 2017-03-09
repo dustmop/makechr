@@ -42,6 +42,18 @@ class AppPaletteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('palette', golden_suffix='-black-color')
     self.assert_output_result('attribute')
 
+  def test_output_background_color_mask(self):
+    """Using a mask requires the mask in the bg_color_spec."""
+    img = Image.open('testdata/full-image-mask.png')
+    self.args.bg_color = bg_color_spec.build('34=30')
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'full-image'
+    self.assert_output_result('chr')
+    self.assert_output_result('nametable')
+    self.assert_output_result('palette')
+    self.assert_output_result('attribute')
+
   def test_output_explicit_palette(self):
     """Explicit palette can be set with palette option."""
     img = Image.open('testdata/full-image.png')
