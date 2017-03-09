@@ -43,7 +43,8 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     self.initialize()
     self.load_image(img)
     config = ppu_memory.PpuMemoryConfig(is_sprite=True,
-                                        is_locked_tiles=is_locked_tiles)
+                                        is_locked_tiles=is_locked_tiles,
+                                        allow_overflow=allow_overflow)
     is_tall = '8x16' in self.traversal
     # Scan the image, find corners of each tile based upon region merging.
     zones = self._find_zones(bg_color_fill)
@@ -88,7 +89,14 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
         color_needs = self._color_manifest.at(cid)
         (pid, palette_option) = pal.select(color_needs)
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
-        (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
+        try:
+          (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
+        except errors.NametableOverflow, e:
+          self._err.add(errors.NametableOverflow(e.chr_num, y, x))
+          chr_num = 0
+        if (config.is_locked_tiles and self._ppu_memory.chr_set.is_full() and
+            chr_num == 0):
+          raise errors.ChrPageFull()
         self._ppu_memory.spritelist.append([y - 1, chr_num, pid | flip_bits, x])
     else:
       ebs_processor = eight_by_sixteen_processor.EightBySixteenProcessor()
@@ -100,9 +108,12 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
         (pid, palette_option) = pal.select(color_needs)
         chr_num_u, chr_num_l, flip_bits = ebs_processor.store_vert_pair(
           palette_option, cid_u, did_u, cid_l, did_l, config)
+        if (config.is_locked_tiles and self._ppu_memory.chr_set.is_full() and
+            chr_num_u == 0 and chr_num_l == 0):
+          raise errors.ChrPageFull()
         # TODO: Only add this 1 if the sprite chr order is 1.
         chr_num = chr_num_u + 1
-        if not 's' in allow_overflow:
+        if not 's' in config.allow_overflow:
           if len(self._ppu_memory.spritelist) >= 0x40:
             self._err.add(errors.SpritelistOverflow(y, x))
             continue

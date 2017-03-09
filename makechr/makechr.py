@@ -17,6 +17,8 @@ def allow_overflow_build(text):
     return ['s']
   elif text == 'c':
     return ['c']
+  elif text in ['cs', 'sc']:
+    return ['c', 's']
   else:
     # TODO: Support more types of components.
     raise errors.CommandLineArgError(
