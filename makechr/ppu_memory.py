@@ -17,10 +17,11 @@ class GraphicsPage(object):
 
 class PpuMemoryConfig(object):
   def __init__(self, traversal=None, is_sprite=None, is_locked_tiles=None,
-               allow_overflow=None, chr_order=None):
+               lock_sprite_flips=None, allow_overflow=None, chr_order=None):
     self.traversal = traversal
     self.is_sprite = is_sprite
     self.is_locked_tiles = is_locked_tiles
+    self.lock_sprite_flips = lock_sprite_flips
     self.allow_overflow = allow_overflow or []
     self.chr_order = self.pick_order(chr_order, is_sprite)
     self.palette_order = int(bool(is_sprite))

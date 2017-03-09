@@ -88,6 +88,11 @@ def run():
                             'simply be monotonically increasing, so it is '
                             'not output at all. If image is 128x128 then '
                             'only 8x8 blocks are processed.'))
+  parser.add_argument('--lock-sprite-flips', dest='lock_sprite_flips',
+                      action='store_true',
+                      help=('Locks the vertical and horizontal flip flags '
+                            'for sprites, preventing flipped versions being '
+                            'merged.'))
   parser.add_argument('-t', dest='traversal_strategy', metavar='strategy',
                       help=('Traverse image, when generating CHR and '
                             'nametable, according to this strategy. If '

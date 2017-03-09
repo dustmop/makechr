@@ -279,7 +279,8 @@ class ImageProcessor(object):
       self._chrdata_cache[key] = (0, 0x00)
       raise errors.NametableOverflow(chr_num)
     # Save in the cache.
-    if config.is_sprite and not config.is_locked_tiles:
+    if (config.is_sprite and not config.is_locked_tiles and
+        not config.lock_sprite_flips):
       self.assign_tile_flips(tile, [chr_num], self._chrdata_cache)
     elif not config.is_locked_tiles:
       self._chrdata_cache[key] = (chr_num, 0x00)
@@ -491,7 +492,8 @@ class ImageProcessor(object):
       self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
 
   def process_image(self, img, palette_text, bg_color, traversal,
-                    is_sprite, is_locked_tiles, allow_overflow):
+                    is_sprite, is_locked_tiles, lock_sprite_flips,
+                    allow_overflow):
     """Process an image, creating the ppu_memory necessary to display it.
 
     img: Pixel art image.
@@ -501,6 +503,7 @@ class ImageProcessor(object):
     is_sprite: Whether the image is of sprites.
     is_locked_tiles: Whether tiles are locked into place. If so, do not
         merge duplicates, and only handle first 256 tiles.
+    lock_sprite_flips: Whether to only lock sprite flip bits.
     allow_overflow: Characters representing components. Only 's' is supported.
     """
     self.initialize()
@@ -510,6 +513,7 @@ class ImageProcessor(object):
     # Assign configuration.
     config = ppu_memory.PpuMemoryConfig(is_sprite=is_sprite,
                                         is_locked_tiles=is_locked_tiles,
+                                        lock_sprite_flips=lock_sprite_flips,
                                         allow_overflow=allow_overflow)
     if 'c' in config.allow_overflow:
       self._ppu_memory.upgrade_chr_set_to_bank()

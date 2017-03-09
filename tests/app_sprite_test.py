@@ -115,6 +115,20 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_not_exist('attribute')
     self.assert_output_result('spritelist', '-locked')
 
+  def test_output_sprite_lock_sprite_flips(self):
+    """Sprite mode with locked sprite flips."""
+    img = Image.open('testdata/reticule.png')
+    self.args.is_sprite = True
+    self.args.lock_sprite_flips = True
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'reticule'
+    self.assert_output_result('chr', '-lock-sprite-flips')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-sprite')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-lock-sprite-flips')
+
   def test_output_sprite_8x16(self):
     """Sprite mode with 8x16 sprites."""
     img = Image.open('testdata/reticule.png')

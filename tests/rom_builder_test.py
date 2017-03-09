@@ -21,6 +21,7 @@ class MockArgs(object):
     self.bg_color = None
     self.is_sprite = False
     self.is_locked_tiles = False
+    self.lock_sprite_flips = False,
     self.allow_overflow = []
     self.order = None
     self.compile = self.tmpfile('rom.nes')
@@ -41,6 +42,7 @@ class RomBuilderTests(unittest.TestCase):
     self.processor.process_image(img, palette_text, self.args.bg_color,
                                  traversal, self.args.is_sprite,
                                  self.args.is_locked_tiles,
+                                 self.args.lock_sprite_flips,
                                  self.args.allow_overflow)
     self.ppu_memory = self.processor.ppu_memory()
 

@@ -117,7 +117,9 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
       (chr_num_u, flip_bits) = self.store_chrdata(xlat_u, did_u, force)
       (chr_num_l, flip_bits) = self.store_chrdata(xlat_l, did_l, force)
       self._chrdata_cache[key] = (chr_num_u, chr_num_l, flip_bits)
-      self.assign_tile_flips(vert, [chr_num_u, chr_num_l], self._chrdata_cache)
+      if not config.lock_sprite_flips:
+        self.assign_tile_flips(vert, [chr_num_u, chr_num_l],
+                               self._chrdata_cache)
     return chr_num_u, chr_num_l, flip_bits
 
   def make_spritelist(self, traversal, pal, config):

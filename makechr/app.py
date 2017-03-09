@@ -41,7 +41,7 @@ class Application(object):
       processor.set_verbose('--verbose' in sys.argv)
       processor.process_image(img, args.palette, args.bg_color.look,
                               args.bg_color.fill, args.is_locked_tiles,
-                              args.allow_overflow)
+                              args.lock_sprite_flips, args.allow_overflow)
     elif traversal == '8x16':
       if not args.is_sprite:
         raise errors.CommandLineArgError('Traversal strategy \'8x16\' requires '
@@ -52,7 +52,7 @@ class Application(object):
       processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       processor.process_image(img, args.palette, args.bg_color.look,
                               traversal, args.is_sprite, args.is_locked_tiles,
-                              args.allow_overflow)
+                              args.lock_sprite_flips, args.allow_overflow)
     else:
       global image_processor
       if not image_processor:
@@ -60,7 +60,7 @@ class Application(object):
       processor = image_processor.ImageProcessor()
       processor.process_image(img, args.palette, args.bg_color.look,
                               traversal, args.is_sprite, args.is_locked_tiles,
-                              args.allow_overflow)
+                              args.lock_sprite_flips, args.allow_overflow)
     if args.bg_color.fill:
       processor.ppu_memory().override_bg_color(args.bg_color.fill)
     self.create_views(processor.ppu_memory(), args, img)
@@ -121,10 +121,10 @@ class Application(object):
       renderer.create_free_zone_view(args.free_zone_view, img, mem)
 
   def create_output(self, mem, args, traversal):
-    config = ppu_memory.PpuMemoryConfig(chr_order=args.order,
-                                        traversal=traversal,
-                                        is_sprite=args.is_sprite,
-                                        is_locked_tiles=args.is_locked_tiles)
+    config = ppu_memory.PpuMemoryConfig(
+      chr_order=args.order, traversal=traversal, is_sprite=args.is_sprite,
+      is_locked_tiles=args.is_locked_tiles,
+      lock_sprite_flips=args.lock_sprite_flips)
     if args.output == '/dev/null':
       pass
     elif args.output and args.output.endswith('.o'):

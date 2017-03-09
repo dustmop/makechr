@@ -24,6 +24,7 @@ class MockArgs(object):
     self.traversal = 'horizontal'
     self.is_sprite = False
     self.is_locked_tiles = False
+    self.lock_sprite_flips = False
     self.allow_overflow = []
     self.use_legacy_views = False
     self.order = None
@@ -61,6 +62,7 @@ class GeneralAppTests(unittest.TestCase):
                                    self.args.bg_color.look,
                                    self.args.bg_color.fill,
                                    self.args.is_locked_tiles,
+                                   self.args.lock_sprite_flips,
                                    self.args.allow_overflow)
     elif self.args.traversal == '8x16':
       self.processor = eight_by_sixteen_processor.EightBySixteenProcessor()
@@ -68,6 +70,7 @@ class GeneralAppTests(unittest.TestCase):
                                    self.args.bg_color.look,
                                    self.args.traversal, self.args.is_sprite,
                                    self.args.is_locked_tiles,
+                                   self.args.lock_sprite_flips,
                                    self.args.allow_overflow)
     else:
       self.processor = image_processor.ImageProcessor()
@@ -77,6 +80,7 @@ class GeneralAppTests(unittest.TestCase):
                                    self.args.bg_color.look,
                                    self.args.traversal, self.args.is_sprite,
                                    self.args.is_locked_tiles,
+                                   self.args.lock_sprite_flips,
                                    self.args.allow_overflow)
     self.ppu_memory = self.processor.ppu_memory()
     self.err = self.processor.err()
