@@ -82,7 +82,6 @@ class ComponentView(object):
     if len(self._drawCommands) == 0:
       return
     dc = wx.ClientDC(self.ctrl)
-    dc.BeginDrawing()
     for clear, y, x, size, color in self._drawCommands:
       if clear and not is_clear:
         dc.DrawBitmap(self.bitmap, 0, 0, True)
@@ -92,7 +91,6 @@ class ComponentView(object):
       dc.SetPen(wx.Pen(color, style=wx.SOLID))
       dc.SetBrush(wx.Brush(color, wx.TRANSPARENT))
       dc.DrawRectangle(x * size, y * size, size, size)
-    dc.EndDrawing()
     self._drawCommands = []
 
   def emitMouse(self, clear, y, x):
