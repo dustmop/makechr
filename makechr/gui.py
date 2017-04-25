@@ -670,7 +670,7 @@ class MakechrGui(wx.Frame):
 
   def OnSave(self, e):
     dlg = wx.FileDialog(self, 'Save project as...', '', '',
-                        '*.mchr', wx.SAVE|wx.OVERWRITE_PROMPT)
+                        '*.mchr', wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
     if dlg.ShowModal() != wx.ID_OK:
       return
     path = dlg.GetPath()
@@ -691,7 +691,7 @@ class MakechrGui(wx.Frame):
 
   def OnExportBinaries(self, e):
     dlg = wx.FileDialog(self, 'Save binaries as...', '', '%s.dat',
-                        '', wx.SAVE)
+                        '', wx.FD_SAVE)
     if dlg.ShowModal() != wx.ID_OK:
       return
     path = dlg.GetPath()
@@ -707,7 +707,7 @@ class MakechrGui(wx.Frame):
 
   def OnCompileRom(self, e):
     dlg = wx.FileDialog(self, 'Save ROM as...', '', '', '*.nes',
-                        wx.SAVE|wx.OVERWRITE_PROMPT)
+                        wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
     target = None
     if dlg.ShowModal() == wx.ID_OK:
       target = dlg.GetPath()
