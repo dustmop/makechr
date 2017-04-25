@@ -684,7 +684,7 @@ class MakechrGui(wx.Frame):
 
   def OnImportRam(self, e):
     dlg = wx.FileDialog(self, 'Choose memory dump', '', '',
-                        '*.bin;*.mem', wx.OPEN)
+                        '*.bin;*.mem', wx.FD_OPEN)
     if dlg.ShowModal() == wx.ID_OK:
       self.inputImagePath = dlg.GetPath()
     dlg.Destroy()
