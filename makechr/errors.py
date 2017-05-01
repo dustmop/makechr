@@ -83,6 +83,14 @@ class PaletteParseError(Exception):
     return text
 
 
+class PaletteExtractionError(Exception):
+  def __init__(self, msg):
+    self.msg = msg
+
+  def __str__(self):
+    return self.msg + '.\n  Disable extraction using the flag "-p -"'
+
+
 class ColorNotAllowedError(Exception):
   def __init__(self, pixel, tile_y, tile_x, y, x):
     self.pixel = pixel

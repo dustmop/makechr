@@ -9,6 +9,7 @@ import os
 import palette
 import ppu_memory
 import rgb
+import wrapped_image_palette
 from constants import *
 
 
@@ -325,18 +326,23 @@ class ImageProcessor(object):
         tile.put_pixel(row, col, val)
     return tile
 
-  def make_palette(self, palette_text, bg_color, is_sprite):
-    """Construct the palette object from parsable text or color_needs.
+  def parse_palette(self, palette_text, bg_color):
+    """Parse the palette either from command-line flag, or indexed image.
 
     palette_text: Optional text to parse palette object from.
     bg_color: Background color. Must match palette's background color, if given.
-    is_sprite: Whether this is a sprite palette.
     """
     pal = None
     if palette_text:
-      # If palette argument was passed, use as either a literal or a file.
+      # If palette argument was passed, parse it.
       try:
-        if palette_text.startswith('P/'):
+        if palette_text == '+':
+          # Attempt to extract the palette from the image, see below.
+          pass
+        elif palette_text == '-':
+          # Do not attempt to extract the palette.
+          return None
+        elif palette_text.startswith('P/'):
           # Literal palette string.
           parser = palette.PaletteParser()
           pal = parser.parse(palette_text)
@@ -344,20 +350,37 @@ class ImageProcessor(object):
           # File containing a palette.
           reader = palette.PaletteFileReader()
           pal = reader.read(palette_text)
+        else:
+          raise errors.PaletteParseError('Unknown palette "%s"' % palette_text)
       except errors.PaletteParseError as e:
         self._err.add(e)
         return None
-      if not bg_color is None and pal.bg_color != bg_color:
-        self._err.add(errors.PaletteBackgroundColorConflictError(
-          pal.bg_color, bg_color))
-        return None
-      return pal
+      if pal:
+        if not bg_color is None and pal.bg_color != bg_color:
+          self._err.add(errors.PaletteBackgroundColorConflictError(
+            pal.bg_color, bg_color))
+          return None
+        return pal
+    # If image uses indexed color, attempt to extract the palette.
     if self.img.palette:
-      # If the image uses indexed color, try to extract a palette.
       extractor = extract_indexed_image_palette.ExtractIndexedImagePalette(self)
-      pal = extractor.extract_palette(self.img.palette, self.img.format)
+      try:
+        w = wrapped_image_palette.WrappedImagePalette.from_image(self.img)
+        pal = extractor.extract_palette(w)
+      except errors.PaletteExtractionError as e:
+        self._err.add(e)
+        return None
       if pal:
         return pal
+    return None
+
+  def make_palette(self, bg_color, is_sprite):
+    """Construct the palette object from color_needs.
+
+    bg_color: Background color.
+    is_sprite: Whether this is a sprite palette.
+    """
+    pal = None
     # If sprite mode, and there's no bg color, we can figure it out based upon
     # how many empty tiles there need to be.
     if is_sprite and bg_color is None and not self._test_only_auto_sprite_bg:
@@ -545,6 +568,10 @@ class ImageProcessor(object):
       self._ppu_memory.upgrade_chr_set_to_bank()
     # TODO: Not being used anywhere.
     self._ppu_memory.nt_width = NUM_BLOCKS_X * 2
+    # Parse the palette if provided.
+    pal = None
+    if palette_text or self.img.palette:
+      pal = self.parse_palette(palette_text, bg_color_fill)
     # If image is exactly 128x128 and uses locked tiles, treat it as though it
     # represents CHR memory.
     if self.image_x == self.image_y == SMALL_SQUARE and config.is_locked_tiles:
@@ -558,8 +585,9 @@ class ImageProcessor(object):
     self.process_to_artifacts(bg_color_mask, bg_color_fill, config)
     if self._err.has():
       return
-    # Make the palette, and store it.
-    pal = self.make_palette(palette_text, bg_color_fill, config.is_sprite)
+    # Make the palette, if it doesn't already exist.
+    if not pal:
+      pal = self.make_palette(bg_color_fill, config.is_sprite)
     if not pal:
       return
     if not config.is_sprite:

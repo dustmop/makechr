@@ -52,6 +52,10 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     # HACK: Assign zones to ppu_memory so that they can be used by the
     # view renderer.
     self._ppu_memory.zones = zones
+    # Parse the palette if provided.
+    pal = None
+    if palette_text or self.img.palette:
+      pal = self.parse_palette(palette_text, bg_color_mask)
     # Convert zones into artifacts.
     artifacts = []
     for z in zones:
@@ -83,7 +87,8 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     if is_tall:
       self._needs_provider = self._vert_color_manifest
     # Build the palette.
-    pal = self.make_palette(palette_text, bg_color_mask, True)
+    if not pal:
+      pal = self.make_palette(bg_color_mask, True)
     # Build the PPU memory.
     if not is_tall:
       for cid, did, unused, y, x in artifacts:

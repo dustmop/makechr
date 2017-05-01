@@ -115,6 +115,48 @@ Palette: P/30-38-16-01/30-19/
     self.assert_file_eq(output_tmpl.replace('%s', 'palette'),
                         'testdata/allow_overflow_palette.dat')
 
+  def test_extract_palette_ok(self):
+    output_tmpl = os.path.join(self.tmpdir, '%s.dat')
+    args = ['testdata/full-image-16color.png', '-o', output_tmpl]
+    self.makechr(args)
+    self.assertEquals(self.returncode, 0)
+    self.assert_file_eq(output_tmpl.replace('%s', 'chr'),
+                        'testdata/full-image-chr-16color.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'nametable'),
+                        'testdata/full-image-nametable-16color.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'attribute'),
+                        'testdata/full-image-attribute-16color.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'palette'),
+                        'testdata/full-image-palette-16color.dat')
+
+  def test_extract_palette_yes_flag(self):
+    output_tmpl = os.path.join(self.tmpdir, '%s.dat')
+    args = ['testdata/full-image-16color.png', '-o', output_tmpl, '-p', '+']
+    self.makechr(args)
+    self.assertEquals(self.returncode, 0)
+    self.assert_file_eq(output_tmpl.replace('%s', 'chr'),
+                        'testdata/full-image-chr-16color.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'nametable'),
+                        'testdata/full-image-nametable-16color.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'attribute'),
+                        'testdata/full-image-attribute-16color.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'palette'),
+                        'testdata/full-image-palette-16color.dat')
+
+  def test_extract_palette_no_flag(self):
+    output_tmpl = os.path.join(self.tmpdir, '%s.dat')
+    args = ['testdata/full-image-16color.png', '-o', output_tmpl, '-p', '-']
+    self.makechr(args)
+    self.assertEquals(self.returncode, 0)
+    self.assert_file_eq(output_tmpl.replace('%s', 'chr'),
+                        'testdata/full-image-chr.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'nametable'),
+                        'testdata/full-image-nametable.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'attribute'),
+                        'testdata/full-image-attribute.dat')
+    self.assert_file_eq(output_tmpl.replace('%s', 'palette'),
+                        'testdata/full-image-palette.dat')
+
   def test_error_too_many_tiles(self):
     args = ['testdata/257tiles.png', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
@@ -169,6 +211,16 @@ To see errors visually, use -e command-line option.
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Found 1 error:
 MakepalBorderNotFound 
+To see errors visually, use -e command-line option.
+""")
+    self.assertEquals(self.returncode, 1)
+
+  def test_error_extract_palette_failed(self):
+    args = ['testdata/full-image-16color-badpal.png', '-o', self.output_name]
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Found 1 error:
+PaletteExtractionError Background color did not match: 22 <> 35.
+  Disable extraction using the flag "-p -"
 To see errors visually, use -e command-line option.
 """)
     self.assertEquals(self.returncode, 1)
