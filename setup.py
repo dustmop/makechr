@@ -30,7 +30,7 @@ if sys.argv[1] == 'py2exe':
           'icon_resources': [(1, 'makechr/res/windows.ico')],
           'dest_base': 'makechr',
           'description': 'Makechr tool for generating NES graphics',
-          'copyright': 'Copyright (C) 2016 Dustin Long',
+          'copyright': 'Copyright (C) 2017 Dustin Long',
         }],
         packages=['makechr'],
         zipfile=None,

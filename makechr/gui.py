@@ -1,5 +1,8 @@
 import wx
 
+if int(wx.version().split('.')[0]) < 4:
+  raise RuntimeError('makechr gui requires wxpPython version 4.0 or greater')
+
 import collections
 import os
 from PIL import Image

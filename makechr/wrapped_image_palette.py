@@ -9,7 +9,7 @@ class WrappedImagePalette(object):
   interface, by detecting what the provided bytearray actually represents.
   """
   def __init__(self):
-    self.imgpal = None
+    self.palette = None
     self.format = None
     self.elems = None
     self.invert = False

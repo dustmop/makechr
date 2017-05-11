@@ -1,5 +1,5 @@
 makechr, a tool for generating NES graphics
-Copyright (C) 2015  dustmop
+Copyright (C) 2017  dustmop
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
