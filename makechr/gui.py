@@ -42,7 +42,7 @@ class ComponentView(object):
   def __init__(self, parent, pos, size):
     self.width = size[0]
     self.height = size[1]
-    self.bitmap = wx.EmptyBitmap(self.width, self.height)
+    self.bitmap = wx.Bitmap(self.width, self.height)
     self.ctrl = wx.StaticBitmap(parent, wx.ID_ANY, self.bitmap, pos=pos,
                                 size=size)
     self.manager = None
@@ -50,7 +50,7 @@ class ComponentView(object):
     self.StartMouseListener()
 
   def clear(self):
-    empty = wx.EmptyBitmap(self.width, self.height)
+    empty = wx.Bitmap(self.width, self.height)
     self.load(empty)
 
   def load(self, bitmap):
@@ -82,7 +82,6 @@ class ComponentView(object):
     if len(self._drawCommands) == 0:
       return
     dc = wx.ClientDC(self.ctrl)
-    dc.BeginDrawing()
     for clear, y, x, size, color in self._drawCommands:
       if clear and not is_clear:
         dc.DrawBitmap(self.bitmap, 0, 0, True)
@@ -92,7 +91,6 @@ class ComponentView(object):
       dc.SetPen(wx.Pen(color, style=wx.SOLID))
       dc.SetBrush(wx.Brush(color, wx.TRANSPARENT))
       dc.DrawRectangle(x * size, y * size, size, size)
-    dc.EndDrawing()
     self._drawCommands = []
 
   def emitMouse(self, clear, y, x):
@@ -337,7 +335,7 @@ class MakechrGui(wx.Frame):
     # Set the application icon.
     res = pkg_resources.resource_stream('makechr', 'res/icon.png')
     bitmap = self.PilImgToBitmap(Image.open(res))
-    icon = wx.EmptyIcon()
+    icon = wx.Icon()
     icon.CopyFromBitmap(bitmap)
     self.SetIcon(icon)
 
@@ -391,21 +389,21 @@ class MakechrGui(wx.Frame):
                                          pos=(0x290,0x140), size=(0x10f,0x10f))
 
     # Palette.
-    img = wx.EmptyImage(104, 32)
+    img = wx.Image(104, 32)
     self.paletteCtrl = wx.StaticBitmap(self.panel, wx.ID_ANY,
-                                       wx.BitmapFromImage(img),
+                                       wx.Bitmap(img),
                                        pos=(0x170,0x250), size=(0x68, 0x20))
     # System colors.
-    img = wx.EmptyImage(252, 72)
+    img = wx.Image(252, 72)
     self.sysColorCtrl = wx.StaticBitmap(self.panel, wx.ID_ANY,
-                                        wx.BitmapFromImage(img),
+                                        wx.Bitmap(img),
                                         pos=(0x20,0x160), size=(0xfc,0x48))
     self.SetBitmapResource(self.sysColorCtrl, 'res/systemcolors.png')
 
     # Key for reuse.
-    img = wx.EmptyImage(42, 144)
+    img = wx.Image(42, 144)
     self.rKeyCtrl = wx.StaticBitmap(self.panel, wx.ID_ANY,
-                                    wx.BitmapFromImage(img),
+                                    wx.Bitmap(img),
                                     pos=(0x3a0,0x30), size=(42,144))
     self.SetBitmapResource(self.rKeyCtrl, 'res/reuse-key.png')
 
@@ -585,7 +583,7 @@ class MakechrGui(wx.Frame):
       bitmap = self.PilImgToBitmap(view)
     else:
       img = wx.Image(self.inputImagePath, wx.BITMAP_TYPE_ANY)
-      bitmap = wx.BitmapFromImage(img)
+      bitmap = wx.Bitmap(img)
     self.inputComp.load(bitmap)
 
   def ProcessMakechr(self):
@@ -644,10 +642,10 @@ class MakechrGui(wx.Frame):
     self.chrComp.clear()
 
   def PilImgToBitmap(self, pilImg):
-    img = wx.EmptyImage(*pilImg.size)
+    img = wx.Image(*pilImg.size)
     img.SetData(pilImg.convert('RGB').tobytes())
-    img.SetAlphaData(pilImg.convert('RGBA').tobytes()[3::4])
-    return wx.BitmapFromImage(img)
+    img.SetAlpha(pilImg.convert('RGBA').tobytes()[3::4])
+    return wx.Bitmap(img)
 
   def BuildConfigFromOptions(self):
     is_locked_tiles = self.lockedTilesCheckBox.GetValue()
@@ -663,7 +661,7 @@ class MakechrGui(wx.Frame):
 
   def OnOpen(self, e):
     dlg = wx.FileDialog(self, 'Choose project or input image', '', '',
-                        '*.bmp;*.png;*.gif;*.mchr', wx.OPEN)
+                        '*.bmp;*.png;*.gif;*.mchr', wx.FD_OPEN)
     if dlg.ShowModal() == wx.ID_OK:
       self.inputImagePath = dlg.GetPath()
     dlg.Destroy()
@@ -672,7 +670,7 @@ class MakechrGui(wx.Frame):
 
   def OnSave(self, e):
     dlg = wx.FileDialog(self, 'Save project as...', '', '',
-                        '*.mchr', wx.SAVE|wx.OVERWRITE_PROMPT)
+                        '*.mchr', wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
     if dlg.ShowModal() != wx.ID_OK:
       return
     path = dlg.GetPath()
@@ -684,7 +682,7 @@ class MakechrGui(wx.Frame):
 
   def OnImportRam(self, e):
     dlg = wx.FileDialog(self, 'Choose memory dump', '', '',
-                        '*.bin;*.mem', wx.OPEN)
+                        '*.bin;*.mem', wx.FD_OPEN)
     if dlg.ShowModal() == wx.ID_OK:
       self.inputImagePath = dlg.GetPath()
     dlg.Destroy()
@@ -693,7 +691,7 @@ class MakechrGui(wx.Frame):
 
   def OnExportBinaries(self, e):
     dlg = wx.FileDialog(self, 'Save binaries as...', '', '%s.dat',
-                        '', wx.SAVE)
+                        '', wx.FD_SAVE)
     if dlg.ShowModal() != wx.ID_OK:
       return
     path = dlg.GetPath()
@@ -709,7 +707,7 @@ class MakechrGui(wx.Frame):
 
   def OnCompileRom(self, e):
     dlg = wx.FileDialog(self, 'Save ROM as...', '', '', '*.nes',
-                        wx.SAVE|wx.OVERWRITE_PROMPT)
+                        wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
     target = None
     if dlg.ShowModal() == wx.ID_OK:
       target = dlg.GetPath()
