@@ -3,6 +3,7 @@ import argparse
 import bg_color_spec
 import errno
 import errors
+import os
 from PIL import Image
 import sys
 
@@ -170,18 +171,21 @@ def run():
   if args.memimport and args.input:
     sys.stderr.write('Cannot both import memory and process input file')
     sys.exit(1)
+  elif args.memimport and not os.path.isfile(args.memimport):
+    sys.stderr.write('File not found: "%s"\n' % args.memimport)
+    sys.exit(1)
   elif args.memimport:
     application.read_memory(args.memimport, 'ram', args)
+  elif args.input and not os.path.isfile(args.input):
+    sys.stderr.write('File not found: "%s"\n' % args.input)
+    sys.exit(1)
   elif args.input and is_valiant(args.input):
     application.read_memory(args.input, 'valiant', args)
   elif args.input:
     try:
       img = Image.open(args.input)
     except IOError, e:
-      if e.errno is None:
-        sys.stderr.write('Not an image file: "%s"\n' % args.input)
-      elif e.errno == errno.ENOENT:
-        sys.stderr.write('Input file not found: "%s"\n' % args.input)
+      sys.stderr.write('Not an image file: "%s"\n' % args.input)
       sys.exit(1)
     try:
       if not application.run(img, args):

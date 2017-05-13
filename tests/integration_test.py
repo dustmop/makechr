@@ -225,6 +225,20 @@ To see errors visually, use -e command-line option.
 """)
     self.assertEquals(self.returncode, 1)
 
+  def test_error_image_not_found(self):
+    args = ['testdata/not_found.png', '-o', self.output_name]
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """File not found: "testdata/not_found.png"
+""")
+    self.assertEquals(self.returncode, 1)
+
+  def test_error_mem_not_found(self):
+    args = ['-m', 'testdata/not_found.bin', '-o', self.output_name]
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """File not found: "testdata/not_found.bin"
+""")
+    self.assertEquals(self.returncode, 1)
+
   def golden(self, name, ext):
     if name:
       return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)
