@@ -22,16 +22,14 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
     process_tile_func = self.process_tile
     combine_color_needs_func = self.combine_color_needs
     if bg_mask:
-      inner_func = combine_color_needs_func
-      # TODO: Test this.
-      combine_color_needs_func = (
-        lambda a,b: self.filter_bg(a, b, bg_mask, bg_fill, inner_func))
+      process_tile_func = (
+        lambda y,x: self.filter_process_tile(y, x, bg_mask, bg_fill))
     for j in xrange(2):
       # Collect color_needs for vertical pair.
       vert_color_needs = bytearray([NULL, NULL, NULL, NULL])
       for i in xrange(2):
         try:
-          (color_needs, dot_profile) = process_tile_func(y + i, x + j, 0, 0)
+          (color_needs, dot_profile) = process_tile_func(y + i, x + j)
         except (errors.PaletteOverflowError, errors.ColorNotAllowedError) as e:
           self.collect_error(e, block_y, block_x, i, j)
           continue

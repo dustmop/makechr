@@ -116,7 +116,7 @@ class ImageProcessor(object):
     else:
       self._artifacts[block_y * 2 + i][block_x * 2 + j] = [0, 0, 0]
 
-  def process_tile(self, tile_y, tile_x, subtile_y, subtile_x):
+  def process_tile(self, tile_y, tile_x, subtile_y=0, subtile_x=0):
     """Process the tile and save artifact information.
 
     Process the tile to obtain its color needs and dot profile, verifying that
@@ -204,13 +204,12 @@ class ImageProcessor(object):
     if is_sprite:
       combine_color_needs_func = self.null_func
     if bg_mask:
-      inner_func = combine_color_needs_func
-      combine_color_needs_func = (
-        lambda a,b: self.filter_bg(a, b, bg_mask, bg_fill, inner_func))
+      process_tile_func = (
+        lambda y,x: self.filter_process_tile(y, x, bg_mask, bg_fill))
     for i in xrange(2):
       for j in xrange(2):
         try:
-          (color_needs, dot_profile) = process_tile_func(y + i, x + j, 0, 0)
+          (color_needs, dot_profile) = process_tile_func(y + i, x + j)
         except (errors.PaletteOverflowError, errors.ColorNotAllowedError) as e:
           self.collect_error(e, block_y, block_x, i, j)
           continue
@@ -228,11 +227,12 @@ class ImageProcessor(object):
       bcid = self._block_color_manifest.id(block_color_needs)
       self._artifacts[y][x][ARTIFACT_BCID] = bcid
 
-  def filter_bg(self, target, source, bg_mask, bg_fill, inner_func):
-    for i in xrange(len(source)):
-      if source[i] == bg_mask:
-        source[i] = bg_fill
-    inner_func(target, source)
+  def filter_process_tile(self, tile_y, tile_x, bg_mask, bg_fill):
+    (color_needs, dot_profile) = self.process_tile(tile_y, tile_x)
+    for i in xrange(len(color_needs)):
+      if color_needs[i] == bg_mask:
+        color_needs[i] = bg_fill
+    return (color_needs, dot_profile)
 
   def combine_color_needs(self, target, source):
     """Combine by filling in null elements. Raise an error if full."""

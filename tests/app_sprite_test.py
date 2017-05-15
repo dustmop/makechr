@@ -52,6 +52,35 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('attribute')
     self.assert_not_exist('spritelist')
 
+  def test_output_sprite_color_mask(self):
+    """Bg color spec with mask can be used for sprite images."""
+    img = Image.open('testdata/full-image-mask.png')
+    self.args.is_sprite = True
+    self.args.bg_color = bg_color_spec.build('34=30')
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'full-image'
+    self.assert_output_result('chr', '-mask-sprite')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-mask-sprite')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-mask-sprite')
+
+  def test_output_sprite_8x16_color_mask(self):
+    """Bg color spec with mask can be used for 8x16 sprite images."""
+    img = Image.open('testdata/full-image-mask.png')
+    self.args.is_sprite = True
+    self.args.bg_color = bg_color_spec.build('34=30')
+    self.args.traversal = '8x16'
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'full-image'
+    self.assert_output_result('chr', '-mask-8x16')
+    self.assert_not_exist('nametable')
+    self.assert_output_result('palette', '-mask-sprite-reoder')
+    self.assert_not_exist('attribute')
+    self.assert_output_result('spritelist', '-mask-8x16')
+
   def test_output_sprite_auto_bg_color(self):
     """In sprite mode the bg color can be auto detected."""
     img = Image.open('testdata/reticule.png')
