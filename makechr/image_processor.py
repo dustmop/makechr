@@ -368,7 +368,8 @@ class ImageProcessor(object):
         w = wrapped_image_palette.WrappedImagePalette.from_image(self.img)
         pal = extractor.extract_palette(w)
       except errors.PaletteExtractionError as e:
-        self._err.add(e)
+        if palette_text is not None:
+          self._err.add(e)
         return None
       if pal:
         return pal

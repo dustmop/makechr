@@ -216,7 +216,8 @@ To see errors visually, use -e command-line option.
     self.assertEquals(self.returncode, 1)
 
   def test_error_extract_palette_failed(self):
-    args = ['testdata/full-image-16color-badpal.png', '-o', self.output_name]
+    args = ['testdata/full-image-16color-badpal.png', '-o', self.output_name,
+            '-p', '+']
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Found 1 error:
 PaletteExtractionError Background color did not match: 22 <> 35.
@@ -224,6 +225,12 @@ PaletteExtractionError Background color did not match: 22 <> 35.
 To see errors visually, use -e command-line option.
 """)
     self.assertEquals(self.returncode, 1)
+
+  def test_error_extract_palette_failure_ignored(self):
+    args = ['testdata/full-image-16color-badpal.png', '-o', self.output_name]
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, '')
+    self.assertEquals(self.returncode, 0)
 
   def test_error_image_not_found(self):
     args = ['testdata/not_found.png', '-o', self.output_name]
