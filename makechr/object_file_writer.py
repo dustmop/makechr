@@ -96,7 +96,7 @@ class ObjectFileWriter(object):
       pre_pad, padding, bytes = self._condense(bytes, info.align, pad_size)
     else:
       pre_pad = padding = 0
-    role = valiant.DataRole.Value(info.name.upper())
+    role = valiant.DataRole.Value(self._strip_num_suffix(info.name.upper()))
     binary = valiant.DirectBinary()
     binary.bin = bytes
     if info.null_value:
@@ -108,6 +108,11 @@ class ObjectFileWriter(object):
     packet = self.obj_body.packets.add()
     packet.role = role
     packet.binary.CopyFrom(binary)
+
+  def _strip_num_suffix(self, text):
+    while text and text[-1].isdigit():
+      text = text[:-1]
+    return text
 
   # TODO: Test.
   def _condense(self, bytes, align, extra_padding):

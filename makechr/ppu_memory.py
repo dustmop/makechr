@@ -9,6 +9,8 @@ object_file_writer = None
 
 class GraphicsPage(object):
   def __init__(self):
+    self.nt_start = None
+    self.nt_width = None
     self.nametable = [row[:] for row in
                       [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
     self.colorization = [row[:] for row in
@@ -38,8 +40,9 @@ class PpuMemory(object):
   Data structure representing the components of graphics in PPU memory.
   """
   def __init__(self):
+    self.num_gfx_page = None
     self.gfx_0 = GraphicsPage()
-    self.gfx_1 = GraphicsPage() # unused
+    self.gfx_1 = GraphicsPage()
     self.palette_nt = None
     self.palette_spr = None
     self.chr_set = chr_data.ChrPage()
@@ -97,6 +100,10 @@ class PpuMemory(object):
     if 'nametable' in components:
       fout = self._writer.get_writable('nametable', False)
       self._save_nametable(fout, self.gfx_0.nametable)
+      if self.num_gfx_page == 2:
+        self._writer.close()
+        fout = self._writer.get_writable('nametable1', False)
+        self._save_nametable(fout, self.gfx_1.nametable)
     if 'chr' in components:
       fout = self._writer.get_writable('chr', True)
       self._writer.configure(null_value=0, size=0x1000, order=config.chr_order,
@@ -110,6 +117,10 @@ class PpuMemory(object):
     if 'attribute' in components:
       fout = self._writer.get_writable('attribute', False)
       self._save_attribute(fout, self.gfx_0.colorization)
+      if self.num_gfx_page == 2:
+        self._writer.close()
+        fout = self._writer.get_writable('attribute1', False)
+        self._save_attribute(fout, self.gfx_1.colorization)
     if 'spritelist' in components:
       fout = self._writer.get_writable('spritelist', False)
       self._save_spritelist(fout, self.spritelist,
@@ -190,10 +201,11 @@ class PpuMemory(object):
         else:
           fout.write(chr(bg_color))
 
-  def get_nametable(self, i):
-    # TOOD: Support mulitple nametables.
-    if i == 0:
-      return self.gfx_0.nametable
+  def get_page(self, i):
+    if i == 0 and self.num_gfx_page > 0:
+      return self.gfx_0
+    elif i == 1 and self.num_gfx_page > 1:
+      return self.gfx_1
     else:
       raise errors.NametableNotFound(i)
 

@@ -211,7 +211,7 @@ class DrawCursorManager(object):
     component.SetManager(self)
 
   def getChrTilePosition(self):
-    nt = self.processor.ppu_memory().get_nametable(0)
+    nt = self.processor.ppu_memory().get_page(0).nametable
     if self.cursor.y is None or self.cursor.x is None:
       return (None, None)
     try:
@@ -244,7 +244,7 @@ class DrawCursorManager(object):
     if not y is None and not x is None and not size is None:
       self.cursor.set(y, x, size)
     if meta == 'reuse':
-      nt = self.processor.ppu_memory().get_nametable(0)
+      nt = self.processor.ppu_memory().get_page(0).nametable
       try:
         self.tileSet = nt[self.cursor.y][self.cursor.x]
       except TypeError:

@@ -5,6 +5,7 @@ import errors
 import guess_best_palette
 import id_manifest
 import itertools
+import math
 import os
 import palette
 import ppu_memory
@@ -29,16 +30,28 @@ class ImageProcessor(object):
     self._block_color_manifest = id_manifest.IdManifest()
     self._needs_provider = None
     self._artifacts = [row[:] for row in
-                       [[None]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+                       [[None]*(NUM_BLOCKS_X*4)]*(NUM_BLOCKS_Y*4)]
     self._flip_bits = [row[:] for row in
-                       [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+                       [[0]*(NUM_BLOCKS_X*4)]*(NUM_BLOCKS_Y*4)]
     self._err = errors.ErrorCollector()
     self.image_x = self.image_y = None
 
   def load_image(self, img):
     self.img = img
-    (self.image_x, self.image_y) = self.img.size
     self.pixels = self.img.convert('RGB').load()
+    (self.image_x, self.image_y) = self.img.size
+    self.blocks_y = int(math.ceil(float(self.image_y) / 16))
+    self.blocks_x = int(math.ceil(float(self.image_x) / 16))
+    if self.blocks_x <= 16:
+      self._ppu_memory.num_gfx_page = 1
+      self._ppu_memory.gfx_0.nt_start = 0
+      self._ppu_memory.gfx_0.nt_width = self.blocks_x * 2
+    else:
+      self._ppu_memory.num_gfx_page = 2
+      self._ppu_memory.gfx_0.nt_start = 0
+      self._ppu_memory.gfx_0.nt_width = 32
+      self._ppu_memory.gfx_1.nt_start = 32
+      self._ppu_memory.gfx_1.nt_width = (self.blocks_x * 2) - 32
 
   def artifacts(self):
     return self._artifacts
@@ -438,33 +451,36 @@ class ImageProcessor(object):
     pal: Palette for this image.
     config: Configuration of ppu_memory
     """
-    if not config.is_sprite:
-      # For each block, get the attribute aka the palette.
-      for block_y in xrange(self.blocks_y):
-        for block_x in xrange(self.blocks_x):
-          y = block_y * 2
-          x = block_x * 2
-          (cid, did, bcid) = self._artifacts[y][x]
-          color_needs = self._needs_provider.at(bcid)
-          try:
-            (pid, palette_option) = pal.select(color_needs)
-          except IndexError:
-            self._err.add(errors.PaletteNoChoiceError(y, x, color_needs))
-            pid = 0
-          for a,b in itertools.product(range(2),range(2)):
-            self._ppu_memory.gfx_0.colorization[y + a][x + b] = pid
-    else:
-      # For each tile, get the attribute aka the palette.
-      for y in xrange(self.blocks_y * 2):
-        for x in xrange(self.blocks_x * 2):
-          (cid, did, bcid) = self._artifacts[y][x]
-          color_needs = self._needs_provider.at(cid)
-          try:
-            (pid, palette_option) = pal.select(color_needs)
-          except IndexError:
-            self._err.add(errors.PaletteNoChoiceError(y, x, color_needs))
-            pid = 0
-          self._ppu_memory.gfx_0.colorization[y][x] = pid
+    for g in xrange(self._ppu_memory.num_gfx_page):
+      gfx = self._ppu_memory.get_page(g)
+      (nt_s, nt_w) = (gfx.nt_start, gfx.nt_width)
+      if not config.is_sprite:
+        # For each block, get the attribute aka the palette.
+        for block_x in xrange(nt_w / 2):
+          for block_y in xrange(self.blocks_y):
+            y = block_y * 2
+            x = block_x * 2
+            (cid, did, bcid) = self._artifacts[y][x + nt_s]
+            color_needs = self._needs_provider.at(bcid)
+            try:
+              (pid, palette_option) = pal.select(color_needs)
+            except IndexError:
+              self._err.add(errors.PaletteNoChoiceError(y, x, color_needs))
+              pid = 0
+            for a,b in itertools.product(range(2),range(2)):
+              gfx.colorization[y + a][x + b] = pid
+      else:
+        # For each tile, get the attribute aka the palette.
+        for x in xrange(nt_w):
+          for y in xrange(self.blocks_y * 2):
+            (cid, did, bcid) = self._artifacts[y][x + nt_s]
+            color_needs = self._needs_provider.at(cid)
+            try:
+              (pid, palette_option) = pal.select(color_needs)
+            except IndexError:
+              self._err.add(errors.PaletteNoChoiceError(y, x, color_needs))
+              pid = 0
+            gfx.colorization[y][x] = pid
 
   def traverse_artifacts(self, traversal, pal, config):
     """Traverse the artifacts, building CHR and other ppu_memory data.
@@ -476,45 +492,46 @@ class ImageProcessor(object):
     # Find empty tile.
     empty_did = self._dot_manifest.get(chr(0) * 64)
     empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
-    # Traverse tiles in the artifact table, creating the chr and nametable.
-    if traversal == 'horizontal':
-      generator = ((y,x) for y in xrange(self.blocks_y * 2) for
-                   x in xrange(self.blocks_x * 2))
-    elif traversal == 'vertical':
-      generator = ((y,x) for x in xrange(self.blocks_x * 2) for
-                   y in xrange(self.blocks_y * 2))
-    elif traversal == 'block':
-      generator = ((y*2+i,x*2+j) for y in xrange(self.blocks_y) for
-                   x in xrange(self.blocks_x) for i in xrange(2) for
-                   j in xrange(2))
-    elif traversal == '8x16':
-      raise errors.UnknownLogicFailure('traverse using subclassed processor')
-    for (y,x) in generator:
-      (cid, did, bcid) = self._artifacts[y][x]
-      pid = self._ppu_memory.gfx_0.colorization[y][x]
-      palette_option = pal.get(pid)
-      color_needs = self._color_manifest.at(cid)
-      if config.is_sprite and not config.is_locked_tiles:
-        if empty_cid == cid and empty_did == did:
-          self._ppu_memory.gfx_0.nametable[y][x] = 0x100
-          self._ppu_memory.empty_tile = 0x100
+    for g in xrange(self._ppu_memory.num_gfx_page):
+      gfx = self._ppu_memory.get_page(g)
+      (nt_s, nt_w, nt_h) = (gfx.nt_start, gfx.nt_width, self.blocks_y * 2)
+      # Traverse tiles in the artifact table, creating the chr and nametable.
+      if traversal == 'horizontal':
+        generator = ((y,x) for y in xrange(nt_h) for x in xrange(nt_w))
+      elif traversal == 'vertical':
+        generator = ((y,x) for x in xrange(nt_w) for y in xrange(nt_h))
+      elif traversal == 'block':
+        generator = ((y*2+i,x*2+j) for y in xrange(nt_h / 2) for
+                     x in xrange(nt_w / 2) for i in xrange(2) for
+                     j in xrange(2))
+      elif traversal == '8x16':
+        raise errors.UnknownLogicFailure('traverse using subclassed processor')
+      for (y,x) in generator:
+        (cid, did, bcid) = self._artifacts[y][x + nt_s]
+        pid = gfx.colorization[y][x]
+        palette_option = pal.get(pid)
+        color_needs = self._color_manifest.at(cid)
+        if config.is_sprite and not config.is_locked_tiles:
+          if empty_cid == cid and empty_did == did:
+            gfx.nametable[y][x] = 0x100
+            self._ppu_memory.empty_tile = 0x100
+            continue
+        # Create a translator that can turn the dot_profile into a chr_tile.
+        dot_xlat = self.get_dot_xlat(color_needs, palette_option)
+        if not dot_xlat:
           continue
-      # Create a translator that can turn the dot_profile into a chr_tile.
-      dot_xlat = self.get_dot_xlat(color_needs, palette_option)
-      if not dot_xlat:
-        continue
-      # If there was an error in the tile, the dot_xlat will be empty. So
-      # skip this entry.
-      try:
-        (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
-      except errors.NametableOverflow, e:
-        self._err.add(errors.NametableOverflow(e.chr_num, y, x))
-        chr_num = 0
-      if config.is_sprite:
-        self._flip_bits[y][x] = flip_bits
-      self._ppu_memory.gfx_0.nametable[y][x] = chr_num
-      if empty_cid == cid and empty_did == did:
-        self._ppu_memory.empty_tile = chr_num
+        # If there was an error in the tile, the dot_xlat will be empty. So
+        # skip this entry.
+        try:
+          (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
+        except errors.NametableOverflow, e:
+          self._err.add(errors.NametableOverflow(e.chr_num, y, x))
+          chr_num = 0
+        if config.is_sprite:
+          self._flip_bits[y][x + nt_s] = flip_bits
+        gfx.nametable[y][x] = chr_num
+        if empty_cid == cid and empty_did == did:
+          self._ppu_memory.empty_tile = chr_num
 
   def make_spritelist(self, traversal, pal, config):
     """Convert data from the nametable to create spritelist.
@@ -547,19 +564,18 @@ class ImageProcessor(object):
 
     img: Pixel art image.
     palette_text: Optional string representing a palette to be parsed.
-    bg_color_mask: Background color mask, if a mask is begin used.
+    bg_color_mask: Background color mask, if a mask is being used.
     bg_color_fill: Background color fill.
     traversal: Strategy for traversing the nametable.
     is_sprite: Whether the image is of sprites.
     is_locked_tiles: Whether tiles are locked into place. If so, do not
         merge duplicates, and only handle first 256 tiles.
     lock_sprite_flips: Whether to only lock sprite flip bits.
-    allow_overflow: Characters representing components. Only 's' is supported.
+    allow_overflow: Characters representing components. Only 'c' and 's'
+        are supported.
     """
     self.initialize()
     self.load_image(img)
-    self.blocks_y = NUM_BLOCKS_Y
-    self.blocks_x = NUM_BLOCKS_X
     # Assign configuration.
     config = ppu_memory.PpuMemoryConfig(is_sprite=is_sprite,
                                         is_locked_tiles=is_locked_tiles,
@@ -567,19 +583,12 @@ class ImageProcessor(object):
                                         allow_overflow=allow_overflow)
     if 'c' in config.allow_overflow:
       self._ppu_memory.upgrade_chr_set_to_bank()
-    # TODO: Not being used anywhere.
-    self._ppu_memory.nt_width = NUM_BLOCKS_X * 2
     # Parse the palette if provided.
     pal = None
     if palette_text or self.img.palette:
       pal = self.parse_palette(palette_text, bg_color_fill)
-    # If image is exactly 128x128 and uses locked tiles, treat it as though it
-    # represents CHR memory.
-    if self.image_x == self.image_y == SMALL_SQUARE and config.is_locked_tiles:
-      self.blocks_y = NUM_BLOCKS_SMALL_SQUARE
-      self.blocks_x = NUM_BLOCKS_SMALL_SQUARE
-      self._ppu_memory.nt_width = NUM_BLOCKS_SMALL_SQUARE * 2
     # In order to auto detect the background color, have to count color needs.
+    # Counting is slower, so don't do it by default.
     if config.is_sprite and bg_color_fill is None:
       self._color_manifest = id_manifest.CountingIdManifest()
     # Process each block and tile to build artifacts.

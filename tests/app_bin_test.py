@@ -48,9 +48,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr')
-    self.assert_output_result('nametable')
     self.assert_output_result('palette')
+    self.assert_output_result('nametable')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_for_bottom_attributes(self):
     """Make sure bottom row attributes work correctly."""
@@ -58,9 +60,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr')
-    self.assert_output_result('nametable', golden_suffix='-bottom-attr')
     self.assert_output_result('palette')
+    self.assert_output_result('nametable', golden_suffix='-bottom-attr')
     self.assert_output_result('attribute', golden_suffix='-bottom-attr')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_implied_bg_color(self):
     """Background color is derived by palette guesser."""
@@ -69,9 +73,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.create_output()
     self.golden_file_prefix = 'implied-bg-color'
     self.assert_output_result('chr')
-    self.assert_output_result('nametable')
     self.assert_output_result('palette')
+    self.assert_output_result('nametable')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_uses_safe_black(self):
     """Dangerous black is turned into safe black."""
@@ -88,9 +94,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr', golden_suffix='-locked-tiles')
-    self.assert_not_exist('nametable')
     self.assert_output_result('palette')
+    self.assert_not_exist('nametable')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_for_locked_tiles_small_square(self):
     """Locked tiles with a 128x128 input image works specially."""
@@ -99,9 +107,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr', golden_suffix='-small-square')
-    self.assert_not_exist('nametable')
     self.assert_output_result('palette')
+    self.assert_not_exist('nametable')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_from_memory_dump(self):
     """Memory can be imported then split into components."""
@@ -109,9 +119,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     a = app.Application()
     a.read_memory(memfile, 'ram', self.args)
     self.assert_output_result('chr')
-    self.assert_output_result('nametable')
     self.assert_output_result('palette')
+    self.assert_output_result('nametable')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_order1(self):
     """Order option changes how binaries are stored."""
@@ -120,9 +132,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr', golden_suffix='-order1')
-    self.assert_output_result('nametable')
     self.assert_output_result('palette')
+    self.assert_output_result('nametable')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_traverse_block(self):
     """Traversal by block changes the way CHR and nametables are created."""
@@ -131,9 +145,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr', golden_suffix='-traverse-block')
-    self.assert_output_result('nametable', golden_suffix='-traverse-block')
     self.assert_output_result('palette')
+    self.assert_output_result('nametable', golden_suffix='-traverse-block')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_traverse_vertical(self):
     """Travere vertically to change the way CHR and nametables are created."""
@@ -142,9 +158,11 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.process_image(img)
     self.create_output()
     self.assert_output_result('chr', golden_suffix='-traverse-vertical')
-    self.assert_output_result('nametable', golden_suffix='-traverse-vertical')
     self.assert_output_result('palette')
+    self.assert_output_result('nametable', golden_suffix='-traverse-vertical')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
 
   def test_output_allow_chr_overflow(self):
     """Allow chr overflow so that it uses second page in the bank."""
@@ -154,9 +172,25 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.create_output()
     self.golden_file_prefix = '257tiles'
     self.assert_output_result('chr')
-    self.assert_output_result('nametable')
     self.assert_output_result('palette')
+    self.assert_output_result('nametable')
     self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
+
+  def test_output_double_wide_nametable(self):
+    """Image with double width nametable."""
+    img = Image.open('testdata/double-image.png')
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'double-image'
+    self.assert_output_result('chr')
+    # TODO: Palette has background color 1.
+    self.assert_output_result('palette')
+    self.assert_output_result('nametable')
+    self.assert_output_result('nametable1')
+    self.assert_output_result('attribute')
+    self.assert_output_result('attribute1')
 
   def test_error_too_many_tiles(self):
     """If there are more tiles than can fit in CHR, throw error."""

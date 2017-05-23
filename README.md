@@ -4,9 +4,9 @@ makechr is a tool for generating NES graphics. Its primary operation is to take 
 
 The goals of makechr are to be portable (written in python), fast (can process a busy image with 256 tiles and 4 full palettes in <300ms), powerful, easy to understand, and usable in command-line based builds.
 
-Input images should be 256px wide and 240px high, representing a full nametable, and must follow NES attribute and palette restrictions. An RGB palette is hard-coded in rgb.py, other palettes are not yet supported.
+Input images should be 256px wide and 240px high, representing a full nametable, and must follow NES attribute and palette restrictions. Smaller imagse will have padded nametables, while images with greater width will result in up to 2 nametables.
 
-Alternatively, if an input image is exactly 128px by 128px, representing a page of CHR data, and the "-l lock tiles" flag is set, image processing will be limited to 8 blocks square. This will end up with a CHR bank that resembles the input image.
+An RGB palette is hard-coded in rgb.py, other palettes are not yet supported.
 
 # Example usage
 
@@ -56,9 +56,7 @@ After installing protobuf, run build-proto.sh to generate the python protocol bu
 
     -l               Lock tiles. Won't remove duplicates, leaving all tiles in
                      the same position they appear in in the pixel art input.
-                     Will only process the first 256 tiles in the input. If the
-                     image is only 128px by 128px, then only 8 blocks square
-                     will be processed.
+                     Will only process the first 256 tiles in the input.
 
     -t [strategy]    Strategy for traversing tile during CHR and nametable
                      generation. Can be "horizontal", "block", "free", or.

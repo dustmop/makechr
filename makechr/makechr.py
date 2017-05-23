@@ -87,8 +87,7 @@ def run():
                             'Duplicates are not removed. Only first 256 tiles '
                             'in the image are processed. Nametable would '
                             'simply be monotonically increasing, so it is '
-                            'not output at all. If image is 128x128 then '
-                            'only 8x8 blocks are processed.'))
+                            'not output at all.'))
   parser.add_argument('--lock-sprite-flips', dest='lock_sprite_flips',
                       action='store_true',
                       help=('Locks the vertical and horizontal flip flags '

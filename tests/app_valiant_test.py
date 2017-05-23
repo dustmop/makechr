@@ -86,6 +86,15 @@ class AppValiantTests(general_app_test_util.GeneralAppTests):
     self.golden_file_prefix = 'reticule-more'
     self.assert_file_eq(self.args.output, self.golden(None, 'o'))
 
+  def test_output_valiant_double_wide_nametable(self):
+    """Valiant file for image with double width nametable."""
+    img = Image.open('testdata/double-image.png')
+    self.process_image(img)
+    self.args.output = self.args.tmpfile('double-image.o')
+    self.create_output()
+    self.golden_file_prefix = 'double-image'
+    self.assert_file_eq(self.args.output, self.golden(None, 'o'))
+
 
 if __name__ == '__main__':
   unittest.main()
