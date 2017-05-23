@@ -128,14 +128,18 @@ class Application(object):
       is_locked_tiles=args.is_locked_tiles,
       lock_sprite_flips=args.lock_sprite_flips)
     if args.output == '/dev/null':
+      # Ignore output.
       pass
     elif args.output and args.output.endswith('.o'):
+      # Output as a valiant object file.
       mem.save_valiant(args.output, config)
     elif args.output and args.output.endswith('.png'):
+      # Render an image.
       renderer = pixel_art_renderer.PixelArtRenderer()
       img = renderer.render(mem)
       img.save(args.output)
     else:
+      # Output as multiple files using a template.
       out_tmpl = args.output or '%s.dat'
       if out_tmpl[-1] == '/' or os.path.isdir(out_tmpl):
         out_tmpl = os.path.join(out_tmpl, '%s.dat')
@@ -143,6 +147,7 @@ class Application(object):
         raise errors.CommandLineArgError('output needs "%s" in its template')
       mem.save_template(out_tmpl, config)
     if args.compile:
+      # Compile a runnable ROM.
       builder = rom_builder.RomBuilder()
       builder.build(mem, args.compile)
 

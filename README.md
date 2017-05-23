@@ -2,9 +2,9 @@
 
 makechr is a tool for generating NES graphics. Its primary operation is to take pixel art images and split it into components: chr, nametable, palette, attributes, and spritelist.
 
-The goals of makechr are to be portable (written in python), fast (can process a busy image with 256 tiles and 4 full palettes in <300ms), powerful, easy to understand, and usable in command-line based builds.
+The goals of makechr are to be portable (written in python), fast (can process a busy image with 256 tiles and 4 full palettes in <300ms), powerful, easy to understand, and usable in command-line based builds. A GUI is available as well, though it is missing a few features.
 
-Input images should be 256px wide and 240px high, representing a full nametable, and must follow NES attribute and palette restrictions. Smaller imagse will have padded nametables, while images with greater width will result in up to 2 nametables.
+Input images should be 256px wide and 240px high, representing a full nametable, and must follow NES attribute and palette restrictions. Smaller imagse will have padded nametables, while images with greater width will result in up to 2 nametables, assuming horizontal arrangement.
 
 An RGB palette is hard-coded in rgb.py, other palettes are not yet supported.
 
@@ -18,109 +18,61 @@ This will output four files: chr.dat, nametable.dat, palette.dat, attribute.dat.
 
     Pillow
     protobuf
+    wxpython (GUI only)
+    watchdog (GUI only)
 
 After installing protobuf, run build-proto.sh to generate the python protocol buffer library in the gen/ directory.
 
 # Command-line options
 
-    -o [output]      Either an output template or the name of the output object.
-                     A template needs to have "%s" in it. An object needs to
-                     end in ".o". See valiant.proto for the format of objects.
+Run `makechr -h` to get details on command-line options.
+
+    --version        See the current version number.
+
+    -o [output]      Output filename.
 
     -c [rom]         Create an NES rom file that just displays the image.
 
     -e [error_file]  Output errors to an image file.
 
-    -p [palette]     Palette to use for the input image, either a literal
-                     representation, or a file made by --makepal. If not set,
-                     makechr will attempt to automatically derive a palette,
-                     or extract a palette if the image uses indexed color. See
-                     below for the syntax for literal palettes.
+    -p [palette]     Palette to use for the input image.
 
-    -b [background_color] | [background_look=background_fill]
-                     Background color for the palette. If the palette is not
-                     provided, the derived palette will used this color. If the
-                     palette is provided, its background color must match.
-                     Color must be in hexadecimal. Alternatively, a pair
-                     of colors may be provided, separated by an "=" operator.
-                     The first color is the "look", which appears in the input
-                     image, the second color is the "fill", which is output to
-                     the palette.
+    -b [background_color] | [mask=fill]
+                     Background color spec for the palette.
 
-    -s               Sprite mode. Will prevent nametable and attribute
-                     components from being output. Output spritelist component,
-                     which is a list of 4-tuples containing sprite data, in the
-                     order (y, tile, attribute, x). Write the palette as a
-                     sprite palette by using address 0x10 instead of 0x00.
-                     Default the chr order to 0x1000 instead of 0x0000.
+    -s               Sprite mode.
 
-    -l               Lock tiles. Won't remove duplicates, leaving all tiles in
-                     the same position they appear in in the pixel art input.
-                     Will only process the first 256 tiles in the input.
+    -l               Lock tiles.
 
-    -t [strategy]    Strategy for traversing tile during CHR and nametable
-                     generation. Can be "horizontal", "block", "free", or.
-                     "8x16". Horizontal will traverse tiles left to right,
-                     top to bottom. Block will traverse blocks at a top,
-                     top-left to top-right to bottom-left to bottom-right.
-                     Free is only usable with sprites and a background color
-                     spec, and will look for sprites positioned freely in the
-                     image. 8x16 is only usable with sprites and will create
-                     data that is suitable for 8x16 mode. (default is
-                     horizontal)
+    --lock-sprite-flips
+                     Lock vertical and horizontal flip flags for sprites.
 
-    -r [chr_order]   Order that the CHR data appears in memory relative to
-                     other CHR data. Can be 0 or 1. If 0, then the CHR data
-                     appears at 0x0000. If 1, then the CHR data appears at
-                     0x1000. (default is 0, -s can override this)
+    -t [strategy]    Strategy for traversing tiles when making output.
+
+    -r [chr_order]   Order that the CHR data appears in memory.
 
     -z               Whether to show statistics at the end of processing.
-                     Displays number of dot-profiles, number of tiles, and
-                     the palette.
 
-    -m [mem_file]    A ppu memory dump, representing the state of ppu ram. Used
-                     instead of a pixel art image as a graphics source. Can
-                     be obtained by dumping the memory of an NES emulator.
+    --allow-overflow [components]
+                     Components that allow overflow.
 
-    --makepal        Generate a palette object file from an image, or just
-                     output binary data if the file name ends in .bin or .dat.
+    --makepal        Generate a palette binary file from an image.
 
-    --allow-overflow    [comps]  Components that allow overflow. Only "s" for
-                                 "spritelist" is currently implemented.
+    -m [mem_file]    A ppu memory dump, representing the state of ppu ram.
 
-    --palette-view      [image]  Output the palette to an image file.
+    --palette-view      [image]  Output a view of the palette.
 
-    --colorization-view [image]  Output an image file with the palette for
-                                 each blocks according to attributes.
+    --colorization-view [image]  Output a view showing the palettes per block.
 
-    --reuse-view        [image]  Output an image file showing how many times
-                                 each tile was reused according to the
-                                 following key:
-                                 1: black (unique tile)
-                                 2: dark green
-                                 3: light green
-                                 4: cyan
-                                 5: blue
-                                 6: dark purple
-                                 7: light purple
-                                 8: red
-                                 9: orange
-                                 10: yellow
-                                 11+: white (common tile)
+    --reuse-view        [image]  Output a view showing tile reuse.
 
-    --nametable-view    [image]  Output an image file showing the nametable
-                                 value for each position, in hexidecimal.
-                                 Positions that have value 0 do not output
-                                 anything.
+    --nametable-view    [image]  Output a view showing the nametable.
 
-    --chr-view          [image]  Output an image file showing the entire
-                                 page of chr.
+    --chr-view          [image]  Output a view showing the entire page of chr.
 
-    --grid-view         [image]  Output an image file showing the input
-                                 pixel art with the grid applied.
+    --grid-view         [image]  Output the image file with grid.
 
-    --free-zone-view    [image]  Output an image file showing the zones
-                                 created by free sprite traversal.
+    --free-zone-view    [image]  Output a view showing free traversal zones.
 
 # Palette literal syntax
 
