@@ -243,6 +243,10 @@ def run():
     except IOError, e:
       sys.stderr.write('Not an image file: "%s"\n' % args.input)
       sys.exit(1)
+    if args.output and args.output.endswith('/') or args.output.endswith('/.'):
+      if not os.path.isdir(args.output):
+        sys.stderr.write('Directory does not exist: "%s"\n' % args.output)
+        sys.exit(1)
     try:
       if not application.run(img, args):
         sys.exit(1)

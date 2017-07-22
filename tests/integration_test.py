@@ -157,6 +157,13 @@ Palette: P/30-38-16-01/30-19/
     self.assert_file_eq(output_tmpl.replace('%s', 'palette'),
                         'testdata/full-image-palette.dat')
 
+  def test_error_no_output_dir(self):
+    args = ['testdata/full-image.png', '-o', 'build/']
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Directory does not exist: "build/"
+""")
+    self.assertEquals(self.returncode, 1)
+
   def test_error_too_many_tiles(self):
     args = ['testdata/257tiles.png', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
