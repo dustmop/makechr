@@ -91,7 +91,7 @@ class PaletteExtractionError(Exception):
     return self.msg + '.\n  Disable extraction using the flag "-p -"'
 
 
-class ColorNotAllowedError(Exception):
+class CouldntConvertRGB(Exception):
   def __init__(self, pixel, tile_y, tile_x, y, x):
     self.pixel = pixel
     self.tile_y = tile_y
@@ -104,9 +104,10 @@ class ColorNotAllowedError(Exception):
     return self.pixel[0] * 256 * 256 + self.pixel[1] * 256 + self.pixel[2]
 
   def __str__(self):
-    text = ('@ tile (%dy,%dx) and pixel (%dy,%dx) - "%02x,%02x,%02x"' %
-            (self.tile_y, self.tile_x, self.y, self.x,
-             self.pixel[0], self.pixel[1], self.pixel[2]))
+    text = (': R %02x, G %02x, B %02x @ tile (%dy,%dx) / pixel (%dy,%dx)' %
+            (self.pixel[0], self.pixel[1], self.pixel[2],
+             self.tile_y, self.tile_x,
+             self.tile_y * 8 + self.y, self.tile_x * 8 + self.x))
     if self.count > 1:
       text = text + ' (%d times)' % self.count
     return text
@@ -212,7 +213,7 @@ class ErrorCollector(object):
     self.spritelist_overflow_idx = None
 
   def add(self, error):
-    if isinstance(error, ColorNotAllowedError):
+    if isinstance(error, CouldntConvertRGB):
       c = error.get_color()
       if c in self.color_not_allowed_dups:
         idx = self.color_not_allowed_dups[c]

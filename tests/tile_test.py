@@ -49,7 +49,7 @@ class TileTests(unittest.TestCase):
     img = Image.open('testdata/color-not-allowed-tile.png')
     processor = image_processor.ImageProcessor()
     processor.load_image(img)
-    with self.assertRaises(errors.ColorNotAllowedError):
+    with self.assertRaises(errors.CouldntConvertRGB):
       processor.process_tile(0, 0, 0, 0)
 
   def test_process_tile_error_palette_overflow(self):

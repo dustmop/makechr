@@ -222,8 +222,8 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     errs = self.err.get()
     expect_errors = ['PaletteOverflowError @ block (1y,3x)',
                      'PaletteOverflowError @ tile (2y,10x)',
-                     ('ColorNotAllowedError @ tile (4y,1x) and ' +
-                      'pixel (1y,2x) - "ff,ff,00"')]
+                     ('CouldntConvertRGB : R ff, G ff, B 00' +
+                      ' @ tile (4y,1x) / pixel (33y,10x)')]
     actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
     self.assertEqual(actual_errors, expect_errors)
     renderer = view_renderer.ViewRenderer()
@@ -241,8 +241,8 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     errs = self.err.get()
     expect_errors = ['PaletteOverflowError @ block (1y,3x)',
                      'PaletteOverflowError @ tile (2y,10x)',
-                     ('ColorNotAllowedError @ tile (4y,1x) and ' +
-                      'pixel (1y,2x) - "ff,ff,00"')]
+                     ('CouldntConvertRGB : R ff, G ff, B 00' +
+                      ' @ tile (4y,1x) / pixel (33y,10x)')]
     actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
     self.assertEqual(actual_errors, expect_errors)
     renderer = view_renderer.ViewRenderer()

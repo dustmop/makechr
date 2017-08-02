@@ -169,4 +169,5 @@ class Application(object):
       renderer = view_renderer.ViewRenderer()
       renderer.create_error_view(args.error_outfile, img, errors_with_dups)
     else:
-      sys.stderr.write('To see errors visually, use -e command-line option.\n')
+      sys.stderr.write('To see errors visually, use the ' +
+                       '"-e <error_image.png>" command-line option.\n')

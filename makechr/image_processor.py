@@ -109,7 +109,7 @@ class ImageProcessor(object):
     else:
       nc = self.components_to_nescolor(p[0], p[1], p[2])
       if nc == -1:
-        raise errors.ColorNotAllowedError(p, tile_y, tile_x, i, j)
+        raise errors.CouldntConvertRGB(p, tile_y, tile_x, i, j)
       return nc
 
   def collect_error(self, e, block_y, block_x, i, j, is_block=False):
@@ -167,7 +167,7 @@ class ImageProcessor(object):
         else:
           nc = components_to_nescolor_func(p[0], p[1], p[2])
           if nc == -1:
-            raise errors.ColorNotAllowedError(p, tile_y, tile_x, i, j)
+            raise errors.CouldntConvertRGB(p, tile_y, tile_x, i, j)
         # Add the nescolor 'nc' to the 'color_needs'. Insert it into the first
         # position that is equal to NULL, otherwise raise an error. Loop is
         # unrolled for performance.
@@ -223,7 +223,7 @@ class ImageProcessor(object):
       for j in xrange(2):
         try:
           (color_needs, dot_profile) = process_tile_func(y + i, x + j)
-        except (errors.PaletteOverflowError, errors.ColorNotAllowedError) as e:
+        except (errors.PaletteOverflowError, errors.CouldntConvertRGB) as e:
           self.collect_error(e, block_y, block_x, i, j)
           continue
         cid = self._color_manifest.id(color_needs)

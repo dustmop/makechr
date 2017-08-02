@@ -169,7 +169,7 @@ Palette: P/30-38-16-01/30-19/
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Found 1 error:
 NametableOverflow 256 at tile (8y,0x)
-To see errors visually, use -e command-line option.
+To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
     self.assertEquals(self.returncode, 1)
 
@@ -207,7 +207,7 @@ Errors displayed in "%s"
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Found 1 error:
 NametableOverflow 256 at tile (8y,0x)
-To see errors visually, use -e command-line option.
+To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
     self.assertEquals(self.returncode, 1)
     self.assert_file_eq(palette_view, 'testdata/too-many-tiles-pal.png')
@@ -218,7 +218,7 @@ To see errors visually, use -e command-line option.
     self.makechr(args, is_expect_fail=True)
     self.assertEquals(self.err, """Found 1 error:
 MakepalBorderNotFound 
-To see errors visually, use -e command-line option.
+To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
     self.assertEquals(self.returncode, 1)
 
@@ -229,7 +229,7 @@ To see errors visually, use -e command-line option.
     self.assertEquals(self.err, """Found 1 error:
 PaletteExtractionError Background color did not match: 22 <> 35.
   Disable extraction using the flag "-p -"
-To see errors visually, use -e command-line option.
+To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
     self.assertEquals(self.returncode, 1)
 
