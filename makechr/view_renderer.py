@@ -436,6 +436,11 @@ class ViewRenderer(object):
     s = self.scale * 8
     # Draw errors.
     for e in errs:
+      if hasattr(e, 'list_blocks'):
+        for block_y,block_x in e.list_blocks:
+          y = block_y * 16 * self.scale
+          x = block_x * 16 * self.scale
+          self.draw_error(y, x, s * 2)
       if (not getattr(e, 'tile_y', None) is None and
           not getattr(e, 'tile_x', None) is None):
         y = e.tile_y * 8 * self.scale

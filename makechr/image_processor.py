@@ -408,10 +408,34 @@ class ImageProcessor(object):
     color_sets = self._needs_provider.elems()
     try:
       pal = guesser.guess_palette(color_sets)
-    except errors.TooManyPalettesError as e:
+    except errors.PaletteTooManySubsets as e:
       self._err.add(e)
       return None
     return pal
+
+  def is_subset_of_one_of(self, needle, haystack):
+    needle = set(needle)
+    for elem in haystack:
+      if needle <= set(elem):
+        return True
+    return False
+
+  def maybe_find_palette_subset_errors(self):
+    e = self._err.find_type(errors.PaletteTooManySubsets)
+    if not e:
+      return
+    colors = e.colors
+    to_merge = e.to_merge
+    for block_y in xrange(self.blocks_y):
+      for block_x in xrange(self.blocks_x):
+        y = block_y * 2
+        x = block_x * 2
+        bcid = self._artifacts[y][x][ARTIFACT_BCID]
+        block_color_needs = self._block_color_manifest.at(bcid)
+        if self.is_subset_of_one_of(block_color_needs, e.colors):
+          continue
+        if self.is_subset_of_one_of(block_color_needs, e.to_merge):
+          e.list_blocks.append([block_y, block_x])
 
   def process_to_artifacts(self, bg_mask, bg_fill, config):
     """Process the image and store data in the artifact table.
@@ -599,6 +623,7 @@ class ImageProcessor(object):
     if not pal:
       pal = self.make_palette(bg_color_fill, config.is_sprite)
     if not pal:
+      self.maybe_find_palette_subset_errors()
       return
     if not config.is_sprite:
       self._ppu_memory.palette_nt = pal

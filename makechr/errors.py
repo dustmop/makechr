@@ -113,18 +113,21 @@ class CouldntConvertRGB(Exception):
     return text
 
 
-class TooManyPalettesError(Exception):
+class PaletteTooManySubsets(Exception):
   def __init__(self, colors, to_merge=None):
     self.colors = colors
     self.to_merge = to_merge
+    self.list_blocks = []
 
   def to_text(self, colors):
-    return '/'.join(['-'.join(['%02x' % c for c in row]) for row in colors])
+    return ','.join(['-'.join(['%02x' % c for c in row]) for row in colors])
 
   def __str__(self):
     text = self.to_text(self.colors)
     if self.to_merge:
-      text = text + ',MERGE={' + self.to_text(self.to_merge) + '}'
+      text = ('- valid: ' + text + '\n' +
+              'subsets that can\'t be merged: [' +
+              self.to_text(self.to_merge) + ']')
     return text
 
 
@@ -247,13 +250,22 @@ class ErrorCollector(object):
     if y is None or x is None:
       return None
     for e in self.errs:
-      tile_y, tile_x = (getattr(e, 'tile_y', None), getattr(e, 'tile_x', None))
-      if not tile_y is None and not tile_x is None:
+      if hasattr(e, 'tile_y') and hasattr(e, 'tile_x'):
+        tile_y, tile_x = getattr(e, 'tile_y'), getattr(e, 'tile_x')
         if y == tile_y and x == tile_x:
           return e
-      block_y, block_x = (getattr(e, 'block_y', None),
-                          getattr(e, 'block_x', None))
-      if not block_y is None and not block_x is None:
+      if hasattr(e, 'block_y') and hasattr(e, 'block_x'):
+        block_y, block_x = getattr(e, 'block_y'), getattr(e, 'block_x')
         if y / 2 == block_y and x / 2 == block_x:
           return e
+      if hasattr(e, 'list_blocks'):
+        for block_y, block_x in getattr(e, 'list_blocks'):
+          if y / 2 == block_y and x / 2 == block_x:
+            return e
+    return None
+
+  def find_type(self, t):
+    for e in self.errs:
+      if type(e) is t:
+        return e
     return None

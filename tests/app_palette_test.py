@@ -4,7 +4,7 @@ import unittest
 from PIL import Image
 
 import context
-from makechr import bg_color_spec
+from makechr import bg_color_spec, view_renderer
 
 
 class AppPaletteTests(general_app_test_util.GeneralAppTests):
@@ -99,6 +99,26 @@ class AppPaletteTests(general_app_test_util.GeneralAppTests):
       self.assertEqual(msg, ('PaletteBackgroundColorConflictError between '
                              'palette /30/ <> bg color /1/'))
 
+  def test_error_too_many_subsets(self):
+    """If image colors cannot be merged into a valid palette, throw error."""
+    img = Image.open('testdata/full-image-conflict.png')
+    self.process_image(img)
+    self.args.error_outfile = self.args.tmppng('error')
+    self.assertTrue(self.err.has())
+    es = self.err.get()
+    expect_errors = ['PaletteTooManySubsets - valid: ' +
+                     '30-28-19-14,38-30-16-01\n' +
+                     'subsets that can\'t be merged: ' +
+                     '[30-0c-0b,31-30-04,34-30-07]']
+    actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in es]
+    self.assertEqual(actual_errors, expect_errors)
+    expect_list_blocks = [[1, 4], [2, 4], [3, 4]]
+    self.assertEqual(es[0].list_blocks, expect_list_blocks)
+    renderer = view_renderer.ViewRenderer()
+    renderer.create_error_view(self.args.error_outfile, img, es)
+    self.assert_file_eq(self.args.error_outfile,
+                        'testdata/errors-conflict-palette.png')
+
   def test_error_background_but_already_filled(self):
     """If background color cannot fit into any guessed palette, throw error."""
     img = Image.open('testdata/full-image.png')
@@ -108,7 +128,8 @@ class AppPaletteTests(general_app_test_util.GeneralAppTests):
     es = self.err.get()
     for e in es:
       msg = '{0} {1}'.format(type(e).__name__, e)
-      self.assertEqual(msg, 'TooManyPalettesError 38-30-16-01,MERGE={30-19}')
+      self.assertEqual(msg, ('PaletteTooManySubsets - valid: 38-30-16-01\n' +
+                             "subsets that can't be merged: [30-19]"))
 
   def test_error_palette_no_choice(self):
     """If explicit palette cannot be used for the image, throw error."""

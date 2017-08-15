@@ -121,7 +121,7 @@ class GuessBestPalette(object):
         continue
       merged_color_possibilities.append([bg_color, combined_colors])
     if not len(merged_color_possibilities):
-      raise errors.TooManyPalettesError(finalized, to_merge=remaining)
+      raise errors.PaletteTooManySubsets(finalized, to_merge=remaining)
     return merged_color_possibilities
 
   def get_merged_color_possibilities(self, minimal_colors):
