@@ -180,6 +180,39 @@ class SortableChrPage(ChrPage):
       self.idx.append(i)
 
 
+# TODO: Add description and tests.
+class SparseChrPage(ChrPage):
+  def __init__(self):
+    ChrPage.__init__(self)
+    self.lower = 0
+    self.tiles = {}
+
+  def add(self, tile):
+    if self.is_full():
+      raise errors.ChrPageFull()
+    ret = self.lower
+    self.tiles[self.lower] = tile
+    self._adjust_lower()
+    return ret
+
+  def insert(self, pos, tile):
+    self.tiles[pos] = tile
+    self._adjust_lower()
+    return pos
+
+  def _adjust_lower(self):
+    while self.lower in self.tiles:
+      self.lower += 1
+
+  def to_bytes(self):
+    bytes = bytearray(len(self.tiles) * 0x10)
+    for k,idx in enumerate(self.tiles):
+      tile = self.tiles[idx]
+      bytes[k*0x10+0x00:k*0x10+0x08] = tile.low
+      bytes[k*0x10+0x08:k*0x10+0x10] = tile.hi
+    return bytes
+
+
 class VertTilePair(object):
   """A pair of 8x8 tiles, vertically oriented."""
 
