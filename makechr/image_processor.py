@@ -109,7 +109,7 @@ class ImageProcessor(object):
     else:
       nc = self.components_to_nescolor(p[0], p[1], p[2])
       if nc == -1:
-        raise errors.CouldntConvertRGB(p, tile_y, tile_x, i, j)
+        raise errors.CouldntConvertRGB(p, y/8, x/8, y%8, x%8)
       return nc
 
   def collect_error(self, e, block_y, block_x, i, j, is_block=False):

@@ -48,7 +48,11 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
                                         allow_overflow=allow_overflow)
     is_tall = '8x16' in self.traversal
     # Scan the image, find corners of each tile based upon region merging.
-    zones = self._find_zones(bg_color_fill)
+    try:
+      zones = self._find_zones(bg_color_fill)
+    except errors.CouldntConvertRGB as e:
+      self._err.add(e)
+      return None
     # HACK: Assign zones to ppu_memory so that they can be used by the
     # view renderer.
     self._ppu_memory.zones = zones

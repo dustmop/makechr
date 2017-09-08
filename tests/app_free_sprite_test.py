@@ -142,6 +142,20 @@ class AppFreeSpriteTests(general_app_test_util.GeneralAppTests):
     actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
     self.assertEqual(actual_errors, expect_errors)
 
+  def test_error_couldnt_convert_rgb(self):
+    """Free traversal gracefully handles color conversion errors."""
+    img = Image.open('testdata/free-sprites-couldnt-convert-rgb.png')
+    self.args.bg_color = bg_color_spec.build('39=34')
+    self.args.is_sprite = True
+    self.args.traversal = 'free'
+    self.process_image(img)
+    self.assertTrue(self.err.has())
+    errs = self.err.get()
+    expect_errors = ['CouldntConvertRGB : R ff, G ff, B 00 @ ' +
+                     'tile (26y,4x) / pixel (209y,34x)']
+    actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in errs]
+    self.assertEqual(actual_errors, expect_errors)
+
   def test_view_for_free_sprite_traversal(self):
     """View for the zones in free sprite traversal."""
     img = Image.open('testdata/free-sprites.png')
