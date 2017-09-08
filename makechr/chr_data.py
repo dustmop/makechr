@@ -72,7 +72,10 @@ class ChrTile(object):
     return 0
 
   def __str__(self):
-    return '<ChrTile ' + bytes(self.get_bytes()) + '>'
+    return '<ChrTile %r>' % bytes(self.get_bytes())
+
+  def __repr__(self):
+    return self.__str__()
 
 
 class ChrPage(object):
@@ -106,9 +109,12 @@ class ChrPage(object):
       make.add(tile)
     return make
 
+  def _enum_tiles(self):
+    return enumerate(self.tiles)
+
   def to_bytes(self):
     bytes = bytearray(len(self.tiles) * 0x10)
-    for k,tile in enumerate(self.tiles):
+    for k,tile in self._enum_tiles():
       bytes[k*0x10+0x00:k*0x10+0x08] = tile.low
       bytes[k*0x10+0x08:k*0x10+0x10] = tile.hi
     return bytes
@@ -180,8 +186,9 @@ class SortableChrPage(ChrPage):
       self.idx.append(i)
 
 
-# TODO: Add description and tests.
 class SparseChrPage(ChrPage):
+  """ChrPage stored as a sparse array, can insert into arbitrary indexes."""
+
   def __init__(self):
     ChrPage.__init__(self)
     self.lower = 0
@@ -204,13 +211,8 @@ class SparseChrPage(ChrPage):
     while self.lower in self.tiles:
       self.lower += 1
 
-  def to_bytes(self):
-    bytes = bytearray(len(self.tiles) * 0x10)
-    for k,idx in enumerate(self.tiles):
-      tile = self.tiles[idx]
-      bytes[k*0x10+0x00:k*0x10+0x08] = tile.low
-      bytes[k*0x10+0x08:k*0x10+0x10] = tile.hi
-    return bytes
+  def _enum_tiles(self):
+    return self.tiles.items()
 
 
 class VertTilePair(object):

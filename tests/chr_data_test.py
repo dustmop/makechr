@@ -85,6 +85,36 @@ class ChrDataTests(unittest.TestCase):
     self.assertEqual(spage.get(4), expect_tile)
     self.assertEqual(spage.k_smallest(0), expect_tile)
 
+  def test_sparse_chr_page(self):
+    spage = chr_data.SparseChrPage()
+    first_tile = chr_data.ChrTile()
+    first_tile.set(bytes(bytearray(xrange(0,16))))
+    spage.insert(2, first_tile)
+    second_tile = chr_data.ChrTile()
+    second_tile.set(bytes(bytearray(range(1,17))))
+    spage.insert(4, second_tile)
+    self.assertEqual(spage.size(), 2)
+    self.assertFalse(spage.is_full())
+    third_tile = chr_data.ChrTile()
+    third_tile.set(bytes(bytearray(range(2,18))))
+    spage.add(third_tile)
+    fourth_tile = chr_data.ChrTile()
+    fourth_tile.set(bytes(bytearray(range(3,19))))
+    spage.add(fourth_tile)
+    fifth_tile = chr_data.ChrTile()
+    fifth_tile.set(bytes(bytearray(range(4,20))))
+    spage.add(fifth_tile)
+    self.assertEqual(spage.size(), 5)
+    self.assertEqual(spage.get(0), third_tile)
+    self.assertEqual(spage.get(1), fourth_tile)
+    self.assertEqual(spage.get(2), first_tile)
+    self.assertEqual(spage.get(3), fifth_tile)
+    self.assertEqual(spage.get(4), second_tile)
+    expect_bytes = bytearray()
+    for t in [third_tile, fourth_tile, first_tile, fifth_tile, second_tile]:
+      expect_bytes += t.get_bytes()
+    self.assertEqual(spage.to_bytes(), expect_bytes)
+
   def test_flip(self):
     empty = [0] * 8
     origin = [0,1,2,3,4,5,6,7]
