@@ -131,6 +131,10 @@ class PaletteTooManySubsets(Exception):
     return text
 
 
+class TooManyPalettesError(Exception):
+  pass
+
+
 class FileFormatError(Exception):
   def __init__(self, actual, size):
     self.actual = actual

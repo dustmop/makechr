@@ -119,6 +119,19 @@ class AppPaletteTests(general_app_test_util.GeneralAppTests):
     self.assert_file_eq(self.args.error_outfile,
                         'testdata/errors-conflict-palette.png')
 
+  def test_error_too_many_palettes(self):
+    """If there are more required palettes than allowed."""
+    img = Image.open('testdata/full-image-too-many.png')
+    self.process_image(img)
+    self.args.error_outfile = self.args.tmppng('error')
+    self.assertTrue(self.err.has())
+    es = self.err.get()
+    expect_errors = ['TooManyPalettesError [[48, 25, 12, 11], ' +
+                     '[50, 49, 48, 4], [52, 48, 7, 3], [56, 48, 22, 1], ' +
+                     '[59, 48, 16, 0]]']
+    actual_errors = ['%s %s' % (type(e).__name__, str(e)) for e in es]
+    self.assertEqual(actual_errors, expect_errors)
+
   def test_error_background_but_already_filled(self):
     """If background color cannot fit into any guessed palette, throw error."""
     img = Image.open('testdata/full-image.png')

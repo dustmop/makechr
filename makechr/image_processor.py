@@ -408,7 +408,7 @@ class ImageProcessor(object):
     color_sets = self._needs_provider.elems()
     try:
       pal = guesser.guess_palette(color_sets)
-    except errors.PaletteTooManySubsets as e:
+    except (errors.PaletteTooManySubsets, errors.TooManyPalettesError) as e:
       self._err.add(e)
       return None
     return pal
