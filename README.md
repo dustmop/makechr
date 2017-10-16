@@ -4,11 +4,13 @@ makechr is a tool for generating NES graphics. Its primary operation is to take 
 
 The goals of makechr are to be portable (written in python), fast (can process a busy image with 256 tiles and 4 full palettes in <300ms), powerful, easy to understand, and usable in command-line based builds. A GUI is available as well, though it is missing a few features.
 
+Windows GUI builds are available in releases.
+
 Input images should be 256px wide and 240px high, representing a full nametable, and must follow NES attribute and palette restrictions. Smaller imagse will have padded nametables, while images with greater width will result in up to 2 nametables, assuming horizontal arrangement.
 
 An RGB palette is hard-coded in rgb.py, other palettes are not yet supported.
 
-# Example usage
+# Example usage (command-line)
 
     makechr image.png
 
@@ -21,15 +23,13 @@ This will output four files: chr.dat, nametable.dat, palette.dat, attribute.dat.
     wxpython (GUI only)
     watchdog (GUI only)
 
-After installing protobuf, run build-proto.sh to generate the python protocol buffer library in the gen/ directory.
-
 # Command-line options
 
 Run `makechr -h` to get details on command-line options.
 
     --version        See the current version number.
 
-    -o [output]      Output filename.
+    -o [output]      Output filename. Use /dev/null to output nothing.
 
     -c [rom]         Create an NES rom file that just displays the image.
 

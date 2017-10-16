@@ -33,9 +33,13 @@ def is_valiant(filename):
   return content.startswith('(VALIANT)')
 
 
-class BlankLineFormatter(argparse.HelpFormatter):
+class BlankLineFormatter(argparse.RawDescriptionHelpFormatter):
   def _split_lines(self, text, width):
-    return argparse.HelpFormatter._split_lines(self, text, width) + ['']
+    parts = text.split('\n')
+    text = parts[0]
+    lines = parts[1:]
+    lines = argparse.HelpFormatter._split_lines(self, text, width) + lines
+    return lines + ['']
 
 
 def run():
@@ -178,17 +182,17 @@ def run():
                       metavar='image',
                       help=('Output filename for reuse view. Will show color '
                             'for each tile based upon how many times the '
-                            'tile is used, according to the following key - '
-                            '1: white (unique tile), '
-                            '2: yellow, '
-                            '3: orange, '
-                            '4: light green, '
-                            '5: cyan, '
-                            '6: magenta, '
-                            '7: red, '
-                            '8: green, '
-                            '9: blue, '
-                            '10: purple, '
+                            'tile is used, according to the following key:\n'
+                            '1: white (unique tile),\n'
+                            '2: yellow,\n'
+                            '3: orange,\n'
+                            '4: light green,\n'
+                            '5: cyan,\n'
+                            '6: magenta,\n'
+                            '7: red,\n'
+                            '8: green,\n'
+                            '9: blue,\n'
+                            '10: purple,\n'
                             '11+: grey'))
 
   parser.add_argument('--nametable-view', dest='nametable_view',

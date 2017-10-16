@@ -57,7 +57,7 @@ else:
         download_url=('https://github.com/dustmop/makechr/tarball/' +
                       __version__),
         license='GPL3',
-        packages=['makechr'],
+        packages=['makechr', 'makechr.gen'],
         keywords='NES graphics gamedev',
         install_requires=[
           'argparse',
