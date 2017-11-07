@@ -253,6 +253,30 @@ To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
     self.assertEquals(self.returncode, 1)
 
+  def test_rgb_mapping(self):
+    args = ['testdata/full-image.png', '-o', self.output_name,
+            '--rgb-mapping', 'almighty']
+    self.makechr(args)
+    self.assert_file_eq(self.output_name, self.golden(None, 'o'))
+    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.out, '')
+
+  def test_rgb_mapping_fceux(self):
+    args = ['testdata/full-image-fceux.png', '-o', self.output_name,
+            '--rgb-mapping', 'fceux']
+    self.makechr(args)
+    self.assert_file_eq(self.output_name, self.golden(None, 'o'))
+    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.out, '')
+
+  def test_rgb_mapping_unknown(self):
+    args = ['testdata/full-image.png', '-o', self.output_name,
+            '--rgb-mapping', 'unknown']
+    self.makechr(args, is_expect_fail=True)
+    self.assertEquals(self.err, """Unknown rgb-mapping: "unknown"
+""")
+    self.assertEquals(self.returncode, 1)
+
   def golden(self, name, ext):
     if name:
       return 'testdata/%s-%s.%s' % (self.golden_file_prefix, name, ext)

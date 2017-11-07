@@ -155,6 +155,11 @@ def run():
                             'errors. Only "c" and "s" are supported, for '
                             '"chr" and "spritelist".'))
 
+  parser.add_argument('--rgb-mapping', dest='rgb_mapping',
+                      help=('Mapping between RGB colors and the NES\'s '
+                            'native NTSC color signal. Allowed choices are '
+                            '"almighty", "fceux", and "nesst".'))
+
   parser.add_argument('--makepal', dest='makepal', action='store_true',
                       help=('Make palette object file from an image, or '
                             'just output binary data if the file name ends '
