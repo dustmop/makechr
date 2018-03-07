@@ -91,7 +91,7 @@ class ObjectFileWriter(object):
       palette_metadata.order = 1
 
   def add_component(self, bytes, info):
-    pad_size = info.size - len(bytes) if (not info.size is None) else None
+    pad_size = info.size - len(bytes) if (info.size is not None) else None
     if info.is_condensable:
       pre_pad, padding, bytes = self._condense(bytes, info.align, pad_size)
     else:
@@ -101,9 +101,9 @@ class ObjectFileWriter(object):
     binary.bin = bytes
     if info.null_value:
       binary.null_value = info.null_value
-    if not pre_pad is None:
+    if pre_pad is not None:
       binary.pre_pad = pre_pad
-    if not padding is None:
+    if padding is not None:
       binary.padding = padding
     packet = self.obj_body.packets.add()
     packet.role = role

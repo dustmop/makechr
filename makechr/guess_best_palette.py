@@ -73,7 +73,7 @@ class GuessBestPalette(object):
 
     combined_colors: List of color needs.
     """
-    if not self._bg_color is None:
+    if self._bg_color is not None:
       return self._bg_color
     possibilities = set(combined_colors[0])
     recommendations = set(possibilities)

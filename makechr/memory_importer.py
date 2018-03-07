@@ -122,9 +122,9 @@ class MemoryImporter(object):
       size = (prepad or 0) + len(binary.bin) + (padding or 0)
       padding = (padding or 0) + req_align - size
     bytes = bytearray()
-    if not prepad is None:
+    if prepad is not None:
       bytes += (chr(nullval) * prepad)
     bytes += binary.bin
-    if not padding is None:
+    if padding is not None:
       bytes += (chr(nullval) * padding)
     return bytes

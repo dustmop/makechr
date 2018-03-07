@@ -29,7 +29,7 @@ class PpuMemoryConfig(object):
     self.palette_order = int(bool(is_sprite))
 
   def pick_order(self, order, is_sprite):
-    if not order is None:
+    if order is not None:
       return order
     return int(bool(is_sprite))
 

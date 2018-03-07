@@ -69,7 +69,7 @@ class Zone(Span):
 
   def __repr__(self):
     maybe_bottom = ''
-    if not self.bottom is None:
+    if self.bottom is not None:
       maybe_bottom = ' B=%s' % self.bottom
     return ('<Zone L=%s R=%s T=%s%s>' % (
       [self.left, self.maybe_left] if self.maybe_left else self.left,

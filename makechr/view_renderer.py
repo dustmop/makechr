@@ -441,13 +441,13 @@ class ViewRenderer(object):
           y = block_y * 16 * self.scale
           x = block_x * 16 * self.scale
           self.draw_error(y, x, s * 2)
-      if (not getattr(e, 'tile_y', None) is None and
-          not getattr(e, 'tile_x', None) is None):
+      if (getattr(e, 'tile_y', None) is not None and
+          getattr(e, 'tile_x', None) is not None):
         y = e.tile_y * 8 * self.scale
         x = e.tile_x * 8 * self.scale
         self.draw_error(y, x, s)
-      elif (not getattr(e, 'block_y', None) is None and
-            not getattr(e, 'block_x', None) is None):
+      elif (getattr(e, 'block_y', None) is not None and
+            getattr(e, 'block_x', None) is not None):
         y = e.block_y * 16 * self.scale
         x = e.block_x * 16 * self.scale
         self.draw_error(y, x, s * 2)

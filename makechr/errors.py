@@ -20,7 +20,7 @@ class PaletteOverflowError(Exception):
       self.tile_x = elem_x
 
   def __str__(self):
-    if not self.block_y is None and not self.block_x is None:
+    if self.block_y is not None and self.block_x is not None:
       return '@ block (%dy,%dx)' % (self.block_y, self.block_x)
     else:
       return '@ tile (%dy,%dx)' % (self.tile_y, self.tile_x)

@@ -241,7 +241,7 @@ class DrawCursorManager(object):
     clear, y, x, size, meta = (pos.clear, pos.y, pos.x, pos.size, pos.meta)
     if clear:
       self.cursor.set(None, None, None)
-    if not y is None and not x is None and not size is None:
+    if y is not None and x is not None and size is not None:
       self.cursor.set(y, x, size)
     if meta == 'reuse':
       nt = self.processor.ppu_memory().get_page(0).nametable
@@ -297,7 +297,7 @@ class DrawCursorManager(object):
       if isinstance(comp, ChrBasedComponentView):
         (chr_y, chr_x) = self.getChrTilePosition()
         chr_size = 17
-        if not chr_y is None and not chr_x is None:
+        if chr_y is not None and chr_x is not None:
           comp.drawBox(clear, chr_y, chr_x, chr_size, color)
       else:
         comp.drawBox(clear, cursor.y, cursor.x, cursor.size, color)
@@ -668,7 +668,7 @@ class MakechrGui(wx.Frame):
     if dlg.ShowModal() == wx.ID_OK:
       self.inputImagePath = dlg.GetPath()
     dlg.Destroy()
-    if not self.inputImagePath is None:
+    if self.inputImagePath is not None:
       self.LoadImage()
 
   def OnSave(self, e):
@@ -678,7 +678,7 @@ class MakechrGui(wx.Frame):
       return
     path = dlg.GetPath()
     dlg.Destroy()
-    if not path is None:
+    if path is not None:
       config = self.BuildConfigFromOptions()
       self.processor.ppu_memory().save_valiant(path, config)
       self.ShowMessage('Saved to "%s"' % path, 4.0)
@@ -689,7 +689,7 @@ class MakechrGui(wx.Frame):
     if dlg.ShowModal() == wx.ID_OK:
       self.inputImagePath = dlg.GetPath()
     dlg.Destroy()
-    if not self.inputImagePath is None:
+    if self.inputImagePath is not None:
       self.LoadImportedRam()
 
   def OnExportBinaries(self, e):
@@ -699,7 +699,7 @@ class MakechrGui(wx.Frame):
       return
     path = dlg.GetPath()
     dlg.Destroy()
-    if not path is None:
+    if path is not None:
       if not '%s' in path:
         self.ShowMessage('ERROR: Export path must have "%s" in filename', 8.0)
         return
@@ -715,7 +715,7 @@ class MakechrGui(wx.Frame):
     if dlg.ShowModal() == wx.ID_OK:
       target = dlg.GetPath()
     dlg.Destroy()
-    if not target is None:
+    if target is not None:
       builder = rom_builder.RomBuilder()
       # This should have a direct reference to mem
       mem = self.processor.ppu_memory()

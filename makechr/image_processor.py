@@ -369,7 +369,7 @@ class ImageProcessor(object):
         self._err.add(e)
         return None
       if pal:
-        if not bg_color is None and pal.bg_color != bg_color:
+        if bg_color is not None and pal.bg_color != bg_color:
           self._err.add(errors.PaletteBackgroundColorConflictError(
             pal.bg_color, bg_color))
           return None
@@ -403,7 +403,7 @@ class ImageProcessor(object):
           bg_color = color
     # Make the palette from the color needs.
     guesser = guess_best_palette.GuessBestPalette()
-    if not bg_color is None:
+    if bg_color is not None:
       guesser.set_bg_color(bg_color)
     color_sets = self._needs_provider.elems()
     try:
