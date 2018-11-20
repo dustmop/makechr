@@ -51,6 +51,16 @@ class ChrTile(object):
       make.hi = [self._reverse_bits(b) for b in make.hi]
     return make
 
+  def vertical_pixel_display(self):
+    def vertical_plane(plane):
+      make = [0] * 8
+      for i,b in enumerate(plane):
+        for j in xrange(8):
+          make[j] |= (((b >> (7 - j)) & 1) << (i))
+      return make
+    self.low = vertical_plane(self.low)
+    self.hi = vertical_plane(self.hi)
+
   def _assign_bit_low_plane(self, bit, index, offset):
     self.low[index] |= (bit << (7 - offset))
 
@@ -118,6 +128,20 @@ class ChrPage(object):
       bytes[k*0x10+0x00:k*0x10+0x08] = tile.low
       bytes[k*0x10+0x08:k*0x10+0x10] = tile.hi
     return bytes
+
+  def to_bytes_select_plane(self, selection):
+    bytes = bytearray(len(self.tiles) * 0x08)
+    if selection == 0:
+      for k,tile in self._enum_tiles():
+        bytes[k*0x08+0x00:k*0x08+0x08] = tile.low
+    elif selection == 1:
+      for k,tile in self._enum_tiles():
+        bytes[k*0x08+0x00:k*0x08+0x08] = tile.hi
+    return bytes
+
+  def vertical_pixel_display(self):
+    for tile in self.tiles:
+      tile.vertical_pixel_display()
 
 
 class ChrBank(ChrPage):

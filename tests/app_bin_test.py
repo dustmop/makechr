@@ -192,6 +192,61 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('attribute')
     self.assert_output_result('attribute1')
 
+  def test_small_image(self):
+    """Image with only 16x16 pixel size, and three colors."""
+    img = Image.open('testdata/smile.png')
+    self.process_image(img, palette_text='P/30-0f-39/')
+    self.create_output()
+    self.golden_file_prefix = 'smile'
+    self.assert_output_result('chr')
+    self.assert_output_result('palette')
+    self.assert_output_result('nametable')
+    self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
+
+  def test_small_image_vertical_pixel_display(self):
+    """Image with 16x16 pixel size and the vertical-pixel-display flag."""
+    img = Image.open('testdata/smile.png')
+    self.args.vertical_pixel_display = True
+    self.process_image(img, palette_text='P/30-0f-39/')
+    self.create_output()
+    self.golden_file_prefix = 'smile'
+    self.assert_output_result('chr', golden_suffix='-vertical-pixel-display')
+    self.assert_output_result('palette')
+    self.assert_output_result('nametable')
+    self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
+
+  def test_small_image_select_chr_plane_0(self):
+    """Image with 16x16 pixel size and only chr-plane 0 selected."""
+    img = Image.open('testdata/smile.png')
+    self.args.select_chr_plane = '0'
+    self.process_image(img, palette_text='P/30-0f-39/')
+    self.create_output()
+    self.golden_file_prefix = 'smile'
+    self.assert_output_result('chr', golden_suffix='-chr-plane-0')
+    self.assert_output_result('palette')
+    self.assert_output_result('nametable')
+    self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
+
+  def test_small_image_select_chr_plane_1(self):
+    """Image with 16x16 pixel size and only chr-plane 1 selected."""
+    img = Image.open('testdata/smile.png')
+    self.args.select_chr_plane = '1'
+    self.process_image(img, palette_text='P/30-0f-39/')
+    self.create_output()
+    self.golden_file_prefix = 'smile'
+    self.assert_output_result('chr', golden_suffix='-chr-plane-1')
+    self.assert_output_result('palette')
+    self.assert_output_result('nametable')
+    self.assert_output_result('attribute')
+    self.assert_not_exist('nametable1')
+    self.assert_not_exist('attribute1')
+
   def test_error_too_many_tiles(self):
     """If there are more tiles than can fit in CHR, throw error."""
     img = Image.open('testdata/257tiles.png')

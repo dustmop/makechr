@@ -25,6 +25,8 @@ class MockArgs(object):
     self.allow_overflow = []
     self.order = None
     self.compile = self.tmpfile('rom.nes')
+    self.select_chr_plane = None
+    self.vertical_pixel_display = False
     self.output = self.tmpfile('full-image-%s.dat')
 
   def tmpfile(self, template):

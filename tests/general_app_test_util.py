@@ -29,6 +29,8 @@ class MockArgs(object):
     self.use_legacy_views = False
     self.order = None
     self.compile = None
+    self.vertical_pixel_display = False
+    self.select_chr_plane = None
     self.output = self.tmpfile('actual-%s.dat')
 
   def clear_views(self):

@@ -19,7 +19,8 @@ class GraphicsPage(object):
 
 class PpuMemoryConfig(object):
   def __init__(self, traversal=None, is_sprite=None, is_locked_tiles=None,
-               lock_sprite_flips=None, allow_overflow=None, chr_order=None):
+               lock_sprite_flips=None, allow_overflow=None, chr_order=None,
+               select_chr_plane=False):
     self.traversal = traversal
     self.is_sprite = is_sprite
     self.is_locked_tiles = is_locked_tiles
@@ -27,6 +28,7 @@ class PpuMemoryConfig(object):
     self.allow_overflow = allow_overflow or []
     self.chr_order = self.pick_order(chr_order, is_sprite)
     self.palette_order = int(bool(is_sprite))
+    self.select_chr_plane = select_chr_plane
 
   def pick_order(self, order, is_sprite):
     if order is not None:
@@ -108,7 +110,7 @@ class PpuMemory(object):
       fout = self._writer.get_writable('chr', True)
       self._writer.configure(null_value=0, size=0x1000, order=config.chr_order,
                              align=0x10, extract=0x2000)
-      self._save_chr(fout, self.chr_set)
+      self._save_chr(fout, self.chr_set, config.select_chr_plane)
     if 'palette' in components:
       fout = self._writer.get_writable('palette', True)
       self._writer.configure(null_value=self._bg_color, size=0x10,
@@ -134,8 +136,14 @@ class PpuMemory(object):
         nt = nametable[y][x]
         fout.write(chr(nt))
 
-  def _save_chr(self, fout, chr_set):
-    fout.write(chr_set.to_bytes())
+  def _save_chr(self, fout, chr_set, select_chr_plane):
+    if select_chr_plane in ['0','1']:
+      fout.write(chr_set.to_bytes_select_plane(int(select_chr_plane)))
+    elif select_chr_plane is None:
+      fout.write(chr_set.to_bytes())
+    else:
+      raise RuntimeError('Unknown option for select-chr-plane: %s' %
+                         (select_chr_plane,))
 
   def _save_palette(self, fout, palette_1, palette_2):
     self._write_single_palette(fout, palette_1, self._bg_color)

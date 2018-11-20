@@ -165,6 +165,18 @@ def run():
                             'just output binary data if the file name ends '
                             'in .bin or .dat.'))
 
+  parser.add_argument('--vertical-pixel-display', dest='vertical_pixel_display',
+                      action='store_true',
+                      help=('Certain platforms, like Arduboy, render pixels '
+                            'from top to bottom instead of left to right. '
+                            'This flag will change chr storage order to work '
+                            'as with this type of display.'))
+
+  parser.add_argument('--select-chr-plane', dest='select_chr_plane',
+                      help=('Instead of outputting CHR as a bit-planar bitmap, '
+                            'only output plane 0 or plane 1, and ignore the '
+                            'other.'))
+
   # Input
   parser.add_argument('-m', dest='memimport', metavar='memory_dump',
                       help=('Filename for memory dump to import, instead of '

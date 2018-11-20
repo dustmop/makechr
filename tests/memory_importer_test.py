@@ -17,6 +17,8 @@ class MockArgs(object):
     self.is_sprite = None
     self.is_locked_tiles = None
     self.lock_sprite_flips = None
+    self.select_chr_plane = None
+    self.vertical_pixel_display = False
     self.compile = None
 
   def tmpfile(self, template):

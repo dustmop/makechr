@@ -126,7 +126,10 @@ class Application(object):
     config = ppu_memory.PpuMemoryConfig(
       chr_order=args.order, traversal=traversal, is_sprite=args.is_sprite,
       is_locked_tiles=args.is_locked_tiles,
-      lock_sprite_flips=args.lock_sprite_flips)
+      lock_sprite_flips=args.lock_sprite_flips,
+      select_chr_plane=args.select_chr_plane)
+    if args.vertical_pixel_display:
+      mem.chr_set.vertical_pixel_display()
     if args.output == '/dev/null':
       # Ignore output.
       pass
