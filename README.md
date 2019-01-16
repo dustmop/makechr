@@ -6,7 +6,7 @@ The goals of makechr are to be portable (written in python), fast (can process a
 
 Windows GUI builds are available in releases.
 
-Input images should be 256px wide and 240px high, representing a full nametable, and must follow NES attribute and palette restrictions. Smaller imagse will have padded nametables, while images with greater width will result in up to 2 nametables, assuming horizontal arrangement.
+Input images should be 256px wide and 240px high, representing a full nametable, and must follow NES attribute and palette restrictions. Smaller images will have padded nametables, while images with greater width will result in up to 2 nametables, assuming horizontal arrangement.
 
 An RGB palette is hard-coded in rgb.py, other palettes are not yet supported.
 
