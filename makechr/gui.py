@@ -267,7 +267,7 @@ class DrawCursorManager(object):
     self.tileSet = y * 16 + x
     try:
       elems = self.parent.nt_inverter[self.tileSet]
-    except AttributeError, KeyError:
+    except (AttributeError, KeyError):
       elems = None
     if elems:
       (y,x) = elems[0]
@@ -280,7 +280,7 @@ class DrawCursorManager(object):
       self.DrawCursorToComponents(clear, self.cursor)
       try:
         elems = self.parent.nt_inverter[self.tileSet]
-      except AttributeError, KeyError:
+      except (AttributeError, KeyError):
         elems = None
       if elems and len(elems) <= TILE_REUSE_LIMIT:
         for y,x in elems:

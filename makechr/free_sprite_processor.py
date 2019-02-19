@@ -101,7 +101,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
         dot_xlat = self.get_dot_xlat(color_needs, palette_option)
         try:
           (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
-        except errors.NametableOverflow, e:
+        except errors.NametableOverflow as e:
           self._err.add(errors.NametableOverflow(e.chr_num, y, x))
           chr_num = 0
         if (config.is_locked_tiles and self._ppu_memory.chr_set.is_full() and

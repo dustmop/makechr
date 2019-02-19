@@ -19,8 +19,9 @@ for n in range(num_trials):
                        stderr=subprocess.PIPE)
   (out, err) = p.communicate()
   if p.returncode != 0:
-    print err
+    print(err)
     sys.exit(1)
+  err = err.decode('ascii')
   collect += err
 
 real, user, syst = ([], [], [])
@@ -34,7 +35,13 @@ for line in collect.split('\n'):
     elif 'sys' in line:
       syst.append(float(m.group(1)))
 
+if not real:
+  sys.stderr.write('Could not pattern match any results\n')
+  sys.exit(1)
+
 def average(elems):
+  if not elems:
+    return 0
   num = 0.0
   for e in elems:
     num += e
@@ -47,19 +54,20 @@ def stddev(elems):
     num += (e - mean) ** 2
   return num ** 0.5
 
+# Drop first sample, to try and ignore startup time.
 real = real[1:]
 user = user[1:]
 syst = syst[1:]
 
-print 'Run time over %s trials' % len(real)
-print '----------------'
-print 'real    0m%.3fs' % average(real)
-print 'user    0m%.3fs' % average(user)
-print 'sys     0m%.3fs' % average(syst)
-print
-print 'Standard deviations'
-print '----------------'
-print 'SD real 0m%.3fs' % stddev(real)
-print 'SD user 0m%.3fs' % stddev(user)
-print 'SD sys  0m%.3fs' % stddev(syst)
+print('Run time over %s trials' % len(real))
+print('----------------')
+print('real    0m%.3fs' % average(real))
+print('user    0m%.3fs' % average(user))
+print('sys     0m%.3fs' % average(syst))
+print('')
+print('Standard deviations')
+print('----------------')
+print('SD real 0m%.3fs' % stddev(real))
+print('SD user 0m%.3fs' % stddev(user))
+print('SD sys  0m%.3fs' % stddev(syst))
 

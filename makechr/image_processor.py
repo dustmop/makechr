@@ -9,9 +9,14 @@ import math
 import os
 import palette
 import ppu_memory
+import sys
 import rgb
 import wrapped_image_palette
 from constants import *
+
+
+if sys.version_info < (3,0):
+  range = xrange
 
 
 class ImageProcessor(object):
@@ -40,8 +45,8 @@ class ImageProcessor(object):
     self.img = img
     self.pixels = self.img.convert('RGB').load()
     (self.image_x, self.image_y) = self.img.size
-    self.blocks_y = int(math.ceil(float(self.image_y) / 16))
-    self.blocks_x = int(math.ceil(float(self.image_x) / 16))
+    self.blocks_y = int(math.ceil(float(self.image_y) // 16))
+    self.blocks_x = int(math.ceil(float(self.image_x) // 16))
     if self.blocks_x <= 16:
       self._ppu_memory.num_gfx_page = 1
       self._ppu_memory.gfx_0.nt_start = 0
@@ -84,8 +89,8 @@ class ImageProcessor(object):
     found_diff = float('infinity')
     colors = rgb.RGB_COLORS
     for i,allow_val in enumerate(colors):
-      diff_r = abs(r - allow_val / (256 * 256))
-      diff_g = abs(g - (allow_val / 256) % 256)
+      diff_r = abs(r - allow_val // (256 * 256))
+      diff_g = abs(g - (allow_val // 256) % 256)
       diff_b = abs(b - allow_val % 256)
       diff = diff_r + diff_g + diff_b
       if diff < found_diff:
@@ -156,9 +161,9 @@ class ImageProcessor(object):
     ps = self.pixels
     xlat = rgb.RGB_XLAT
     components_to_nescolor_func = self.components_to_nescolor
-    for i in xrange(TILE_SIZE):
+    for i in range(TILE_SIZE):
       row = i * TILE_SIZE
-      for j in xrange(TILE_SIZE):
+      for j in range(TILE_SIZE):
         # Inlined call to get_nes_color(pixel_y, pixel_x) to get nc.
         p = ps[pixel_x + j, pixel_y + i]
         color_val = (p[0] << 16) + (p[1] << 8) + p[2]
@@ -219,8 +224,8 @@ class ImageProcessor(object):
     if bg_mask:
       process_tile_func = (
         lambda y,x: self.filter_process_tile(y, x, bg_mask, bg_fill))
-    for i in xrange(2):
-      for j in xrange(2):
+    for i in range(2):
+      for j in range(2):
         try:
           (color_needs, dot_profile) = process_tile_func(y + i, x + j)
         except (errors.PaletteOverflowError, errors.CouldntConvertRGB) as e:
@@ -242,7 +247,7 @@ class ImageProcessor(object):
 
   def filter_process_tile(self, tile_y, tile_x, bg_mask, bg_fill):
     (color_needs, dot_profile) = self.process_tile(tile_y, tile_x)
-    for i in xrange(len(color_needs)):
+    for i in range(len(color_needs)):
       if color_needs[i] == bg_mask:
         color_needs[i] = bg_fill
     return (color_needs, dot_profile)
@@ -332,8 +337,8 @@ class ImageProcessor(object):
     """
     dot_profile = self._dot_manifest.at(did)
     tile = chr_data.ChrTile()
-    for row in xrange(8):
-      for col in xrange(8):
+    for row in range(8):
+      for col in range(8):
         i = row * 8 + col
         val = xlat[dot_profile[i]]
         tile.put_pixel(row, col, val)
@@ -426,8 +431,8 @@ class ImageProcessor(object):
       return
     colors = e.colors
     to_merge = e.to_merge
-    for block_y in xrange(self.blocks_y):
-      for block_x in xrange(self.blocks_x):
+    for block_y in range(self.blocks_y):
+      for block_x in range(self.blocks_x):
         y = block_y * 2
         x = block_x * 2
         bcid = self._artifacts[y][x][ARTIFACT_BCID]
@@ -447,13 +452,13 @@ class ImageProcessor(object):
     bg_fill: Background color fill.
     config: Configuration of ppu_memory
     """
-    for block_y in xrange(self.blocks_y):
-      for block_x in xrange(self.blocks_x):
+    for block_y in range(self.blocks_y):
+      for block_x in range(self.blocks_x):
         try:
           self.process_block(block_y, block_x, bg_mask, bg_fill,
                              config.is_sprite)
         except errors.PaletteOverflowError as e:
-          print 'palette error'
+          print('palette error')
           self.collect_error(e, block_y, block_x, 0, 0, is_block=True)
           continue
     self._needs_provider = self._block_color_manifest
@@ -463,9 +468,9 @@ class ImageProcessor(object):
   def replace_mask_with_fill(self, bg_color_mask, bg_color_fill):
     """Replace the mask color by the fill color in the color manifest."""
     if bg_color_mask:
-      for i in xrange(len(self._color_manifest)):
+      for i in range(len(self._color_manifest)):
         colors = self._color_manifest.at(i)
-        for j in xrange(len(colors)):
+        for j in range(len(colors)):
           if colors[j] == bg_color_mask:
             colors[j] = bg_color_fill
 
@@ -475,13 +480,13 @@ class ImageProcessor(object):
     pal: Palette for this image.
     config: Configuration of ppu_memory
     """
-    for g in xrange(self._ppu_memory.num_gfx_page):
+    for g in range(self._ppu_memory.num_gfx_page):
       gfx = self._ppu_memory.get_page(g)
       (nt_s, nt_w) = (gfx.nt_start, gfx.nt_width)
       if not config.is_sprite:
         # For each block, get the attribute aka the palette.
-        for block_x in xrange(nt_w / 2):
-          for block_y in xrange(self.blocks_y):
+        for block_x in range(nt_w // 2):
+          for block_y in range(self.blocks_y):
             y = block_y * 2
             x = block_x * 2
             (cid, did, bcid) = self._artifacts[y][x + nt_s]
@@ -495,8 +500,8 @@ class ImageProcessor(object):
               gfx.colorization[y + a][x + b] = pid
       else:
         # For each tile, get the attribute aka the palette.
-        for x in xrange(nt_w):
-          for y in xrange(self.blocks_y * 2):
+        for x in range(nt_w):
+          for y in range(self.blocks_y * 2):
             (cid, did, bcid) = self._artifacts[y][x + nt_s]
             color_needs = self._needs_provider.at(cid)
             try:
@@ -516,18 +521,18 @@ class ImageProcessor(object):
     # Find empty tile.
     empty_did = self._dot_manifest.get(chr(0) * 64)
     empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
-    for g in xrange(self._ppu_memory.num_gfx_page):
+    for g in range(self._ppu_memory.num_gfx_page):
       gfx = self._ppu_memory.get_page(g)
       (nt_s, nt_w, nt_h) = (gfx.nt_start, gfx.nt_width, self.blocks_y * 2)
       # Traverse tiles in the artifact table, creating the chr and nametable.
       if traversal == 'horizontal':
-        generator = ((y,x) for y in xrange(nt_h) for x in xrange(nt_w))
+        generator = ((y,x) for y in range(nt_h) for x in range(nt_w))
       elif traversal == 'vertical':
-        generator = ((y,x) for x in xrange(nt_w) for y in xrange(nt_h))
+        generator = ((y,x) for x in range(nt_w) for y in range(nt_h))
       elif traversal == 'block':
-        generator = ((y*2+i,x*2+j) for y in xrange(nt_h / 2) for
-                     x in xrange(nt_w / 2) for i in xrange(2) for
-                     j in xrange(2))
+        generator = ((y*2+i,x*2+j) for y in range(nt_h // 2) for
+                     x in range(nt_w // 2) for i in range(2) for
+                     j in range(2))
       elif traversal == '8x16':
         raise errors.UnknownLogicFailure('traverse using subclassed processor')
       for (y,x) in generator:
@@ -548,7 +553,7 @@ class ImageProcessor(object):
         # skip this entry.
         try:
           (chr_num, flip_bits) = self.store_chrdata(dot_xlat, did, config)
-        except errors.NametableOverflow, e:
+        except errors.NametableOverflow as e:
           self._err.add(errors.NametableOverflow(e.chr_num, y, x))
           chr_num = 0
         if config.is_sprite:
@@ -564,8 +569,8 @@ class ImageProcessor(object):
     """
     empty_did = self._dot_manifest.get(chr(0) * 64)
     empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
-    generator = ((y,x) for y in xrange(self.blocks_y * 2) for
-                 x in xrange(self.blocks_x * 2))
+    generator = ((y,x) for y in range(self.blocks_y * 2) for
+                 x in range(self.blocks_x * 2))
     for (y,x) in generator:
       (cid, did, bcid) = self._artifacts[y][x]
       if empty_cid == cid and empty_did == did:

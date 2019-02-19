@@ -3,8 +3,16 @@ import collections
 import chr_data
 from constants import *
 import os
+import sys
 
 object_file_writer = None
+
+
+if sys.version_info < (3,0):
+  range = xrange
+  to_byte = chr
+else:
+  to_byte = lambda v: bytes([v])
 
 
 class GraphicsPage(object):
@@ -131,10 +139,10 @@ class PpuMemory(object):
     return components
 
   def _save_nametable(self, fout, nametable):
-    for y in xrange(NUM_BLOCKS_Y * 2):
-      for x in xrange(NUM_BLOCKS_X * 2):
+    for y in range(NUM_BLOCKS_Y * 2):
+      for x in range(NUM_BLOCKS_X * 2):
         nt = nametable[y][x]
-        fout.write(chr(nt))
+        fout.write(bytearray([nt]))
 
   def _save_chr(self, fout, chr_set, select_chr_plane):
     if select_chr_plane in ['0','1']:
@@ -150,8 +158,8 @@ class PpuMemory(object):
     self._write_single_palette(fout, palette_2, self._bg_color)
 
   def _save_attribute(self, fout, colorization):
-    for attr_y in xrange(NUM_BLOCKS_Y / 2 + 1):
-      for attr_x in xrange(NUM_BLOCKS_X / 2):
+    for attr_y in range(NUM_BLOCKS_Y // 2 + 1):
+      for attr_x in range(NUM_BLOCKS_X // 2):
         block_y = attr_y * 2
         block_x = attr_x * 2
         y = block_y * 2
@@ -161,17 +169,17 @@ class PpuMemory(object):
         p2 = colorization[y + 2][x + 0] if block_y + 1 < NUM_BLOCKS_Y else 0
         p3 = colorization[y + 2][x + 2] if block_y + 1 < NUM_BLOCKS_Y else 0
         attr = p0 + (p1 << 2) + (p2 << 4) + (p3 << 6)
-        fout.write(chr(attr))
+        fout.write(to_byte(attr))
 
   def _save_spritelist(self, fout, spritelist, sprite_palettes):
     n = 0
     for y_pos, tile, attr, x_pos in spritelist:
-      fout.write(chr(y_pos))
-      fout.write(chr(tile))
-      fout.write(chr(attr))
-      fout.write(chr(x_pos))
+      fout.write(to_byte(y_pos))
+      fout.write(to_byte(tile))
+      fout.write(to_byte(attr))
+      fout.write(to_byte(x_pos))
       n += 1
-    fout.write(chr(0xff))
+    fout.write(to_byte(0xff))
 
   def _get_bg_color(self, palette_1, palette_2):
     bg_color = None
@@ -199,15 +207,15 @@ class PpuMemory(object):
   def _write_single_palette(self, fout, palette, bg_color):
     if not palette:
       return
-    for i in xrange(4):
+    for i in range(4):
       palette_option = palette.get(i)
       if palette_option is None:
         palette_option = []
-      for j in xrange(4):
+      for j in range(4):
         if j < len(palette_option):
-          fout.write(chr(palette_option[j]))
+          fout.write(to_byte(palette_option[j]))
         else:
-          fout.write(chr(bg_color))
+          fout.write(to_byte(bg_color))
 
   def get_page(self, i):
     if i == 0 and self.num_gfx_page > 0:
@@ -221,8 +229,8 @@ class PpuMemory(object):
     """Build a table that maps tile numbers to lists of positions."""
     nametable = self.gfx_0.nametable
     lookup = collections.defaultdict(list)
-    for y in xrange(NUM_BLOCKS_Y * 2):
-      for x in xrange(NUM_BLOCKS_X * 2):
+    for y in range(NUM_BLOCKS_Y * 2):
+      for x in range(NUM_BLOCKS_X * 2):
         lookup[nametable[y][x]].append([y,x])
     return lookup
 
@@ -230,14 +238,14 @@ class PpuMemory(object):
     if role == 'nametable':
       nametable = self.gfx_0.nametable
       bytes = bytearray()
-      for y in xrange(30):
+      for y in range(30):
         bytes += bytearray(nametable[y])
       return bytes
     elif role == 'attribute':
       colorization = self.gfx_0.colorization
       bytes = bytearray()
-      for attr_y in xrange(NUM_BLOCKS_Y / 2 + 1):
-        for attr_x in xrange(NUM_BLOCKS_X / 2):
+      for attr_y in range(NUM_BLOCKS_Y // 2 + 1):
+        for attr_x in range(NUM_BLOCKS_X // 2):
           block_y = attr_y * 2
           block_x = attr_x * 2
           y = block_y * 2

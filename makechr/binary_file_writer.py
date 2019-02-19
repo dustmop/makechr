@@ -1,7 +1,7 @@
 from constants import *
 
 
-ZERO_BYTE = chr(0)
+ZERO_BYTE = bytearray([0])[0]
 
 
 class BinaryFileWriter(object):
@@ -25,7 +25,7 @@ class BinaryFileWriter(object):
 
   def configure(self, null_value=None, size=None, order=None, align=None,
                 extract=None):
-    self._null_value = chr(null_value or 0)
+    self._null_value = null_value or bytearray([0])[0]
     _ = size
     _ = order
     _ = align
@@ -33,12 +33,12 @@ class BinaryFileWriter(object):
     self._order = order
     if self._order == 1:
       num = extract - size
-      self._fout.write(self._null_value * num)
+      self._fout.write(bytearray([self._null_value]) * num)
 
   def close(self):
     extract = self._component_req.get(self._name)
     if extract:
       num = extract - self._fout.tell()
-      self._fout.write(self._null_value * num)
+      self._fout.write(bytearray([self._null_value]) * num)
     self._fout.close()
     self._fout = None

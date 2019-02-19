@@ -30,7 +30,7 @@ def is_valiant(filename):
   fp = open(filename, 'rb')
   content = fp.read()
   fp.close()
-  return content.startswith('(VALIANT)')
+  return content.startswith(b'(VALIANT)')
 
 
 class BlankLineFormatter(argparse.RawDescriptionHelpFormatter):
@@ -261,7 +261,7 @@ def run():
   elif args.input:
     try:
       img = Image.open(args.input)
-    except IOError, e:
+    except IOError as e:
       sys.stderr.write('Not an image file: "%s"\n' % args.input)
       sys.exit(1)
     if args.output and (args.output.endswith('/') or
@@ -272,7 +272,7 @@ def run():
     try:
       if not application.run(img, args):
         sys.exit(1)
-    except errors.CommandLineArgError, e:
+    except errors.CommandLineArgError as e:
       sys.stderr.write('Command-line error: %s\n' % e)
       sys.exit(1)
   else:
