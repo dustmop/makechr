@@ -288,12 +288,12 @@ class ViewRenderer(object):
     else:
       palette = ppu_memory.palette_spr
     # TODO: Support both graphics pages.
-    colorization = ppu_memory.gfx_0.colorization
+    colorization = ppu_memory.gfx[0].colorization
     for y in xrange(NUM_BLOCKS_Y):
       for x in xrange(NUM_BLOCKS_X):
         pid = colorization[y*2][x*2]
         poption = palette.get(pid)
-        if self.is_empty_block(y, x, ppu_memory.gfx_0.nametable):
+        if self.is_empty_block(y, x, ppu_memory.gfx[0].nametable):
           self.draw_empty_block(y, x, poption[0])
         else:
           self.draw_block(y, x, poption)
@@ -313,7 +313,7 @@ class ViewRenderer(object):
     self.create_file(outfile, width, height, (0, 0, 0))
     scheme = 'legacy' if self.is_legacy else 'normal'
     # TODO: Support both graphics pages.
-    nametable = ppu_memory.gfx_0.nametable
+    nametable = ppu_memory.gfx[0].nametable
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
         for i in range(2):
@@ -362,7 +362,7 @@ class ViewRenderer(object):
     bg_color = (0, 0, 0) if not self.is_legacy else (255, 255, 255)
     self.create_file(outfile, width, height, bg_color)
     # TODO: Support both graphics pages.
-    nametable = ppu_memory.gfx_0.nametable
+    nametable = ppu_memory.gfx[0].nametable
     for block_y in xrange(NUM_BLOCKS_Y):
       for block_x in xrange(NUM_BLOCKS_X):
         for i in range(2):

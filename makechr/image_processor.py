@@ -34,10 +34,8 @@ class ImageProcessor(object):
     self._dot_manifest = id_manifest.IdManifest()
     self._block_color_manifest = id_manifest.IdManifest()
     self._needs_provider = None
-    self._artifacts = [row[:] for row in
-                       [[None]*(NUM_BLOCKS_X*4)]*(NUM_BLOCKS_Y*4)]
-    self._flip_bits = [row[:] for row in
-                       [[0]*(NUM_BLOCKS_X*4)]*(NUM_BLOCKS_Y*4)]
+    self._artifacts = None
+    self._flip_bits = None
     self._err = errors.ErrorCollector()
     self.image_x = self.image_y = None
 
@@ -45,18 +43,31 @@ class ImageProcessor(object):
     self.img = img
     self.pixels = self.img.convert('RGB').load()
     (self.image_x, self.image_y) = self.img.size
-    self.blocks_y = int(math.ceil(float(self.image_y) // 16))
-    self.blocks_x = int(math.ceil(float(self.image_x) // 16))
-    if self.blocks_x <= 16:
-      self._ppu_memory.num_gfx_page = 1
-      self._ppu_memory.gfx_0.nt_start = 0
-      self._ppu_memory.gfx_0.nt_width = self.blocks_x * 2
-    else:
-      self._ppu_memory.num_gfx_page = 2
-      self._ppu_memory.gfx_0.nt_start = 0
-      self._ppu_memory.gfx_0.nt_width = 32
-      self._ppu_memory.gfx_1.nt_start = 32
-      self._ppu_memory.gfx_1.nt_width = (self.blocks_x * 2) - 32
+    self.blocks_y = int(math.ceil(float(self.image_y) / 16))
+    self.blocks_x = int(math.ceil(float(self.image_x) / 16))
+    # Calculate number of screens and allocate space for ppu memory.
+    self.screen_y = int(math.ceil(float(self.blocks_y) / 16))
+    self.screen_x = int(math.ceil(float(self.blocks_x) / 16))
+    size_x = NUM_TILES_X * self.screen_x
+    size_y = NUM_TILES_Y * self.screen_y
+    self._artifacts = [row[:] for row in [[None] * size_x] * size_y]
+    self._flip_bits = [row[:] for row in [[None] * size_x] * size_y]
+    self._ppu_memory.allocate_num_pages(self.screen_y * self.screen_x)
+    # Set size of nametable for each screen.
+    for y in range(self.screen_y):
+      for x in range(self.screen_x):
+        size_y, size_x = 0, 0
+        if y == self.screen_y - 1:
+          size_y = (self.blocks_y % 15) * 2
+        if x == self.screen_x - 1:
+          size_x = (self.blocks_x % 16) * 2
+        if size_y == 0:
+          size_y = 30
+        if size_x == 0:
+          size_x = 32
+        n = y * self.screen_x + x
+        self._ppu_memory.gfx[n].nt_y = size_y
+        self._ppu_memory.gfx[n].nt_x = size_x
 
   def artifacts(self):
     return self._artifacts
@@ -480,16 +491,17 @@ class ImageProcessor(object):
     pal: Palette for this image.
     config: Configuration of ppu_memory
     """
-    for g in range(self._ppu_memory.num_gfx_page):
-      gfx = self._ppu_memory.get_page(g)
-      (nt_s, nt_w) = (gfx.nt_start, gfx.nt_width)
+    for g, gfx in enumerate(self._ppu_memory.gfx):
+      nt_y, nt_x = (gfx.nt_y, gfx.nt_x)
+      page_y = (g // self.screen_x) * nt_y
+      page_x = (g  % self.screen_x) * nt_x
       if not config.is_sprite:
         # For each block, get the attribute aka the palette.
-        for block_x in range(nt_w // 2):
-          for block_y in range(self.blocks_y):
+        for block_x in range(nt_x // 2):
+          for block_y in range(nt_y // 2):
             y = block_y * 2
             x = block_x * 2
-            (cid, did, bcid) = self._artifacts[y][x + nt_s]
+            (cid, did, bcid) = self._artifacts[y + page_y][x + page_x]
             color_needs = self._needs_provider.at(bcid)
             try:
               (pid, palette_option) = pal.select(color_needs)
@@ -500,9 +512,9 @@ class ImageProcessor(object):
               gfx.colorization[y + a][x + b] = pid
       else:
         # For each tile, get the attribute aka the palette.
-        for x in range(nt_w):
-          for y in range(self.blocks_y * 2):
-            (cid, did, bcid) = self._artifacts[y][x + nt_s]
+        for x in range(nt_x):
+          for y in range(nt_y):
+            (cid, did, bcid) = self._artifacts[y + page_y][x + page_x]
             color_needs = self._needs_provider.at(cid)
             try:
               (pid, palette_option) = pal.select(color_needs)
@@ -521,22 +533,24 @@ class ImageProcessor(object):
     # Find empty tile.
     empty_did = self._dot_manifest.get(chr(0) * 64)
     empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
-    for g in range(self._ppu_memory.num_gfx_page):
-      gfx = self._ppu_memory.get_page(g)
-      (nt_s, nt_w, nt_h) = (gfx.nt_start, gfx.nt_width, self.blocks_y * 2)
+    screen_y = screen_x = 0
+    for g, gfx in enumerate(self._ppu_memory.gfx):
+      nt_y, nt_x = (gfx.nt_y, gfx.nt_x)
+      page_y = (g // self.screen_x) * 30
+      page_x = (g  % self.screen_x) * 32
       # Traverse tiles in the artifact table, creating the chr and nametable.
       if traversal == 'horizontal':
-        generator = ((y,x) for y in range(nt_h) for x in range(nt_w))
+        generator = ((y,x) for y in range(nt_y) for x in range(nt_x))
       elif traversal == 'vertical':
-        generator = ((y,x) for x in range(nt_w) for y in range(nt_h))
+        generator = ((y,x) for x in range(nt_x) for y in range(nt_y))
       elif traversal == 'block':
-        generator = ((y*2+i,x*2+j) for y in range(nt_h // 2) for
-                     x in range(nt_w // 2) for i in range(2) for
+        generator = ((y*2+i,x*2+j) for y in range(nt_y // 2) for
+                     x in range(nt_x // 2) for i in range(2) for
                      j in range(2))
       elif traversal == '8x16':
         raise errors.UnknownLogicFailure('traverse using subclassed processor')
       for (y,x) in generator:
-        (cid, did, bcid) = self._artifacts[y][x + nt_s]
+        (cid, did, bcid) = self._artifacts[y + page_y][x + page_x]
         pid = gfx.colorization[y][x]
         palette_option = pal.get(pid)
         color_needs = self._color_manifest.at(cid)
@@ -557,7 +571,7 @@ class ImageProcessor(object):
           self._err.add(errors.NametableOverflow(e.chr_num, y, x))
           chr_num = 0
         if config.is_sprite:
-          self._flip_bits[y][x + nt_s] = flip_bits
+          self._flip_bits[y + page_y][x + page_x] = flip_bits
         gfx.nametable[y][x] = chr_num
         if empty_cid == cid and empty_did == did:
           self._ppu_memory.empty_tile = chr_num
@@ -575,7 +589,7 @@ class ImageProcessor(object):
       (cid, did, bcid) = self._artifacts[y][x]
       if empty_cid == cid and empty_did == did:
         continue
-      tile = self._ppu_memory.gfx_0.nametable[y][x]
+      tile = self._ppu_memory.gfx[0].nametable[y][x]
       if not config.allow_overflow or not 's' in config.allow_overflow:
         if len(self._ppu_memory.spritelist) >= 0x40:
           if not config.is_locked_tiles:
@@ -583,7 +597,7 @@ class ImageProcessor(object):
           continue
       y_pos = y * 8 - 1 if y > 0 else 0
       x_pos = x * 8
-      attr = self._ppu_memory.gfx_0.colorization[y][x] | self._flip_bits[y][x]
+      attr = self._ppu_memory.gfx[0].colorization[y][x] | self._flip_bits[y][x]
       self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
 
   def process_image(self, img, palette_text, bg_color_mask, bg_color_fill,

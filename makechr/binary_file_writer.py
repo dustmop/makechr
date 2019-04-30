@@ -36,6 +36,8 @@ class BinaryFileWriter(object):
       self._fout.write(bytearray([self._null_value]) * num)
 
   def close(self):
+    if self._fout is None:
+      return
     extract = self._component_req.get(self._name)
     if extract:
       num = extract - self._fout.tell()

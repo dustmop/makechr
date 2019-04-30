@@ -64,8 +64,8 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
       except IndexError:
         self._err.add(errors.PaletteNoChoiceError(y, x, color_needs))
         pid = 0
-      self._ppu_memory.gfx_0.colorization[y    ][x] = pid
-      self._ppu_memory.gfx_0.colorization[y + 1][x] = pid
+      self._ppu_memory.gfx[0].colorization[y    ][x] = pid
+      self._ppu_memory.gfx[0].colorization[y + 1][x] = pid
 
   def traverse_artifacts(self, traversal, pal, config):
     """Traverse in 8x16 order, and create CHR."""
@@ -77,18 +77,18 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
       if not config.is_locked_tiles:
         if (empty_cid == cid_u and empty_did == did_u and
             empty_cid == cid_l and empty_did == did_l):
-          self._ppu_memory.gfx_0.nametable[y  ][x] = 0x100
-          self._ppu_memory.gfx_0.nametable[y+1][x] = 0x100
+          self._ppu_memory.gfx[0].nametable[y  ][x] = 0x100
+          self._ppu_memory.gfx[0].nametable[y+1][x] = 0x100
           self._ppu_memory.empty_tile = 0x100
           continue
       # For 8x16, colorization must be the same for each tile in a vert_pair.
-      pid_u = self._ppu_memory.gfx_0.colorization[y][x]
+      pid_u = self._ppu_memory.gfx[0].colorization[y][x]
       palette_option = pal.get(pid_u)
       # Store chr data and assign tile number to the nametable.
       chr_num_u, chr_num_l, flip_bits = self.store_vert_pair(
         palette_option, cid_u, did_u, cid_l, did_l, config)
-      self._ppu_memory.gfx_0.nametable[y  ][x] = chr_num_u
-      self._ppu_memory.gfx_0.nametable[y+1][x] = chr_num_l
+      self._ppu_memory.gfx[0].nametable[y  ][x] = chr_num_u
+      self._ppu_memory.gfx[0].nametable[y+1][x] = chr_num_l
       self._flip_bits[y][x] = flip_bits
 
   def store_vert_pair(self, palette_option, cid_u, did_u, cid_l, did_l, config):
@@ -141,7 +141,7 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
       if (empty_cid == cid_u and empty_did == did_u and
           empty_cid == cid_l and empty_did == did_l):
         continue
-      tile = self._ppu_memory.gfx_0.nametable[y][x]
+      tile = self._ppu_memory.gfx[0].nametable[y][x]
       if not 's' in config.allow_overflow:
         if len(self._ppu_memory.spritelist) == 0x40:
           if not config.is_locked_tiles:
@@ -149,7 +149,7 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
           continue
       y_pos = y * 8 - 1 if y > 0 else 0
       x_pos = x * 8
-      attr = self._ppu_memory.gfx_0.colorization[y][x] | self._flip_bits[y][x]
+      attr = self._ppu_memory.gfx[0].colorization[y][x] | self._flip_bits[y][x]
       self._ppu_memory.spritelist.append([y_pos, tile + tile_low_bit,
                                           attr, x_pos])
 

@@ -20,12 +20,13 @@ class MemoryImporter(object):
     if file_size != 0x4000:
       raise errors.FileFormatError(file_size, size=0x4000)
     mem = ppu_memory.PpuMemory()
+    mem.allocate_num_pages(2)
     # Read CHR from $0000-$2000
     mem.chr_set = chr_data.ChrBank.from_binary(fp.read(0x2000))
     # TODO: Handle chr order (background / sprite at $0000 / $1000).
     # For each graphics page, read nametable & attribute.
     for loop_num in xrange(2):
-      gfx = mem.gfx_0 if not loop_num else mem.gfx_1
+      gfx = mem.gfx[0] if not loop_num else mem.gfx[1]
       if loop_num == 1:
         # Skip $2400-$2c00
         fp.read(0x800)
@@ -68,6 +69,7 @@ class MemoryImporter(object):
     content = fp.read()
     fp.close()
     mem = ppu_memory.PpuMemory()
+    mem.allocate_num_pages(2)
     obj_file = valiant.ObjectFile()
     obj_file.ParseFromString(content)
     binary_map = {}
@@ -89,7 +91,7 @@ class MemoryImporter(object):
     # Parse nametable data.
     for y in xrange(30):
       for x in xrange(32):
-        mem.gfx_0.nametable[y][x] = nt_bin[y*32 + x]
+        mem.gfx[0].nametable[y][x] = nt_bin[y*32 + x]
     # Parse attributes data.
     for a in xrange(64):
       p0 = (at_bin[a] >> 0) & 0x03
@@ -98,11 +100,11 @@ class MemoryImporter(object):
       p3 = (at_bin[a] >> 6) & 0x03
       y = (a / 8) * 4
       x = (a % 8) * 4
-      mem.gfx_0.colorization[y + 0][x + 0] = p0
-      mem.gfx_0.colorization[y + 0][x + 2] = p1
+      mem.gfx[0].colorization[y + 0][x + 0] = p0
+      mem.gfx[0].colorization[y + 0][x + 2] = p1
       if y < (7 * 4):
-        mem.gfx_0.colorization[y + 2][x + 0] = p2
-        mem.gfx_0.colorization[y + 2][x + 2] = p3
+        mem.gfx[0].colorization[y + 2][x + 0] = p2
+        mem.gfx[0].colorization[y + 2][x + 2] = p3
     # Parse palette data.
     pal = palette.Palette()
     pal.set_bg_color(pal_bin[0])

@@ -19,10 +19,8 @@ class GraphicsPage(object):
   def __init__(self):
     self.nt_start = None
     self.nt_width = None
-    self.nametable = [row[:] for row in
-                      [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
-    self.colorization = [row[:] for row in
-                         [[0]*(NUM_BLOCKS_X*2)]*(NUM_BLOCKS_Y*2)]
+    self.nametable = [row[:] for row in [[0]*(NUM_TILES_X)]*(NUM_TILES_Y)]
+    self.colorization = [row[:] for row in [[0]*(NUM_TILES_X)]*(NUM_TILES_Y)]
 
 
 class PpuMemoryConfig(object):
@@ -50,9 +48,7 @@ class PpuMemory(object):
   Data structure representing the components of graphics in PPU memory.
   """
   def __init__(self):
-    self.num_gfx_page = None
-    self.gfx_0 = GraphicsPage()
-    self.gfx_1 = GraphicsPage()
+    self.gfx = None
     self.palette_nt = None
     self.palette_spr = None
     self.chr_set = chr_data.ChrPage()
@@ -63,6 +59,9 @@ class PpuMemory(object):
     # HACK: Not actually a part of ppu_memory. Only set here so that it can
     # be passed to the view renderer after free sprite traversal.
     self.zones = None
+
+  def allocate_num_pages(self, num):
+    self.gfx = [GraphicsPage() for i in range(num)]
 
   def override_bg_color(self, bg_color):
     self._bg_color = bg_color
@@ -108,12 +107,11 @@ class PpuMemory(object):
     self._bg_color = self._get_bg_color(self.palette_nt, self.palette_spr)
     components = self._get_enabled_components(config)
     if 'nametable' in components:
-      fout = self._writer.get_writable('nametable', False)
-      self._save_nametable(fout, self.gfx_0.nametable)
-      if self.num_gfx_page == 2:
+      for i, gfx in enumerate(self.gfx):
+        name = 'nametable' if i == 0 else ('nametable%d' % i)
+        fout = self._writer.get_writable(name, False)
+        self._save_nametable(fout, gfx.nametable)
         self._writer.close()
-        fout = self._writer.get_writable('nametable1', False)
-        self._save_nametable(fout, self.gfx_1.nametable)
     if 'chr' in components:
       fout = self._writer.get_writable('chr', True)
       self._writer.configure(null_value=0, size=0x1000, order=config.chr_order,
@@ -125,16 +123,15 @@ class PpuMemory(object):
                              order=config.palette_order, extract=0x20)
       self._save_palette(fout, self.palette_nt, self.palette_spr)
     if 'attribute' in components:
-      fout = self._writer.get_writable('attribute', False)
-      self._save_attribute(fout, self.gfx_0.colorization)
-      if self.num_gfx_page == 2:
+      for i, gfx in enumerate(self.gfx):
+        name = 'attribute' if i == 0 else ('attribute%d' % i)
+        fout = self._writer.get_writable(name, False)
+        self._save_attribute(fout, gfx.colorization)
         self._writer.close()
-        fout = self._writer.get_writable('attribute1', False)
-        self._save_attribute(fout, self.gfx_1.colorization)
     if 'spritelist' in components:
       fout = self._writer.get_writable('spritelist', False)
       self._save_spritelist(fout, self.spritelist,
-                            self.gfx_0.colorization)
+                            self.gfx[0].colorization)
     self._writer.close()
     return components
 
@@ -217,17 +214,9 @@ class PpuMemory(object):
         else:
           fout.write(to_byte(bg_color))
 
-  def get_page(self, i):
-    if i == 0 and self.num_gfx_page > 0:
-      return self.gfx_0
-    elif i == 1 and self.num_gfx_page > 1:
-      return self.gfx_1
-    else:
-      raise errors.NametableNotFound(i)
-
   def build_nt_inverter(self):
     """Build a table that maps tile numbers to lists of positions."""
-    nametable = self.gfx_0.nametable
+    nametable = self.gfx[0].nametable
     lookup = collections.defaultdict(list)
     for y in range(NUM_BLOCKS_Y * 2):
       for x in range(NUM_BLOCKS_X * 2):
@@ -236,13 +225,13 @@ class PpuMemory(object):
 
   def get_bytes(self, role):
     if role == 'nametable':
-      nametable = self.gfx_0.nametable
+      nametable = self.gfx[0].nametable
       bytes = bytearray()
       for y in range(30):
         bytes += bytearray(nametable[y])
       return bytes
     elif role == 'attribute':
-      colorization = self.gfx_0.colorization
+      colorization = self.gfx[0].colorization
       bytes = bytearray()
       for attr_y in range(NUM_BLOCKS_Y // 2 + 1):
         for attr_x in range(NUM_BLOCKS_X // 2):

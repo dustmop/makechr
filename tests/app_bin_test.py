@@ -122,8 +122,8 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('palette')
     self.assert_output_result('nametable')
     self.assert_output_result('attribute')
-    self.assert_not_exist('nametable1')
-    self.assert_not_exist('attribute1')
+    self.assert_output_result('nametable1')
+    self.assert_output_result('attribute1')
 
   def test_output_order1(self):
     """Order option changes how binaries are stored."""
@@ -181,6 +181,20 @@ class AppBinTests(general_app_test_util.GeneralAppTests):
   def test_output_double_wide_nametable(self):
     """Image with double width nametable."""
     img = Image.open('testdata/double-image.png')
+    self.process_image(img)
+    self.create_output()
+    self.golden_file_prefix = 'double-image'
+    self.assert_output_result('chr')
+    # TODO: Palette has background color 1.
+    self.assert_output_result('palette')
+    self.assert_output_result('nametable')
+    self.assert_output_result('nametable1')
+    self.assert_output_result('attribute')
+    self.assert_output_result('attribute1')
+
+  def test_output_vertical_tall_nametable(self):
+    """Image with two screen tall nametable."""
+    img = Image.open('testdata/vertical-image.png')
     self.process_image(img)
     self.create_output()
     self.golden_file_prefix = 'double-image'
