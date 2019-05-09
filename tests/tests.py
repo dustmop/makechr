@@ -15,6 +15,7 @@ import guess_best_palette_test
 import integration_test
 import memory_importer_test
 import num_range_test
+import outline_tracer_test
 import palette_test
 import rom_builder_test
 import span_list_delta_test
@@ -40,6 +41,7 @@ suite.addTest(unittest.makeSuite(guess_best_palette_test.GuessBestPaletteTests))
 suite.addTest(unittest.makeSuite(integration_test.IntegrationTests))
 suite.addTest(unittest.makeSuite(memory_importer_test.MemoryImporterTests))
 suite.addTest(unittest.makeSuite(num_range_test.NumRangeTests))
+suite.addTest(unittest.makeSuite(outline_tracer_test.OutlineTracerTests))
 suite.addTest(unittest.makeSuite(palette_test.PaletteTests))
 suite.addTest(unittest.makeSuite(rom_builder_test.RomBuilderTests))
 suite.addTest(unittest.makeSuite(span_list_delta_test.SpanListDeltaTests))
