@@ -10,9 +10,11 @@ import bg_color_spec_test
 import chr_data_test
 import extract_indexed_image_palette_test
 import free_sprite_processor_test
+import geometry_test
 import guess_best_palette_test
 import integration_test
 import memory_importer_test
+import num_range_test
 import palette_test
 import rom_builder_test
 import span_list_delta_test
@@ -33,9 +35,11 @@ suite.addTest(unittest.makeSuite(
     extract_indexed_image_palette_test.ExtractIndexedImagePaletteTests))
 suite.addTest(unittest.makeSuite(
     free_sprite_processor_test.FreeSpriteProcessorTests))
+suite.addTest(unittest.makeSuite(geometry_test.GeometryTests))
 suite.addTest(unittest.makeSuite(guess_best_palette_test.GuessBestPaletteTests))
 suite.addTest(unittest.makeSuite(integration_test.IntegrationTests))
 suite.addTest(unittest.makeSuite(memory_importer_test.MemoryImporterTests))
+suite.addTest(unittest.makeSuite(num_range_test.NumRangeTests))
 suite.addTest(unittest.makeSuite(palette_test.PaletteTests))
 suite.addTest(unittest.makeSuite(rom_builder_test.RomBuilderTests))
 suite.addTest(unittest.makeSuite(span_list_delta_test.SpanListDeltaTests))

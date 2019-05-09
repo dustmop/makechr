@@ -211,6 +211,14 @@ class MakepalInvalidFormat(Exception):
   pass
 
 
+class GeometryError(Exception):
+  def __init__(self, msg):
+    self.msg = msg
+
+  def __str__(self):
+    return 'GeometryError: %s' % self.msg
+
+
 class ErrorCollector(object):
   def __init__(self):
     self.errs = []
