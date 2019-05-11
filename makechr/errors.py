@@ -13,14 +13,20 @@ class PaletteOverflowError(Exception):
       self.block_x = elem_x
       self.tile_y = None
       self.tile_x = None
+      self.pixel_y = None
+      self.pixel_x = None
     else:
       self.block_y = None
       self.block_x = None
       self.tile_y = elem_y
       self.tile_x = elem_x
+      self.pixel_y = None
+      self.pixel_x = None
 
   def __str__(self):
-    if self.block_y is not None and self.block_x is not None:
+    if self.pixel_y is not None and self.pixel_x is not None:
+      return '@ pixel (%dy,%dx)' % (self.pixel_y, self.pixel_x)
+    elif self.block_y is not None and self.block_x is not None:
       return '@ block (%dy,%dx)' % (self.block_y, self.block_x)
     else:
       return '@ tile (%dy,%dx)' % (self.tile_y, self.tile_x)
@@ -37,8 +43,18 @@ class PaletteBackgroundColorConflictError(Exception):
     self.bg_color = bg_color
 
   def __str__(self):
-    return 'between palette /%x/ <> bg color /%x/' % (
+    return 'between palette /%02x/ <> bg color /%02x/' % (
       self.pal_color, self.bg_color)
+
+
+class PaletteBackgroundFillColorSeemsWrong(Exception):
+  def __init__(self, bg_seems, bg_fill):
+    self.bg_seems = bg_seems
+    self.bg_fill = bg_fill
+
+  def __str__(self):
+    return 'Background color seems to be /%02x/, but bg_fill is /%02x/' % (
+      self.bg_seems, self.bg_fill)
 
 
 class PaletteInconsistentError(Exception):

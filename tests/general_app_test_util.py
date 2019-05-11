@@ -100,6 +100,11 @@ class GeneralAppTests(unittest.TestCase):
     expect_file = self.golden(name + golden_suffix, 'dat')
     self.assert_file_eq(actual_file, expect_file)
 
+  def assert_output_result_json(self, name, golden_suffix=''):
+    actual_file = self.args.output % name
+    expect_file = self.golden(name + golden_suffix, 'json')
+    self.assert_file_eq(actual_file.replace('.dat', '.json'), expect_file)
+
   def assert_not_exist(self, name):
     missing_file = self.args.output % name
     self.assertFalse(os.path.exists(missing_file))

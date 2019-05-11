@@ -8,6 +8,7 @@ import app_valiant_test
 import backwards_compatible_test
 import bg_color_spec_test
 import chr_data_test
+import decompose_sprites_processor_test
 import extract_indexed_image_palette_test
 import free_sprite_processor_test
 import geometry_test
@@ -32,6 +33,8 @@ suite.addTest(unittest.makeSuite(
     backwards_compatible_test.BackwardsCompatibleTests))
 suite.addTest(unittest.makeSuite(bg_color_spec_test.BgColorSpecTests))
 suite.addTest(unittest.makeSuite(chr_data_test.ChrDataTests))
+suite.addTest(unittest.makeSuite(
+    decompose_sprites_processor_test.DecomposeSpritesProcessorTests))
 suite.addTest(unittest.makeSuite(
     extract_indexed_image_palette_test.ExtractIndexedImagePaletteTests))
 suite.addTest(unittest.makeSuite(

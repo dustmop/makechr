@@ -2,6 +2,7 @@ import binary_file_writer
 import collections
 import chr_data
 from constants import *
+import json
 import os
 import sys
 
@@ -56,6 +57,7 @@ class PpuMemory(object):
     self._bg_color = None
     self.empty_tile = None
     self.spritelist = []
+    self.sprite_picdata = None
     # HACK: Not actually a part of ppu_memory. Only set here so that it can
     # be passed to the view renderer after free sprite traversal.
     self.zones = None
@@ -128,10 +130,15 @@ class PpuMemory(object):
         fout = self._writer.get_writable(name, False)
         self._save_attribute(fout, gfx.colorization)
         self._writer.close()
+    # TODO: Rename this component to `sprites`
+    # Represents either `spritelist` or `sprite_picdata`
     if 'spritelist' in components:
-      fout = self._writer.get_writable('spritelist', False)
-      self._save_spritelist(fout, self.spritelist,
-                            self.gfx[0].colorization)
+      if self.sprite_picdata:
+        fout = self._writer.get_writable('sprite_picdata', False)
+        self._save_sprite_picdata(fout, self.sprite_picdata)
+      else:
+        fout = self._writer.get_writable('spritelist', False)
+        self._save_spritelist(fout, self.spritelist, self.gfx[0].colorization)
     self._writer.close()
     return components
 
@@ -177,6 +184,10 @@ class PpuMemory(object):
       fout.write(to_byte(x_pos))
       n += 1
     fout.write(to_byte(0xff))
+
+  def _save_sprite_picdata(self, fout, sprite_picdata):
+    text = json.dumps(sprite_picdata, indent=2)
+    fout.write(text)
 
   def _get_bg_color(self, palette_1, palette_2):
     bg_color = None

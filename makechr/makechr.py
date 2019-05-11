@@ -109,6 +109,12 @@ def run():
                             'default chr_order is set to 0x1000 instead of '
                             '0x000; can be overriden with the -r flag.'))
 
+  parser.add_argument('-ds', dest='decompose_sprites', action='store_true',
+                      help=('Decompose sprite mode will take an assembled '
+                            'picture object, and decompose it into sprites. '
+                            'The result is chr, palette, and json representing '
+                            'how to compose the original input picture.'))
+
   # Flags.
   parser.add_argument('-l', dest='is_locked_tiles', action='store_true',
                       help=('Lock tiles in the pixel art so that they appear '
@@ -235,6 +241,16 @@ def run():
                       help=('Output filename for free zone view to output. '
                             'Will show where zones are according to free '
                             'sprite traversal.'))
+
+  parser.add_argument('--rect-cover-anon-view', dest='rect_cover_anon_view',
+                      help=('Output filename for view that anonymizes the '
+                            'input image, with rectilinear covering debug '
+                            'data displayed on top of it.'))
+
+  parser.add_argument('--rect-cover-steps-view', dest='rect_cover_steps_view',
+                      help=('Output filename for view that adds information '
+                            'about rectilinear covering\'s algorithm steps '
+                            'on top of it.'))
 
   parser.add_argument('--use-legacy-views', dest='use_legacy_views',
                       action="store_true",

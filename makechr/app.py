@@ -11,6 +11,7 @@ import sys
 
 eight_by_sixteen_processor = None
 free_sprite_processor = None
+decompose_sprites_processor = None
 image_processor = None
 makepal_processor = None
 
@@ -30,6 +31,7 @@ class Application(object):
       processor.create_output(args.output)
       return True
     elif 'free' in traversal:
+      # DEPRECATED
       if not args.is_sprite or args.bg_color.fill is None:
         raise errors.CommandLineArgError(
           'Traversal strategy \'%s\' requires -s and -b `mask=fill` flags' % (
@@ -42,6 +44,26 @@ class Application(object):
       processor.process_image(img, args.palette, args.bg_color.mask,
                               args.bg_color.fill, args.is_locked_tiles,
                               args.lock_sprite_flips, args.allow_overflow)
+    elif args.decompose_sprites:
+      # --decompose_sprites is a processor mode, not a traversal style.
+      # Can be combined with --free 8x16. Implies -s
+      # TODO: Make -b optional, derive it if possible
+      if args.bg_color.fill is None:
+        raise errors.CommandLineArgError(
+          'Decompose sprites mode requires -b `mask=fill` flags')
+      global decompose_sprites_processor
+      if not decompose_sprites_processor:
+        import decompose_sprites_processor
+      processor = decompose_sprites_processor.DecomposeSpritesProcessor()
+      # TODO: lock_sprite_flags, is_locked_tiles, allow_overflow?
+      processor.process_image(img, args.palette,
+                              args.bg_color.mask, args.bg_color.fill,
+                              {'anon_view': args.rect_cover_anon_view,
+                               'steps_view': args.rect_cover_steps_view})
+      if processor.err().has():
+        self.handle_errors(processor.err(), img, args)
+        return False
+      args.is_sprite = True
     elif traversal == '8x16':
       if not args.is_sprite:
         raise errors.CommandLineArgError('Traversal strategy \'8x16\' requires '

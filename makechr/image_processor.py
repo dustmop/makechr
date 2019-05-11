@@ -212,9 +212,13 @@ class ImageProcessor(object):
           elif color_needs[idx] == NULL:
             color_needs[idx] = nc
             break
-          raise errors.PaletteOverflowError(tile_y, tile_x)
+          idx = self.tile_palette_fault(tile_y, tile_x)
+          break
         dot_profile[row + j] = idx
     return color_needs, dot_profile
+
+  def tile_palette_fault(self, tile_y, tile_x):
+    raise errors.PaletteOverflowError(tile_y, tile_x)
 
   def process_block(self, block_y, block_x, bg_mask, bg_fill, is_sprite):
     """Process the individual tiles in the block.

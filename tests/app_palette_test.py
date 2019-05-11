@@ -97,7 +97,7 @@ class AppPaletteTests(general_app_test_util.GeneralAppTests):
     for e in es:
       msg = '{0} {1}'.format(type(e).__name__, e)
       self.assertEqual(msg, ('PaletteBackgroundColorConflictError between '
-                             'palette /30/ <> bg color /1/'))
+                             'palette /30/ <> bg color /01/'))
 
   def test_error_too_many_subsets(self):
     """If image colors cannot be merged into a valid palette, throw error."""

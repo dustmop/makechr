@@ -20,7 +20,10 @@ class BinaryFileWriter(object):
     if self._fout:
       self.close()
     self._name = name
-    self._fout = open(self._fill_template(name), 'wb')
+    filename = self._fill_template(name)
+    if name == 'sprite_picdata':
+      filename = filename.replace('.dat', '.json')
+    self._fout = open(filename, 'wb')
     return self._fout
 
   def configure(self, null_value=None, size=None, order=None, align=None,
