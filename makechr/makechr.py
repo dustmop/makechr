@@ -8,7 +8,7 @@ from PIL import Image
 import sys
 
 
-__version__ = '1.4'
+__version__ = '1.5'
 
 
 def allow_overflow_build(text):
