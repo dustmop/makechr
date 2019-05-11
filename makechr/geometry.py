@@ -140,6 +140,125 @@ class Edge(object):
     else:
       return self.y_to_range()
 
+  # TODO: Add tests for the functions below this point.
+
+  def fully_overlap(self, other):
+    if self.facing in [DIR_DOWN, DIR_UP]:
+      if self.y0 == other.y0:
+        return self.x0 <= other.x0 and self.x1 >= other.x1
+    else:
+      if self.x0 == other.x0:
+        return self.y0 <= other.y0 and self.y1 >= other.y1
+
+  def partially_overlap(self, other):
+    if self.facing in [DIR_DOWN, DIR_UP]:
+      if self.y0 == other.y0:
+        return self.x_to_range().intersect(other.x_to_range())
+    else:
+      if self.x0 == other.x0:
+        return self.y_to_range().intersect(other.y_to_range())
+    return None
+
+  def partially_in_range_of(self, other):
+    if self.facing in [DIR_DOWN, DIR_UP]:
+      return not (self.x1 < other.x0 and self.x0 > other.x1)
+    else:
+      return not (self.y1 < other.y0 and self.y0 > other.y1)
+
+  def not_in_range_of(self, other):
+    if self.facing in [DIR_DOWN, DIR_UP]:
+      return self.x1 <= other.x0 or self.x0 >= other.x1
+    else:
+      return self.y1 <= other.y0 or self.y0 >= other.y1
+
+  def distance_from(self, other):
+    if isinstance(other, Edge):
+      if self.facing in [other.facing, opposite_dir(other.facing)]:
+        other = other.get_endpoints()[0]
+      else:
+        raise errors.AlgorithmError('Cannot get distance from misaligned edges')
+    if self.facing == DIR_UP:
+      return self.y0 - other.y
+    elif self.facing == DIR_RIGHT:
+      return other.x - self.x0
+    elif self.facing == DIR_DOWN:
+      return other.y - self.y0
+    elif self.facing == DIR_LEFT:
+      return self.x0 - other.x
+
+  def overlaps_point(self, point):
+    if self.facing in [DIR_DOWN, DIR_UP]:
+      return self.y0 == point.y and self.x0 <= point.x <= self.x1
+    else:
+      return self.x0 == point.x and self.y0 <= point.y <= self.y1
+
+  def rotated_edge_til(self, other):
+    next = rotate_dir_cw(self.facing)
+    if self.facing == DIR_UP:
+      x0 = x1 = self.x0
+      y0 = other.y0
+      y1 = self.y0
+    elif self.facing == DIR_RIGHT:
+      x0 = self.x0
+      x1 = other.x0
+      y0 = y1 = self.y0
+    elif self.facing == DIR_DOWN:
+      x0 = x1 = self.x1
+      y0 = self.y0
+      y1 = other.y0
+    elif self.facing == DIR_LEFT:
+      x0 = other.x0
+      x1 = self.x0
+      y0 = y1 = self.y1
+    return Edge(next, y0, x0, y1, x1)
+
+  def stretch_so_it_looks_like(self, other):
+    if self.facing in [DIR_UP, DIR_DOWN]:
+      u = self.x_to_range().union_if_match(other.x_to_range())
+      if not u:
+        raise errors.AlgorithmError('This shouldn\'t be possible')
+      return Edge(self.facing, self.y0, u.p0, self.y0, u.p1)
+    else:
+      u = self.y_to_range().union_if_match(other.y_to_range())
+      if not u:
+        raise errors.AlgorithmError('This shouldn\'t be possible')
+      return Edge(self.facing, u.p0, self.x0, u.p1, self.x1)
+
+  def common_endpoint(self, other):
+    ys = set([self.y0, self.y1]).intersection([other.y0, other.y1])
+    xs = set([self.x0, self.x1]).intersection([other.x0, other.x1])
+    if len(ys) == 1 and len(xs) == 1:
+      return Point(list(ys)[0], list(xs)[0])
+    raise errors.AlgorithmError('No common endpoint found')
+
+  def different_endpoint(self, point):
+    if self.facing in [DIR_UP, DIR_DOWN]:
+      assert self.y0 == self.y1 == point.y
+      if self.x0 == point.x:
+        return Point(self.y0, self.x1)
+      elif self.x1 == point.x:
+        return Point(self.y0, self.x0)
+      else:
+        raise errors.AlgorithmError('Not one of my endpoints')
+    else:
+      assert self.x0 == self.x1 == point.x
+      if self.y0 == point.y:
+        return Point(self.y1, self.x0)
+      elif self.y1 == point.y:
+        return Point(self.y0, self.x0)
+      else:
+        raise errors.AlgorithmError('Not one of my endpoints')
+
+  def extend_until(self, other):
+    if other.facing == DIR_UP:
+      return Edge(self.facing, other.y0, self.x0, self.y1, self.x0)
+    elif other.facing == DIR_RIGHT:
+      return Edge(self.facing, self.y0, self.x0, self.y0, other.x1)
+    elif other.facing == DIR_DOWN:
+      return Edge(self.facing, self.y0, self.x0, other.y0, self.x0)
+    elif other.facing == DIR_LEFT:
+      return Edge(self.facing, self.y0, other.x0, self.y0, self.x1)
+
   def __str__(self):
     if self.facing in [DIR_UP, DIR_DOWN]:
       cover = (' cover=%s' % (self.cover,)) if self.cover else ''

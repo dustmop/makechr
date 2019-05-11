@@ -219,6 +219,14 @@ class GeometryError(Exception):
     return 'GeometryError: %s' % self.msg
 
 
+class AlgorithmError(Exception):
+  def __init__(self, msg):
+    self.msg = msg
+
+  def __str__(self):
+    return 'AlgorithmError: %s' % self.msg
+
+
 class ErrorCollector(object):
   def __init__(self):
     self.errs = []
