@@ -34,7 +34,7 @@ class MemoryImporterTests(unittest.TestCase):
     importer = memory_importer.MemoryImporter()
     mem = importer.read_ram('testdata/full-image.mem')
     a = app.Application()
-    a.create_output(mem, self.args, 'horizontal')
+    a.create_output(mem, self.args, 'horizontal', None)
     self.assert_output_result('chr')
     self.assert_output_result('nametable')
     self.assert_output_result('palette')
@@ -44,7 +44,7 @@ class MemoryImporterTests(unittest.TestCase):
     importer = memory_importer.MemoryImporter()
     mem = importer.read('testdata/full-image.mem', 'ram')
     a = app.Application()
-    a.create_output(mem, self.args, 'horizontal')
+    a.create_output(mem, self.args, 'horizontal', None)
     self.assert_output_result('chr')
     self.assert_output_result('nametable')
     self.assert_output_result('palette')
@@ -55,7 +55,7 @@ class MemoryImporterTests(unittest.TestCase):
     mem = importer.read_ram('testdata/full-image.mem')
     self.args.output = self.args.tmpfile('full-image.png')
     a = app.Application()
-    a.create_output(mem, self.args, 'horizontal')
+    a.create_output(mem, self.args, 'horizontal', None)
     self.assert_equal_image(self.args.output, 'testdata/full-image.png')
 
   def test_import_error_bad_size(self):

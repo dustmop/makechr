@@ -25,7 +25,8 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     self._verbose = verbose
 
   def process_image(self, img, palette_text, bg_color_mask, bg_color_fill,
-                    is_locked_tiles, lock_sprite_flips, allow_overflow):
+                    platform, is_locked_tiles, lock_sprite_flips,
+                    allow_overflow):
     """Process free sprites image, creating the ppu_memory it represents.
 
     The image represents the entire screen, and is mostly filled with
@@ -42,6 +43,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     """
     self.initialize()
     self.load_image(img)
+    self.set_platform(platform)
     config = ppu_memory.PpuMemoryConfig(is_sprite=True,
                                         is_locked_tiles=is_locked_tiles,
                                         lock_sprite_flips=lock_sprite_flips,

@@ -38,6 +38,16 @@ class ImageProcessor(object):
     self._flip_bits = None
     self._err = errors.ErrorCollector()
     self.image_x = self.image_y = None
+    self.tile_ctor = None
+
+  def set_platform(self, platform):
+    if platform is None or platform == 'nes':
+      # TODO: Rename to NesChrTile?
+      self.tile_ctor = chr_data.ChrTile
+    elif platform == 'gameboy':
+      self.tile_ctor = chr_data.GameboyChrTile
+    else:
+      raise errors.CommandLineArgError('Unknown platform: "%s"', platform)
 
   def load_image(self, img):
     self.img = img
@@ -351,7 +361,7 @@ class ImageProcessor(object):
     did: Id for the dot profile.
     """
     dot_profile = self._dot_manifest.at(did)
-    tile = chr_data.ChrTile()
+    tile = self.tile_ctor()
     for row in range(8):
       for col in range(8):
         i = row * 8 + col
@@ -605,8 +615,8 @@ class ImageProcessor(object):
       self._ppu_memory.spritelist.append([y_pos, tile, attr, x_pos])
 
   def process_image(self, img, palette_text, bg_color_mask, bg_color_fill,
-                    traversal, is_sprite, is_locked_tiles, lock_sprite_flips,
-                    allow_overflow):
+                    platform, traversal, is_sprite, is_locked_tiles,
+                    lock_sprite_flips, allow_overflow):
     """Process an image, creating the ppu_memory necessary to display it.
 
     img: Pixel art image.
@@ -623,6 +633,7 @@ class ImageProcessor(object):
     """
     self.initialize()
     self.load_image(img)
+    self.set_platform(platform)
     # Assign configuration.
     config = ppu_memory.PpuMemoryConfig(is_sprite=is_sprite,
                                         is_locked_tiles=is_locked_tiles,

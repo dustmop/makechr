@@ -163,3 +163,4 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
     self._color_manifest = other_processor._color_manifest
     self._dot_manifest = other_processor._dot_manifest
     self._ppu_memory = other_processor._ppu_memory
+    self.tile_ctor = other_processor.tile_ctor

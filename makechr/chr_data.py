@@ -1,4 +1,9 @@
 import errors
+import sys
+
+
+if sys.version_info < (3,0):
+  range = xrange
 
 
 class ChrTile(object):
@@ -51,15 +56,15 @@ class ChrTile(object):
       make.hi = [self._reverse_bits(b) for b in make.hi]
     return make
 
-  def vertical_pixel_display(self):
-    def vertical_plane(plane):
+  def transpose_pixel_order(self):
+    def transpose(plane):
       make = [0] * 8
       for i,b in enumerate(plane):
-        for j in xrange(8):
+        for j in range(8):
           make[j] |= (((b >> (7 - j)) & 1) << (i))
       return make
-    self.low = vertical_plane(self.low)
-    self.hi = vertical_plane(self.hi)
+    self.low = transpose(self.low)
+    self.hi = transpose(self.hi)
 
   def _assign_bit_low_plane(self, bit, index, offset):
     self.low[index] |= (bit << (7 - offset))
@@ -88,6 +93,24 @@ class ChrTile(object):
     return self.__str__()
 
 
+class GameboyChrTile(object):
+  def __init__(self):
+    self.data = [0] * 16
+
+  def put_pixel(self, y, x, val):
+    i = y * 2
+    low_bit = val & 1
+    high_bit = (val >> 1) & 1
+    self.data[i + 0] |= (low_bit  << (7 - x))
+    self.data[i + 1] |= (high_bit << (7 - x))
+
+  def get_bytes(self):
+    return self.data
+
+  def is_empty(self):
+    return self.data == [0] * 16
+
+
 class ChrPage(object):
   """One page of chr tiles, 0x1000 bytes, enough for 256 tiles."""
 
@@ -113,7 +136,7 @@ class ChrPage(object):
   @staticmethod
   def from_binary(bytes):
     make = ChrPage()
-    for k in xrange(len(bytes) / 0x10):
+    for k in range(len(bytes) / 0x10):
       tile = ChrTile()
       tile.set(bytes[k*0x10:k*0x10+0x10])
       make.add(tile)
@@ -125,8 +148,7 @@ class ChrPage(object):
   def to_bytes(self):
     bytes = bytearray(len(self.tiles) * 0x10)
     for k,tile in self._enum_tiles():
-      bytes[k*0x10+0x00:k*0x10+0x08] = tile.low
-      bytes[k*0x10+0x08:k*0x10+0x10] = tile.hi
+      bytes[k*0x10+0x00:k*0x10+0x10] = tile.get_bytes()
     return bytes
 
   def to_bytes_select_plane(self, selection):
@@ -141,7 +163,7 @@ class ChrPage(object):
 
   def vertical_pixel_display(self):
     for tile in self.tiles:
-      tile.vertical_pixel_display()
+      tile.transpose_pixel_order()
 
 
 class ChrBank(ChrPage):
@@ -156,7 +178,7 @@ class ChrBank(ChrPage):
   @staticmethod
   def from_binary(bytes):
     make = ChrBank()
-    for k in xrange(len(bytes) / 0x10):
+    for k in range(len(bytes) / 0x10):
       tile = ChrTile()
       tile.set(bytes[k*0x10:k*0x10+0x10])
       make.add(tile)

@@ -171,6 +171,9 @@ def run():
                             'just output binary data if the file name ends '
                             'in .bin or .dat.'))
 
+  parser.add_argument('--platform', dest='platform',
+                      help=('TODO'))
+
   parser.add_argument('--vertical-pixel-display', dest='vertical_pixel_display',
                       action='store_true',
                       help=('Certain platforms, like Arduboy, render pixels '

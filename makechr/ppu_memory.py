@@ -25,10 +25,12 @@ class GraphicsPage(object):
 
 
 class PpuMemoryConfig(object):
-  def __init__(self, traversal=None, is_sprite=None, is_locked_tiles=None,
+  def __init__(self, traversal=None, platform=None,
+               is_sprite=None, is_locked_tiles=None,
                lock_sprite_flips=None, allow_overflow=None, chr_order=None,
                select_chr_plane=False):
     self.traversal = traversal
+    self.platform = platform
     self.is_sprite = is_sprite
     self.is_locked_tiles = is_locked_tiles
     self.lock_sprite_flips = lock_sprite_flips
@@ -205,6 +207,8 @@ class PpuMemory(object):
     if not config.is_sprite and not config.is_locked_tiles:
       components.add('nametable')
     components.add('chr')
+    if config.platform == 'gameboy':
+      return components
     components.add('palette')
     if not config.is_sprite:
       components.add('attribute')

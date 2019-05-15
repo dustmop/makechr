@@ -42,8 +42,9 @@ class Application(object):
       processor = free_sprite_processor.FreeSpriteProcessor(traversal)
       processor.set_verbose('--verbose' in sys.argv)
       processor.process_image(img, args.palette, args.bg_color.mask,
-                              args.bg_color.fill, args.is_locked_tiles,
-                              args.lock_sprite_flips, args.allow_overflow)
+                              args.bg_color.fill, args.platform,
+                              args.is_locked_tiles, args.lock_sprite_flips,
+                              args.allow_overflow)
     elif args.decompose_sprites:
       # --decompose_sprites is a processor mode, not a traversal style.
       # Can be combined with --free 8x16. Implies -s
@@ -73,25 +74,25 @@ class Application(object):
         import eight_by_sixteen_processor
       processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       processor.process_image(img, args.palette, args.bg_color.mask,
-                              args.bg_color.fill, traversal, args.is_sprite,
-                              args.is_locked_tiles, args.lock_sprite_flips,
-                              args.allow_overflow)
+                              args.bg_color.fill, args.platform, traversal,
+                              args.is_sprite, args.is_locked_tiles,
+                              args.lock_sprite_flips, args.allow_overflow)
     else:
       global image_processor
       if not image_processor:
         import image_processor
       processor = image_processor.ImageProcessor()
       processor.process_image(img, args.palette, args.bg_color.mask,
-                              args.bg_color.fill, traversal, args.is_sprite,
-                              args.is_locked_tiles, args.lock_sprite_flips,
-                              args.allow_overflow)
+                              args.bg_color.fill, args.platform, traversal,
+                              args.is_sprite, args.is_locked_tiles,
+                              args.lock_sprite_flips, args.allow_overflow)
     if args.bg_color.fill:
       processor.ppu_memory().override_bg_color(args.bg_color.fill)
     self.create_views(processor.ppu_memory(), args, img)
     if processor.err().has():
       self.handle_errors(processor.err(), img, args)
       return False
-    self.create_output(processor.ppu_memory(), args, traversal)
+    self.create_output(processor.ppu_memory(), args, traversal, args.platform)
     if args.show_stats:
       self.show_stats(processor.ppu_memory(), processor, args)
     return True
@@ -120,7 +121,7 @@ class Application(object):
       renderer = pixel_art_renderer.PixelArtRenderer()
       img = renderer.render(mem)
     self.create_views(mem, args, img)
-    self.create_output(mem, args, self.get_traversal(None))
+    self.create_output(mem, args, self.get_traversal(None), None)
 
   def create_views(self, mem, args, img, scale=None):
     if args.use_legacy_views:
@@ -144,9 +145,10 @@ class Application(object):
     if args.free_zone_view:
       renderer.create_free_zone_view(args.free_zone_view, img, mem)
 
-  def create_output(self, mem, args, traversal):
+  def create_output(self, mem, args, traversal, platform):
     config = ppu_memory.PpuMemoryConfig(
-      chr_order=args.order, traversal=traversal, is_sprite=args.is_sprite,
+      chr_order=args.order, traversal=traversal, platform=platform,
+      is_sprite=args.is_sprite,
       is_locked_tiles=args.is_locked_tiles,
       lock_sprite_flips=args.lock_sprite_flips,
       select_chr_plane=args.select_chr_plane)

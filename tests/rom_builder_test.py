@@ -38,12 +38,13 @@ class RomBuilderTests(unittest.TestCase):
     self.args = MockArgs()
 
   def process_image(self, img, palette_text=None, traversal=None):
+    platform = None
     if not traversal:
       traversal = 'horizontal'
     self.processor = image_processor.ImageProcessor()
     self.processor.process_image(img, palette_text, self.args.bg_color.mask,
                                  self.args.bg_color.fill,
-                                 traversal, self.args.is_sprite,
+                                 platform, traversal, self.args.is_sprite,
                                  self.args.is_locked_tiles,
                                  self.args.lock_sprite_flips,
                                  self.args.allow_overflow)
@@ -53,7 +54,7 @@ class RomBuilderTests(unittest.TestCase):
     img = Image.open('testdata/full-image.png')
     self.process_image(img)
     a = app.Application()
-    a.create_output(self.ppu_memory, self.args, 'horizontal')
+    a.create_output(self.ppu_memory, self.args, 'horizontal', None)
     actual_file = self.args.compile
     expect_file = 'testdata/full-image-rom.nes'
     self.assert_file_eq(actual_file, expect_file)
@@ -63,7 +64,7 @@ class RomBuilderTests(unittest.TestCase):
     self.process_image(img)
     self.args.output = self.args.tmpfile('full-image.o')
     a = app.Application()
-    a.create_output(self.ppu_memory, self.args, 'horizontal')
+    a.create_output(self.ppu_memory, self.args, 'horizontal', None)
     actual_file = self.args.compile
     expect_file = 'testdata/full-image-rom.nes'
     self.assert_file_eq(actual_file, expect_file)
@@ -73,7 +74,7 @@ class RomBuilderTests(unittest.TestCase):
     self.args.is_locked_tiles = True
     self.process_image(img)
     a = app.Application()
-    a.create_output(self.ppu_memory, self.args, 'horizontal')
+    a.create_output(self.ppu_memory, self.args, 'horizontal', None)
     actual_file = self.args.compile
     expect_file = 'testdata/full-image-rom-locked-tiles.nes'
     self.assert_file_eq(actual_file, expect_file)
@@ -83,7 +84,7 @@ class RomBuilderTests(unittest.TestCase):
     self.args.is_locked_tiles = True
     self.process_image(img)
     a = app.Application()
-    a.create_output(self.ppu_memory, self.args, 'horizontal')
+    a.create_output(self.ppu_memory, self.args, 'horizontal', None)
     actual_file = self.args.compile
     expect_file = 'testdata/full-image-rom-small-square-locked-tiles.nes'
     self.assert_file_eq(actual_file, expect_file)

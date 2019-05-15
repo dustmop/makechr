@@ -21,6 +21,7 @@ class MockArgs(object):
     self.grid_view = self.tmppng('grid')
     self.free_zone_view = None
     self.bg_color = bg_color_spec.default()
+    self.platform = None
     self.traversal = 'horizontal'
     self.is_sprite = False
     self.is_locked_tiles = False
@@ -63,6 +64,7 @@ class GeneralAppTests(unittest.TestCase):
       self.processor.process_image(img, palette_text,
                                    self.args.bg_color.mask,
                                    self.args.bg_color.fill,
+                                   self.args.platform,
                                    self.args.is_locked_tiles,
                                    self.args.lock_sprite_flips,
                                    self.args.allow_overflow)
@@ -71,7 +73,9 @@ class GeneralAppTests(unittest.TestCase):
       self.processor.process_image(img, palette_text,
                                    self.args.bg_color.mask,
                                    self.args.bg_color.fill,
-                                   self.args.traversal, self.args.is_sprite,
+                                   self.args.platform,
+                                   self.args.traversal,
+                                   self.args.is_sprite,
                                    self.args.is_locked_tiles,
                                    self.args.lock_sprite_flips,
                                    self.args.allow_overflow)
@@ -82,7 +86,9 @@ class GeneralAppTests(unittest.TestCase):
       self.processor.process_image(img, palette_text,
                                    self.args.bg_color.mask,
                                    self.args.bg_color.fill,
-                                   self.args.traversal, self.args.is_sprite,
+                                   self.args.platform,
+                                   self.args.traversal,
+                                   self.args.is_sprite,
                                    self.args.is_locked_tiles,
                                    self.args.lock_sprite_flips,
                                    self.args.allow_overflow)
@@ -93,7 +99,8 @@ class GeneralAppTests(unittest.TestCase):
     a = app.Application()
     if self.args.bg_color.fill:
       self.ppu_memory.override_bg_color(self.args.bg_color.fill)
-    a.create_output(self.ppu_memory, self.args, self.args.traversal)
+    a.create_output(self.ppu_memory, self.args, self.args.traversal,
+                    self.args.platform)
 
   def assert_output_result(self, name, golden_suffix=''):
     actual_file = self.args.output % name
