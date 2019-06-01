@@ -211,7 +211,7 @@ class DrawCursorManager(object):
     component.SetManager(self)
 
   def getChrTilePosition(self):
-    nt = self.processor.ppu_memory().get_page(0).nametable
+    nt = self.processor.ppu_memory().gfx[0].nametable
     if self.cursor.y is None or self.cursor.x is None:
       return (None, None)
     try:
@@ -244,7 +244,7 @@ class DrawCursorManager(object):
     if y is not None and x is not None and size is not None:
       self.cursor.set(y, x, size)
     if meta == 'reuse':
-      nt = self.processor.ppu_memory().get_page(0).nametable
+      nt = self.processor.ppu_memory().gfx[0].nametable
       try:
         self.tileSet = nt[self.cursor.y][self.cursor.x]
       except TypeError:
@@ -599,7 +599,9 @@ class MakechrGui(wx.Frame):
       self.processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       self.manager.setProcessor(self.processor)
     input = Image.open(self.inputImagePath)
-    self.processor.process_image(input, None, None, None, config.traversal,
+    platform = None
+    self.processor.process_image(input, None, None, None, platform,
+                                 config.traversal,
                                  config.is_sprite, config.is_locked_tiles,
                                  None, config.allow_overflow)
 

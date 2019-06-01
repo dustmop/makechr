@@ -110,6 +110,18 @@ class GameboyChrTile(object):
   def is_empty(self):
     return self.data == [0] * 16
 
+  def flip(self, direction):
+    make = ChrTile()
+    make.data = self.data
+    if direction == 'v' or direction == 'vh':
+      make.data = make.data[::-1]
+    if direction == 'h' or direction == 'vh':
+      make.data = [self._reverse_bits(b) for b in make.data]
+    return make
+
+  def _reverse_bits(self, b):
+    return int('{:08b}'.format(b)[::-1], 2)
+
 
 class ChrPage(object):
   """One page of chr tiles, 0x1000 bytes, enough for 256 tiles."""
