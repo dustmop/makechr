@@ -42,7 +42,7 @@ class BlankLineFormatter(argparse.RawDescriptionHelpFormatter):
     return lines + ['']
 
 
-def run():
+def main():
   usage = ''
   parser = argparse.ArgumentParser(
     description='Make CHR data files and other NES graphics components.',
@@ -301,4 +301,4 @@ def run():
 
 
 if __name__ == '__main__':
-  run()
+  main()
