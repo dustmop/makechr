@@ -49,4 +49,4 @@ class CountingIdManifest(IdManifest):
     return IdManifest.id(self, obj)
 
   def counts(self):
-    return self._count.items()
+    return sorted(self._count.items(), key=lambda n: n[1], reverse=True)

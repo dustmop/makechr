@@ -210,7 +210,10 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     es = self.err.get()
     self.assertEqual(len(es), 1)
     msg = '{0} {1}'.format(type(es[0]).__name__, es[0])
-    self.assertEqual(msg, 'SpritelistOverflow at tile (2y,7x)')
+    self.assertEqual(msg, 'SpritelistOverflow at tile (2y,29x)')
+    self.assertEqual(self.ppu_memory.palette_nt, None)
+    self.assertEqual(str(self.ppu_memory.palette_spr),
+                     'P/30-2c-28-24/30-19-16-10/30-01/')
 
 
 if __name__ == '__main__':
