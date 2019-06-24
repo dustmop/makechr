@@ -4,7 +4,7 @@ import unittest
 from PIL import Image
 
 import context
-from makechr import bg_color_spec, view_renderer
+import bg_color_spec, view_renderer
 
 
 class AppPaletteTests(general_app_test_util.GeneralAppTests):

@@ -4,7 +4,7 @@ import unittest
 from PIL import Image
 
 import context
-from makechr import app, view_renderer
+import app, view_renderer
 
 
 class AppBinTests(general_app_test_util.GeneralAppTests):

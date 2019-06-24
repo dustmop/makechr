@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import num_range
+import num_range
 
 
 class NumRangeTests(unittest.TestCase):

@@ -2,7 +2,7 @@ import general_app_test_util
 import unittest
 
 import context
-from makechr.gen import valiant_pb2 as valiant #errors, image_processor
+from gen import valiant_pb2 as valiant #errors, image_processor
 
 import os
 from PIL import Image
@@ -74,7 +74,7 @@ class BackwardsCompatibleTests(general_app_test_util.GeneralAppTests):
 
   def assertDowngrade(self, basename):
     future_file = os.path.join('testdata/', basename)
-    fp = open(future_file, 'r')
+    fp = open(future_file, 'rb')
     content = fp.read()
     fp.close()
     obj = valiant.ObjectFile()

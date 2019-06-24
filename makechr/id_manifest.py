@@ -17,7 +17,7 @@ class IdManifest(object):
     return len(self._dict)
 
   def id(self, obj):
-    key = str(obj)
+    key = bytes(obj)
     if key in self._dict:
       result = self._dict[key]
     else:
@@ -44,7 +44,7 @@ class CountingIdManifest(IdManifest):
     IdManifest.__init__(self)
 
   def id(self, obj):
-    if obj[1:4] == bytearray('\xff\xff\xff'):
+    if obj[1:4] == bytearray(b'\xff\xff\xff'):
       self._count[obj[0]] += 1
     return IdManifest.id(self, obj)
 

@@ -9,6 +9,8 @@ class Span(object):
     return self.left == other.left and self.right == other.right
 
   def fully_left(self, other):
+    if self.right is None:
+      return True
     return self.right <= other.left
 
   def fully_right(self, other):
@@ -34,6 +36,9 @@ class Span(object):
     if self.right > other.right:
       return 1
     return 0
+
+  def __eq__(self, other):
+    return self.left == other.left and self.right == other.right
 
 
 class Zone(Span):

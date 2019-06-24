@@ -105,8 +105,8 @@ class TileBasedComponentView(ComponentView):
 
   def emitMouse(self, clear, y, x):
     if self.manager:
-      y = y / 8 if y else None
-      x = x / 8 if x else None
+      y = y // 8 if y else None
+      x = x // 8 if x else None
       self.manager.MouseEvent(MousePos(clear, y, x, 8, None))
 
 
@@ -115,8 +115,8 @@ class InputImageComponentView(TileBasedComponentView):
 
   def emitMouse(self, clear, y, x):
     if self.manager:
-      y = y / 8 if y else None
-      x = x / 8 if x else None
+      y = y // 8 if y else None
+      x = x // 8 if x else None
       self.manager.MouseEvent(MousePos(clear, y, x, 8, 'input'))
 
 
@@ -125,8 +125,8 @@ class BlockBasedComponentView(ComponentView):
 
   def emitMouse(self, clear, y, x):
     if self.manager:
-      y = y / 16 if y else None
-      x = x / 16 if x else None
+      y = y // 16 if y else None
+      x = x // 16 if x else None
       self.manager.MouseEvent(MousePos(clear, y, x, 16, None))
 
   def drawBox(self, clear, y, x, size, color):
@@ -134,8 +134,8 @@ class BlockBasedComponentView(ComponentView):
       new_y = new_x = new_size = None
     else:
       new_size = 16
-      new_y = (y * size) / new_size
-      new_x = (x * size) / new_size
+      new_y = (y * size) // new_size
+      new_x = (x * size) // new_size
     ComponentView.drawBox(self, clear, new_y, new_x, new_size, color)
 
 
@@ -144,8 +144,8 @@ class ReuseBasedComponentView(ComponentView):
 
   def emitMouse(self, clear, y, x):
     if self.manager:
-      y = y / 8 if y else None
-      x = x / 8 if x else None
+      y = y // 8 if y else None
+      x = x // 8 if x else None
       self.manager.MouseEvent(MousePos(clear, y, x, 8, 'reuse'))
 
 
@@ -154,8 +154,8 @@ class ChrBasedComponentView(ComponentView):
 
   def emitMouse(self, clear, y, x):
     if self.manager:
-      y = y / 17 if y else None
-      x = x / 17 if x else None
+      y = y // 17 if y else None
+      x = x // 17 if x else None
       self.manager.ChrMouseEvent(MousePos(clear, y, x, 17, None))
 
 
@@ -219,7 +219,7 @@ class DrawCursorManager(object):
     except IndexError:
       # Sometimes, x == size of array.
       return (None, None)
-    chr_y = tile / 16
+    chr_y = tile // 16
     chr_x = tile % 16
     return chr_y, chr_x
 

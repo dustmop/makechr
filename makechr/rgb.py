@@ -34,7 +34,7 @@ RGB_XLAT = to_lookup_table(RGB_COLORS)
 
 def nc_to_rgb(nc):
   color_val = RGB_COLORS[nc]
-  r = color_val / 0x10000
-  g = (color_val / 0x100) % 0x100
+  r = color_val // 0x10000
+  g = (color_val // 0x100) % 0x100
   b = color_val % 0x100
   return (r, g, b)

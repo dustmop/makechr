@@ -68,7 +68,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
       vert_color_needs = None
       for sprite_y, sprite_x in z.each_sprite(is_tall):
         (color_needs, dot_profile) = self.process_tile(
-          sprite_y / 8, sprite_x / 8, sprite_y % 8, sprite_x % 8)
+          sprite_y // 8, sprite_x // 8, sprite_y % 8, sprite_x % 8)
         cid = self._color_manifest.id(color_needs)
         did = self._dot_manifest.id(dot_profile)
         artifacts.append([cid, did, None, sprite_y, sprite_x])
@@ -80,8 +80,8 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
           try:
             self.combine_color_needs(vert_color_needs, color_needs)
           except errors.PaletteOverflowError as e:
-            e.tile_y = sprite_y / 8
-            e.tile_x = sprite_x / 8
+            e.tile_y = sprite_y // 8
+            e.tile_x = sprite_x // 8
             self._err.add(e)
             continue
           vcid = self._vert_color_manifest.id(vert_color_needs)
@@ -113,7 +113,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     else:
       ebs_processor = eight_by_sixteen_processor.EightBySixteenProcessor()
       ebs_processor.link_from(self)
-      for i in xrange(0, len(artifacts), 2):
+      for i in range(0, len(artifacts), 2):
         (cid_u, did_u, unused, y, x) = artifacts[i]
         (cid_l, did_l, vcid, unused_y, unused_x) = artifacts[i+1]
         color_needs = self._vert_color_manifest.at(vcid)
@@ -139,7 +139,7 @@ class FreeSpriteProcessor(image_processor.ImageProcessor):
     self._regions = []
     zones = []
     # For each line of the image, starting from the top.
-    for y in xrange(self.image_y):
+    for y in range(self.image_y):
       is_color = False
       x = 0
       spans = []

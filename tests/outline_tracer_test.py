@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import outline_tracer
+import outline_tracer
 from PIL import Image
 
 

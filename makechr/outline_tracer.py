@@ -12,8 +12,8 @@ class OutlineTracer(object):
 
   def find_regions(self):
     regions = []
-    for y in xrange(self.height):
-      for x in xrange(self.width):
+    for y in range(self.height):
+      for x in range(self.width):
         if self.is_in_region(regions, y, x):
           continue
         if self.is_clear_func(y, x):

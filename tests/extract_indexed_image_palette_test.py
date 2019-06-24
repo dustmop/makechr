@@ -3,7 +3,7 @@ import unittest
 from PIL import Image
 
 import context
-from makechr import extract_indexed_image_palette, image_processor, \
+import extract_indexed_image_palette, image_processor, \
   wrapped_image_palette
 
 

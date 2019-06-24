@@ -135,7 +135,7 @@ class ImageProcessor(object):
     else:
       nc = self.components_to_nescolor(p[0], p[1], p[2])
       if nc == -1:
-        raise errors.CouldntConvertRGB(p, y/8, x/8, y%8, x%8)
+        raise errors.CouldntConvertRGB(p, y // 8, x // 8, y%8, x%8)
       return nc
 
   def collect_error(self, e, block_y, block_x, i, j, is_block=False):
@@ -545,8 +545,8 @@ class ImageProcessor(object):
     config: Configuration of ppu_memory
     """
     # Find empty tile.
-    empty_did = self._dot_manifest.get(chr(0) * 64)
-    empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
+    empty_did = self._dot_manifest.get(bytes(bytearray([0] * 64)))
+    empty_cid = self._color_manifest.get(bytes(bytearray([pal.bg_color] + [NULL] * 3)))
     screen_y = screen_x = 0
     for g, gfx in enumerate(self._ppu_memory.gfx):
       nt_y, nt_x = (gfx.nt_y, gfx.nt_x)
@@ -595,8 +595,8 @@ class ImageProcessor(object):
 
     traversal: Method of traversal
     """
-    empty_did = self._dot_manifest.get(chr(0) * 64)
-    empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
+    empty_did = self._dot_manifest.get(bytes(bytearray([0] * 64)))
+    empty_cid = self._color_manifest.get(bytes(bytearray([pal.bg_color] + [NULL] * 3)))
     generator = ((y,x) for y in range(self.blocks_y * 2) for
                  x in range(self.blocks_x * 2))
     for (y,x) in generator:

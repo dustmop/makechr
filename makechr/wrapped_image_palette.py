@@ -1,4 +1,11 @@
 import errors
+import sys
+
+
+asbyte = lambda n: n
+if sys.version_info < (3,0):
+  range = xrange
+  asbyte = ord
 
 
 class WrappedImagePalette(object):
@@ -27,7 +34,7 @@ class WrappedImagePalette(object):
     # Some file formats reverse the color order.
     if self.format == 'BMP':
       self.invert = True
-    bytes = [ord(b) for b in bytes]
+    bytes = [asbyte(b) for b in bytes]
     # Some versions of library use 3 bytes per color, other use 4 per color.
     if len(bytes) == 48:
       unit_size = 3
@@ -39,7 +46,7 @@ class WrappedImagePalette(object):
       unit_size = 4
     else:
       raise errors.PaletteExtractionError('Bad palette size %s' % len(bytes))
-    self.elems = [bytes[i*unit_size:i*unit_size+3] for i in xrange(16)]
+    self.elems = [bytes[i*unit_size:i*unit_size+3] for i in range(16)]
 
   def get(self, i):
     if self.invert:

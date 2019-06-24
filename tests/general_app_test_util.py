@@ -1,8 +1,8 @@
 import unittest
 
 import context
-from makechr import app, bg_color_spec, image_processor, free_sprite_processor
-from makechr import eight_by_sixteen_processor
+import app, bg_color_spec, image_processor, free_sprite_processor
+import eight_by_sixteen_processor
 
 import filecmp
 import os

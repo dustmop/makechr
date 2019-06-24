@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import data, errors, free_sprite_processor
+import data, errors, free_sprite_processor
 
 
 class FreeSpriteProcessorTests(unittest.TestCase):

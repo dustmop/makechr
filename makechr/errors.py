@@ -292,11 +292,11 @@ class ErrorCollector(object):
           return e
       if hasattr(e, 'block_y') and hasattr(e, 'block_x'):
         block_y, block_x = getattr(e, 'block_y'), getattr(e, 'block_x')
-        if y / 2 == block_y and x / 2 == block_x:
+        if y // 2 == block_y and x // 2 == block_x:
           return e
       if hasattr(e, 'list_blocks'):
         for block_y, block_x in getattr(e, 'list_blocks'):
-          if y / 2 == block_y and x / 2 == block_x:
+          if y // 2 == block_y and x // 2 == block_x:
             return e
     return None
 

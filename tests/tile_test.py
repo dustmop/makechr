@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import errors, image_processor
+import errors, image_processor
 
 from PIL import Image
 

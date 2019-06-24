@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import chr_data
+import chr_data
 
 
 class ChrDataTests(unittest.TestCase):
@@ -59,20 +59,20 @@ class ChrDataTests(unittest.TestCase):
     self.assertTrue(rite == rite)
 
   def test_chr_page(self):
-    raw_data = bytes(bytearray(xrange(64)))
+    raw_data = bytes(bytearray(range(64)))
     page = chr_data.ChrPage.from_binary(raw_data)
     self.assertEqual(page.size(), 4)
     self.assertFalse(page.is_full())
     tile = page.get(1)
-    self.assertEqual(tile.low, list(xrange(16,24)))
-    self.assertEqual(tile.hi,  list(xrange(24,32)))
+    self.assertEqual(tile.low, list(range(16,24)))
+    self.assertEqual(tile.hi,  list(range(24,32)))
     page.add(tile)
     self.assertEqual(page.size(), 5)
     b = page.to_bytes()
     self.assertEqual(b, raw_data + raw_data[16:32])
 
   def test_sorted_chr_page(self):
-    data = bytes(bytearray(xrange(64)))
+    data = bytes(bytearray(range(64)))
     input = data[16:32] + data[48:64] + data[32:48] + data[48:64] + data[0:16]
     spage = chr_data.SortableChrPage.from_binary(input)
     self.assertEqual(spage.size(), 5)
@@ -81,14 +81,14 @@ class ChrDataTests(unittest.TestCase):
     self.assertEqual(spage.idx, [4,0,2,1])
     self.assertEqual(spage.index(0), 4)
     expect_tile = chr_data.ChrTile()
-    expect_tile.set(bytes(bytearray(xrange(0,16))))
+    expect_tile.set(bytes(bytearray(range(0,16))))
     self.assertEqual(spage.get(4), expect_tile)
     self.assertEqual(spage.k_smallest(0), expect_tile)
 
   def test_sparse_chr_page(self):
     spage = chr_data.SparseChrPage()
     first_tile = chr_data.ChrTile()
-    first_tile.set(bytes(bytearray(xrange(0,16))))
+    first_tile.set(bytes(bytearray(range(0,16))))
     spage.insert(2, first_tile)
     second_tile = chr_data.ChrTile()
     second_tile.set(bytes(bytearray(range(1,17))))

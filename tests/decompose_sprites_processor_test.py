@@ -6,7 +6,7 @@ import unittest
 from PIL import Image
 
 import context
-from makechr import decompose_sprites_processor
+import decompose_sprites_processor
 
 
 class DecomposeSpritesProcessorTests(general_app_test_util.GeneralAppTests):

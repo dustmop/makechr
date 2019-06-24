@@ -24,10 +24,10 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
     if bg_mask:
       process_tile_func = (
         lambda y,x: self.filter_process_tile(y, x, bg_mask, bg_fill))
-    for j in xrange(2):
+    for j in range(2):
       # Collect color_needs for vertical pair.
       vert_color_needs = bytearray([NULL, NULL, NULL, NULL])
-      for i in xrange(2):
+      for i in range(2):
         try:
           (color_needs, dot_profile) = process_tile_func(y + i, x + j)
         except (errors.PaletteOverflowError, errors.ColorNotAllowedError) as e:
@@ -69,8 +69,8 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
 
   def traverse_artifacts(self, traversal, pal, config):
     """Traverse in 8x16 order, and create CHR."""
-    empty_did = self._dot_manifest.get(chr(0) * 64)
-    empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
+    empty_did = self._dot_manifest.get(bytes(bytearray([0] * 64)))
+    empty_cid = self._color_manifest.get(bytes(bytearray([pal.bg_color] + [NULL] * 3)))
     for (y,x) in self.get_generator(traversal):
       (cid_u, did_u, unused) = self._artifacts[y  ][x]
       (cid_l, did_l, unused) = self._artifacts[y+1][x]
@@ -131,8 +131,8 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
 
     traversal: Method of traversal
     """
-    empty_did = self._dot_manifest.get(chr(0) * 64)
-    empty_cid = self._color_manifest.get(chr(pal.bg_color) + chr(NULL) * 3)
+    empty_did = self._dot_manifest.get(bytes(bytearray([0] * 64)))
+    empty_cid = self._color_manifest.get(bytes(bytearray([pal.bg_color] + [NULL] * 3)))
     # TODO: Only set this to 1 if the sprite chr order is 1.
     tile_low_bit = 1
     for (y,x) in self.get_generator(traversal):
@@ -154,8 +154,8 @@ class EightBySixteenProcessor(image_processor.ImageProcessor):
                                           attr, x_pos])
 
   def get_generator(self, traversal):
-    return ((y*2,x) for y in xrange(self.blocks_y) for
-            x in xrange(self.blocks_x * 2))
+    return ((y*2,x) for y in range(self.blocks_y) for
+            x in range(self.blocks_x * 2))
 
   def link_from(self, other_processor):
     """Alias data from other image_processor to the data in this one."""

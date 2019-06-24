@@ -198,7 +198,7 @@ class RegionPerimeter(object):
       if side.partially_in_range_of(edge):
         accum.append([dist, side])
     # Sort them by distance
-    accum.sort()
+    accum.sort(key=lambda n: n[0])
     # Find when we reach coverage
     coverage = num_range.MultiRange()
     for dist, other in accum:

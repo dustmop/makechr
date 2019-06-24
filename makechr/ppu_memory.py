@@ -148,7 +148,7 @@ class PpuMemory(object):
     for y in range(NUM_BLOCKS_Y * 2):
       for x in range(NUM_BLOCKS_X * 2):
         nt = nametable[y][x]
-        fout.write(bytearray([nt]))
+        fout.write(to_byte(nt))
 
   def _save_chr(self, fout, chr_set, select_chr_plane):
     if select_chr_plane in ['0','1']:
@@ -188,8 +188,9 @@ class PpuMemory(object):
     fout.write(to_byte(0xff))
 
   def _save_sprite_picdata(self, fout, sprite_picdata):
-    text = json.dumps(sprite_picdata, indent=2)
-    fout.write(text)
+    text = json.dumps(sprite_picdata, indent=2, sort_keys=True,
+                      separators=(',', ': '))
+    fout.write(text.encode('utf-8'))
 
   def _get_bg_color(self, palette_1, palette_2):
     bg_color = None

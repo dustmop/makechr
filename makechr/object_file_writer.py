@@ -1,5 +1,5 @@
 import gen.valiant_pb2 as valiant
-import StringIO
+from io import BytesIO
 
 
 MAGIC_NUM = 7210303610482106886
@@ -32,7 +32,7 @@ class ObjectFileWriter(object):
   def __init__(self):
     self.file_obj = valiant.ObjectFile()
     self.file_obj.magic1 = MAGIC_NUM % 100
-    self.file_obj.magic2 = MAGIC_NUM / 100
+    self.file_obj.magic2 = MAGIC_NUM // 100
     self.obj_body = self.file_obj.body
     self.buffer = None
     self.info = DataInfo()
@@ -41,7 +41,7 @@ class ObjectFileWriter(object):
   def get_writable(self, name, is_condensable):
     if not self.info.empty():
       self.add_component(self.buffer.getvalue(), self.info)
-    self.buffer = StringIO.StringIO()
+    self.buffer = BytesIO()
     self.info.clear()
     self.info.name = name
     self.info.is_condensable = is_condensable
@@ -121,12 +121,12 @@ class ObjectFileWriter(object):
     size = len(bytes)
     first = bytes[0]
     first_width = next((i for i,n in enumerate(bytes) if first != n), size)
-    first_width = first_width / align * align
+    first_width = first_width // align * align
     if first_width <= align:
       first_width = 0
     last = bytes[size - 1]
     last_width = next((i for i,n in enumerate(reversed(bytes)) if last != n), 0)
-    last_width = last_width / align * align
+    last_width = last_width // align * align
     if last_width <= align:
       last_width = 0
     bytes = bytes[first_width:size - last_width]

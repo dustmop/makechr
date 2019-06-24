@@ -67,14 +67,14 @@ class PaletteParser(object):
     self.fetch_literal('P') or self.die('Expected: "P"')
     self.fetch_literal('/') or self.die('Expected: "/"')
     pal = Palette()
-    for n in xrange(4):
+    for n in range(4):
       row = []
       val = self.fetch_hex()
       if val is None:
         break
       row.append(val)
       pal.set_bg_color(val)
-      for q in xrange(3):
+      for q in range(3):
         if not self.fetch_literal('-'):
           break
         val = self.fetch_hex()
@@ -125,7 +125,7 @@ class PaletteFileReader(object):
         bytes = [int(ord(n)) for n in data]
         pal = Palette()
         pal.set_bg_color(bytes[0])
-        for row in [bytes[i*4:i*4+4] for i in xrange(4)]:
+        for row in [bytes[i*4:i*4+4] for i in range(4)]:
           if row:
             pal.add(row)
         return pal

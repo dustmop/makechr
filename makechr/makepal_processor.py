@@ -27,21 +27,21 @@ class MakepalProcessor(object):
   def _find_unit_size(self):
     self.border_color = self.pixels[0,0]
     unit_size = None
-    for k in xrange(min(self.width, self.height)):
+    for k in range(min(self.width, self.height)):
       if self.pixels[k,k] != self.border_color:
         unit_size = k
         break
     else:
       raise errors.MakepalBorderNotFound()
     # Validate border.
-    for x in xrange(self.width):
+    for x in range(self.width):
       # Top border
       self._validate_border(unit_size, 0, x)
       self._validate_border(unit_size, unit_size - 1, x)
       # Bottom border
       self._validate_border(unit_size, self.height - unit_size, x)
       self._validate_border(unit_size, self.height - 1, x)
-    for y in xrange(self.height):
+    for y in range(self.height):
       # Left border
       self._validate_border(unit_size, y, 0)
       self._validate_border(unit_size, y, unit_size - 1)
@@ -56,12 +56,12 @@ class MakepalProcessor(object):
       sys.stderr.write('Failed')
 
   def _build_palette(self):
-    cols = self.width / self.unit_size
-    rows = self.height / self.unit_size
+    cols = self.width // self.unit_size
+    rows = self.height // self.unit_size
     pal = palette.Palette()
-    for y in xrange(1, rows - 1):
+    for y in range(1, rows - 1):
       p = []
-      for x in xrange(1, cols - 1):
+      for x in range(1, cols - 1):
         nc = self._unit_nes_color(y, x)
         if nc != -1:
           p.append(nc)
@@ -78,7 +78,7 @@ class MakepalProcessor(object):
     y = row * self.unit_size
     x = col * self.unit_size
     nc = self.base.get_nes_color(y, x)
-    for i in xrange(self.unit_size):
+    for i in range(self.unit_size):
       # Top
       if nc != self.base.get_nes_color(y, x + i):
         raise errors.MakepalInvalidFormat()
@@ -96,7 +96,7 @@ class MakepalProcessor(object):
   def _build_vobject(self, palette):
     obj = valiant.ObjectFile()
     obj.magic1 = MAGIC_NUM % 100
-    obj.magic2 = MAGIC_NUM / 100
+    obj.magic2 = MAGIC_NUM // 100
     obj.header.short_palette = True
     packet = obj.body.packets.add()
     packet.role = valiant.PALETTE

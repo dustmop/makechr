@@ -1,8 +1,8 @@
 import unittest
 
 import context
-from makechr import span_list_delta
-from makechr.data import Span
+import span_list_delta
+from data import Span
 
 
 class SpanListDeltaTests(unittest.TestCase):

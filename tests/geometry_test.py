@@ -1,9 +1,8 @@
 import unittest
 
 import context
-from makechr import geometry, errors, num_range
-from makechr.direction_constants import *
-
+import geometry, errors, num_range
+from direction_constants import *
 
 class GeometryTests(unittest.TestCase):
   def test_point(self):

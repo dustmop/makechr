@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import app, bg_color_spec, image_processor, view_renderer
+import app, bg_color_spec, image_processor, view_renderer
 
 import filecmp
 import os

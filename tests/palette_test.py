@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import errors, palette
+import errors, palette
 
 
 class PaletteTests(unittest.TestCase):

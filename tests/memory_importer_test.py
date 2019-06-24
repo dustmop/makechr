@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import app, errors, memory_importer
+import app, errors, memory_importer
 
 import filecmp
 import os

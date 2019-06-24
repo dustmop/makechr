@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr.gen import valiant_pb2 as valiant
+from gen import valiant_pb2 as valiant
 from google.protobuf import text_format
 
 import filecmp
@@ -24,6 +24,8 @@ class IntegrationTests(unittest.TestCase):
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     (self.out, self.err) = p.communicate()
+    self.out = self.out.decode('utf-8')
+    self.err = self.err.decode('utf-8')
     self.returncode = p.returncode
     if is_expect_fail:
       return
@@ -34,7 +36,7 @@ class IntegrationTests(unittest.TestCase):
     args = ['testdata/full-image.png', '-o', self.output_name]
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden(None, 'o'))
-    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.returncode, 0)
     self.assertEqual(self.out, '')
 
   def test_usage(self):
@@ -107,7 +109,7 @@ Palette: P/30-38-16-01/30-19/
     args = ['testdata/257tiles.png', '-o', output_tmpl, '-s',
             '--allow-overflow', 's']
     self.makechr(args)
-    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.returncode, 0)
     self.assert_file_eq(output_tmpl.replace('%s', 'chr'),
                         'testdata/allow_overflow_chr.dat')
     self.assert_file_eq(output_tmpl.replace('%s', 'spritelist'),
@@ -119,7 +121,7 @@ Palette: P/30-38-16-01/30-19/
     output_tmpl = os.path.join(self.tmpdir, '%s.dat')
     args = ['testdata/full-image-16color.png', '-o', output_tmpl]
     self.makechr(args)
-    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.returncode, 0)
     self.assert_file_eq(output_tmpl.replace('%s', 'chr'),
                         'testdata/full-image-chr-16color.dat')
     self.assert_file_eq(output_tmpl.replace('%s', 'nametable'),
@@ -133,7 +135,7 @@ Palette: P/30-38-16-01/30-19/
     output_tmpl = os.path.join(self.tmpdir, '%s.dat')
     args = ['testdata/full-image-16color.png', '-o', output_tmpl, '-p', '+']
     self.makechr(args)
-    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.returncode, 0)
     self.assert_file_eq(output_tmpl.replace('%s', 'chr'),
                         'testdata/full-image-chr-16color.dat')
     self.assert_file_eq(output_tmpl.replace('%s', 'nametable'),
@@ -147,7 +149,7 @@ Palette: P/30-38-16-01/30-19/
     output_tmpl = os.path.join(self.tmpdir, '%s.dat')
     args = ['testdata/full-image-16color.png', '-o', output_tmpl, '-p', '-']
     self.makechr(args)
-    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.returncode, 0)
     self.assert_file_eq(output_tmpl.replace('%s', 'chr'),
                         'testdata/full-image-chr.dat')
     self.assert_file_eq(output_tmpl.replace('%s', 'nametable'),
@@ -160,18 +162,18 @@ Palette: P/30-38-16-01/30-19/
   def test_error_no_output_dir(self):
     args = ['testdata/full-image.png', '-o', 'build/']
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Directory does not exist: "build/"
+    self.assertEqual(self.err, """Directory does not exist: "build/"
 """)
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.returncode, 1)
 
   def test_error_too_many_tiles(self):
     args = ['testdata/257tiles.png', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Found 1 error:
+    self.assertEqual(self.err, """Found 1 error:
 NametableOverflow 256 at tile (8y,0x)
 To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.returncode, 1)
 
   def test_error_view_renderer(self):
     error_view = os.path.join(self.tmpdir, 'error-no-choice.png')
@@ -179,7 +181,7 @@ To see errors visually, use the "-e <error_image.png>" command-line option.
     args = ['testdata/full-image.png', '-o', self.output_name, '-e', error_view,
             '-p', palette_text]
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Found 1 error:
+    self.assertEqual(self.err, """Found 1 error:
 PaletteNoChoiceError at (2y,4x) for 30-19
 Errors displayed in "%s"
 """ % error_view)
@@ -189,76 +191,76 @@ Errors displayed in "%s"
     args = ['testdata/full-image.png', '-m', 'testdata/full-image.mem',
             '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Cannot both import memory and process input file""")
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.err, """Cannot both import memory and process input file""")
+    self.assertEqual(self.returncode, 1)
 
   def test_error_8x16_without_sprite(self):
     self.output_name = os.path.join(self.tmpdir, 'reticule.o')
     self.golden_file_prefix = 'reticule'
     args = ['testdata/reticule.png', '-o', self.output_name, '-t', '8x16']
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Command-line error: Traversal strategy \'8x16\' requires -s flag\n""")
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.err, """Command-line error: Traversal strategy \'8x16\' requires -s flag\n""")
+    self.assertEqual(self.returncode, 1)
 
   def test_error_too_many_tiles_but_view(self):
     palette_view = os.path.join(self.tmpdir, 'palette_view.png')
     args = ['testdata/257tiles.png', '-o', self.output_name,
             '--palette-view', palette_view]
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Found 1 error:
+    self.assertEqual(self.err, """Found 1 error:
 NametableOverflow 256 at tile (8y,0x)
 To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.returncode, 1)
     self.assert_file_eq(palette_view, 'testdata/too-many-tiles-pal.png')
 
   def test_error_makepal_border_not_found(self):
     args = ['testdata/error_border_not_found.png', '-o', self.output_name,
             '--makepal']
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Found 1 error:
+    self.assertEqual(self.err, """Found 1 error:
 MakepalBorderNotFound 
 To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.returncode, 1)
 
   def test_error_extract_palette_failed(self):
     args = ['testdata/full-image-16color-badpal.png', '-o', self.output_name,
             '-p', '+']
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Found 1 error:
+    self.assertEqual(self.err, """Found 1 error:
 PaletteExtractionError Background color did not match: 22 <> 35.
   Disable extraction using the flag "-p -"
 To see errors visually, use the "-e <error_image.png>" command-line option.
 """)
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.returncode, 1)
 
   def test_error_extract_palette_failure_ignored(self):
     args = ['testdata/full-image-16color-badpal.png', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, '')
-    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.err, '')
+    self.assertEqual(self.returncode, 0)
 
   def test_error_image_not_found(self):
     args = ['testdata/not_found.png', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """File not found: "testdata/not_found.png"
+    self.assertEqual(self.err, """File not found: "testdata/not_found.png"
 """)
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.returncode, 1)
 
   def test_error_mem_not_found(self):
     args = ['-m', 'testdata/not_found.bin', '-o', self.output_name]
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """File not found: "testdata/not_found.bin"
+    self.assertEqual(self.err, """File not found: "testdata/not_found.bin"
 """)
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.returncode, 1)
 
   def test_rgb_mapping(self):
     args = ['testdata/full-image.png', '-o', self.output_name,
             '--rgb-mapping', 'almighty']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden(None, 'o'))
-    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.returncode, 0)
     self.assertEqual(self.out, '')
 
   def test_rgb_mapping_fceux(self):
@@ -266,16 +268,16 @@ To see errors visually, use the "-e <error_image.png>" command-line option.
             '--rgb-mapping', 'fceux']
     self.makechr(args)
     self.assert_file_eq(self.output_name, self.golden(None, 'o'))
-    self.assertEquals(self.returncode, 0)
+    self.assertEqual(self.returncode, 0)
     self.assertEqual(self.out, '')
 
   def test_rgb_mapping_unknown(self):
     args = ['testdata/full-image.png', '-o', self.output_name,
             '--rgb-mapping', 'unknown']
     self.makechr(args, is_expect_fail=True)
-    self.assertEquals(self.err, """Unknown rgb-mapping: "unknown"
+    self.assertEqual(self.err, """Unknown rgb-mapping: "unknown"
 """)
-    self.assertEquals(self.returncode, 1)
+    self.assertEqual(self.returncode, 1)
 
   def golden(self, name, ext):
     if name:

@@ -66,15 +66,15 @@ class ViewRenderer(object):
   def determine_empty_tile(self, ppu_memory):
     self.empty_tile = None
     chr_set = ppu_memory.chr_set
-    for i in xrange(chr_set.size()):
+    for i in range(chr_set.size()):
       if chr_set.get(i).is_empty():
         self.empty_tile = i
         return
 
   def to_tuple(self, value):
-    r = value / (256 * 256)
-    g = (value / 256) % 256
-    b = value % 256
+    r = value // 0x10000
+    g = (value // 0x100) % 0x100
+    b = value % 0x100
     return (r,g,b)
 
   def palette_option_to_colors(self, poption):
@@ -110,11 +110,11 @@ class ViewRenderer(object):
   def replace_color(self, img, old, new):
     img = img.copy()
     pixels = img.load()
-    old_color = (old / 0x10000, (old / 0x100) % 0x100, old % 0x100)
-    new_color = (new / 0x10000, (new / 0x100) % 0x100, new % 0x100)
+    old_color = (old // 0x10000, (old // 0x100) % 0x100, old % 0x100)
+    new_color = (new // 0x10000, (new // 0x100) % 0x100, new % 0x100)
     (cols, rows) = img.size
-    for y in xrange(rows):
-      for x in xrange(cols):
+    for y in range(rows):
+      for x in range(cols):
         tuple = pixels[x, y]
         curr_color = (tuple[0], tuple[1], tuple[2])
         if curr_color == old_color:
@@ -178,8 +178,8 @@ class ViewRenderer(object):
     if scheme != 'legacy':
       s *= 2
       t *= 2
-    for y in xrange(8):
-      for x in xrange(8):
+    for y in range(8):
+      for x in range(8):
         base_y = tile_y * (s + 1)
         base_x = tile_x * (s + 1)
         pixel = tile.get_pixel(y, x)
@@ -221,7 +221,7 @@ class ViewRenderer(object):
         w = 7
         h = 11
         offset = 7
-        upper = self.font[nt / 16]
+        upper = self.font[nt // 16]
         lower = self.font[nt % 16]
       else:
         s = self.scale * 8
@@ -230,7 +230,7 @@ class ViewRenderer(object):
         w = self.font_width * self.scale
         h = self.font_height * self.scale
         offset = int(3.5 * self.scale)
-        upper = self.color_and_scale(self.font[nt / 16], 0xffffff, 0xc0c0c0)
+        upper = self.color_and_scale(self.font[nt // 16], 0xffffff, 0xc0c0c0)
         lower = self.color_and_scale(self.font[nt % 16], 0xffffff, 0x909090)
       # Left digit (upper nibble).
       self.img.paste(upper, [x, y, x + w, y + h])
@@ -263,14 +263,14 @@ class ViewRenderer(object):
     tile_grid_color = (0x20,0x80,0x20)
     block_grid_color = (0x00,0xf0,0x00)
     # Draw tile grid.
-    for col in xrange(16):
+    for col in range(16):
       self.draw.line([col*2*s+s, 0, col*2*s+s, height], tile_grid_color)
-    for row in xrange(15):
+    for row in range(15):
       self.draw.line([0, row*2*s+s, width, row*2*s+s], tile_grid_color)
     # Draw block grid.
-    for col in xrange(1, 16):
+    for col in range(1, 16):
       self.draw.line([col*2*s, 0, col*2*s, height], block_grid_color)
-    for row in xrange(1, 15):
+    for row in range(1, 15):
       self.draw.line([0, row*2*s, width, row*2*s], block_grid_color)
 
   def create_colorization_view(self, outfile, ppu_memory, is_sprite):
@@ -289,8 +289,8 @@ class ViewRenderer(object):
       palette = ppu_memory.palette_spr
     # TODO: Support both graphics pages.
     colorization = ppu_memory.gfx[0].colorization
-    for y in xrange(NUM_BLOCKS_Y):
-      for x in xrange(NUM_BLOCKS_X):
+    for y in range(NUM_BLOCKS_Y):
+      for x in range(NUM_BLOCKS_X):
         pid = colorization[y*2][x*2]
         poption = palette.get(pid)
         if self.is_empty_block(y, x, ppu_memory.gfx[0].nametable):
@@ -314,8 +314,8 @@ class ViewRenderer(object):
     scheme = 'legacy' if self.is_legacy else 'normal'
     # TODO: Support both graphics pages.
     nametable = ppu_memory.gfx[0].nametable
-    for block_y in xrange(NUM_BLOCKS_Y):
-      for block_x in xrange(NUM_BLOCKS_X):
+    for block_y in range(NUM_BLOCKS_Y):
+      for block_x in range(NUM_BLOCKS_X):
         for i in range(2):
           for j in range(2):
             y = block_y * 2 + i
@@ -342,7 +342,7 @@ class ViewRenderer(object):
       palette = ppu_memory.palette_nt
     else:
       palette = ppu_memory.palette_spr
-    for i in xrange(4):
+    for i in range(4):
       poption = palette.get(i)
       if self.is_legacy:
         self.draw_poption(i, poption)
@@ -363,8 +363,8 @@ class ViewRenderer(object):
     self.create_file(outfile, width, height, bg_color)
     # TODO: Support both graphics pages.
     nametable = ppu_memory.gfx[0].nametable
-    for block_y in xrange(NUM_BLOCKS_Y):
-      for block_x in xrange(NUM_BLOCKS_X):
+    for block_y in range(NUM_BLOCKS_Y):
+      for block_x in range(NUM_BLOCKS_X):
         for i in range(2):
           for j in range(2):
             y = block_y * 2 + i
@@ -400,7 +400,7 @@ class ViewRenderer(object):
     self.create_file(outfile, width, height, color)
     scheme = 'legacy' if self.is_legacy else 'normal'
     for k, tile in enumerate(chr_set.tiles):
-      tile_y = k / 16
+      tile_y = k // 16
       tile_x = k % 16
       self.draw_chr(tile, tile_y, tile_x, scheme)
     return self.save_file()

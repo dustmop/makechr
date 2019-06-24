@@ -17,9 +17,9 @@ class RectilinearCoverage(object):
         try:
           self.create_coverage(r)
         except RuntimeError as e:
-          print e
+          print(e)
         except IndexError as e:
-          print e
+          print(e)
 
   def create_coverage(self, region):
     # Starting from the first vertex, look back to see if the previous two
@@ -144,13 +144,13 @@ class RectilinearCoverage(object):
       self.collect_rectangle(region, rect, 2)
     # Edges that remain
     # TODO: What edges are incomplete?
-    for phase in xrange(2):
+    for phase in range(2):
       for e in region.edges:
         if e.done:
           continue
         try:
           segment = e.calc_uncovered()
-        except RuntimeError, e:
+        except RuntimeError as e:
           segment = None
         if not segment:
           continue

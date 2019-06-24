@@ -2,8 +2,10 @@ import errors
 import sys
 
 
+asbyte = lambda n: n
 if sys.version_info < (3,0):
   range = xrange
+  asbyte = ord
 
 
 class ChrTile(object):
@@ -38,8 +40,8 @@ class ChrTile(object):
 
   def set(self, bytes):
     """Assign 16 bytes of data to this tile."""
-    self.low = [ord(b) for b in bytes[0:8]]
-    self.hi = [ord(b) for b in bytes[8:16]]
+    self.low = [asbyte(b) for b in bytes[0:8]]
+    self.hi = [asbyte(b) for b in bytes[8:16]]
 
   def is_empty(self):
     return all(e == 0 for e in self.low) and all(e == 0 for e in self.hi)
@@ -85,6 +87,16 @@ class ChrTile(object):
     elif self.hi > other.hi:
       return 1
     return 0
+
+  def __lt__(self, other):
+    if self.low < other.low:
+      return True
+    elif self.low == other.low:
+      return self.high < other.high
+    return False
+
+  def __eq__(self, other):
+    return self.low == other.low and self.hi == other.hi
 
   def __str__(self):
     return '<ChrTile %r>' % bytes(self.get_bytes())
@@ -148,7 +160,7 @@ class ChrPage(object):
   @staticmethod
   def from_binary(bytes):
     make = ChrPage()
-    for k in range(len(bytes) / 0x10):
+    for k in range(len(bytes) // 0x10):
       tile = ChrTile()
       tile.set(bytes[k*0x10:k*0x10+0x10])
       make.add(tile)
@@ -190,7 +202,7 @@ class ChrBank(ChrPage):
   @staticmethod
   def from_binary(bytes):
     make = ChrBank()
-    for k in range(len(bytes) / 0x10):
+    for k in range(len(bytes) // 0x10):
       tile = ChrTile()
       tile.set(bytes[k*0x10:k*0x10+0x10])
       make.add(tile)
@@ -294,4 +306,4 @@ class VertTilePair(object):
     raise RuntimeError('Unknown flip direction "%s"' % direction)
 
   def __str__(self):
-    return '<VertTilePair ' + bytes(self.get_bytes()) + '>'
+    return '<VertTilePair ' + str(self.get_bytes()) + '>'

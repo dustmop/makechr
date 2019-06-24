@@ -9,9 +9,9 @@ class ExtractIndexedImagePalette(object):
 
   def extract_palette(self, imgpal):
     pal = palette.Palette()
-    for j in xrange(4):
+    for j in range(4):
       p = []
-      for k in xrange(4):
+      for k in range(4):
         i = j * 4 + k
         nc = self._to_nescolor(imgpal.get(i))
         if nc == -1:
@@ -29,6 +29,12 @@ class ExtractIndexedImagePalette(object):
 
   def _to_nescolor(self, triplet):
     (r, g, b) = triplet
+    if isinstance(r, str):
+      r = ord(r)
+    if isinstance(g, str):
+      g = ord(g)
+    if isinstance(b, str):
+      b = ord(b)
     color_val = (r << 16) + (g << 8) + b
     if color_val in rgb.RGB_XLAT:
       nc = rgb.RGB_XLAT[color_val]
