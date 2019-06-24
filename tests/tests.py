@@ -14,11 +14,13 @@ import free_sprite_processor_test
 import geometry_test
 import guess_best_palette_test
 import integration_test
+import makepal_processor_test
 import memory_importer_test
 import num_range_test
 import outline_tracer_test
 import palette_test
 import platform_test
+import rectilinear_coverage_test
 import rom_builder_test
 import span_list_delta_test
 import tile_test
@@ -43,13 +45,30 @@ suite.addTest(unittest.makeSuite(
 suite.addTest(unittest.makeSuite(geometry_test.GeometryTests))
 suite.addTest(unittest.makeSuite(guess_best_palette_test.GuessBestPaletteTests))
 suite.addTest(unittest.makeSuite(integration_test.IntegrationTests))
+suite.addTest(unittest.makeSuite(makepal_processor_test.MakepalProcessorTests))
 suite.addTest(unittest.makeSuite(memory_importer_test.MemoryImporterTests))
 suite.addTest(unittest.makeSuite(num_range_test.NumRangeTests))
 suite.addTest(unittest.makeSuite(outline_tracer_test.OutlineTracerTests))
 suite.addTest(unittest.makeSuite(palette_test.PaletteTests))
 suite.addTest(unittest.makeSuite(platform_test.PlatformTests))
+suite.addTest(unittest.makeSuite(
+    rectilinear_coverage_test.RectilinearCoverageTests))
 suite.addTest(unittest.makeSuite(rom_builder_test.RomBuilderTests))
 suite.addTest(unittest.makeSuite(span_list_delta_test.SpanListDeltaTests))
 suite.addTest(unittest.makeSuite(tile_test.TileTests))
 runner = unittest.TextTestRunner()
 runner.run(suite)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

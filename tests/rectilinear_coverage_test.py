@@ -1,7 +1,7 @@
 import unittest
 
 import context
-from makechr import outline_tracer, rectilinear_coverage
+import outline_tracer, rectilinear_coverage
 from PIL import Image
 
 

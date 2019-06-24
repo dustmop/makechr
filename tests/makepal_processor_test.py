@@ -2,7 +2,7 @@ import general_app_test_util
 import unittest
 
 import context
-from makechr import makepal_processor
+import makepal_processor
 
 from PIL import Image
 
