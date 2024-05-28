@@ -52,6 +52,8 @@ class MockArgs(object):
 
 class GeneralAppTests(unittest.TestCase):
   def setUp(self):
+    if not os.getcwd().endswith('tests'):
+      os.chdir('tests/')
     self.args = MockArgs()
     self.golden_file_prefix = 'full-image'
 
@@ -94,6 +96,7 @@ class GeneralAppTests(unittest.TestCase):
                                    self.args.allow_overflow)
     self.ppu_memory = self.processor.ppu_memory()
     self.err = self.processor.err()
+    img.close()
 
   def create_output(self):
     a = app.Application()

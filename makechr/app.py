@@ -7,6 +7,7 @@ import ppu_memory
 import rom_builder
 import view_renderer
 import sys
+from PIL import Image
 
 
 eight_by_sixteen_processor = None
@@ -62,6 +63,7 @@ class Application(object):
                               {'anon_view': args.rect_cover_anon_view,
                                'steps_view': args.rect_cover_steps_view})
       if processor.err().has():
+        
         self.handle_errors(processor.err(), img, args)
         return False
       args.is_sprite = True
@@ -124,6 +126,7 @@ class Application(object):
     self.create_output(mem, args, self.get_traversal(None), None)
 
   def create_views(self, mem, args, img, scale=None):
+    img = Image.open(img.filename)
     if args.use_legacy_views:
       renderer = view_renderer.ViewRenderer(is_legacy=True)
     else:
@@ -185,6 +188,8 @@ class Application(object):
     print('Palette: {0}'.format(pal))
 
   def handle_errors(self, error_provider, img, args):
+    # Reopen img
+    img = Image.open(img.filename)
     es = error_provider.get()
     sys.stderr.write('Found {0} error{1}:\n'.format(
       len(es), 's'[len(es) == 1:]))
