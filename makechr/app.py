@@ -126,7 +126,8 @@ class Application(object):
     self.create_output(mem, args, self.get_traversal(None), None)
 
   def create_views(self, mem, args, img, scale=None):
-    img = Image.open(img.filename)
+    if img is not None:
+      img = Image.open(img.filename)
     if args.use_legacy_views:
       renderer = view_renderer.ViewRenderer(is_legacy=True)
     else:
