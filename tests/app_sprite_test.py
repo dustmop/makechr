@@ -95,6 +95,7 @@ class AppSpriteTests(general_app_test_util.GeneralAppTests):
     self.assert_output_result('spritelist')
     # Without this functionality, the derived palette won't have the right
     # background color, which will cause spritelist overflow.
+    img = Image.open(img.filename)
     self.process_image(img, auto_sprite_bg=True)
     self.assertTrue(self.err.has())
     es = self.err.get()

@@ -426,6 +426,7 @@ class ViewRenderer(object):
     errs: List of errors created by processor.
     has_grid: Whether to draw a grid on the image.
     """
+    img = Image.open(img.filename)
     orig_wide, orig_high = img.size
     make_wide, make_high = (orig_wide * self.scale, orig_high * self.scale)
     self.img = img.resize((make_wide, make_high), Image.NEAREST).convert('RGB')
