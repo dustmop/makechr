@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "makechr"
+version = "1.8.0"
+authors = [
+  { name="Dustin Long", email="me@dustmop.io" },
+]
+description = "Graphics Tool for Retro Image Formats"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: GPL3 License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://dustmop.io/software/makechr"
+Issues = "https://github.com/dustmop/makechr/issues"
