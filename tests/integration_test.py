@@ -19,7 +19,7 @@ class IntegrationTests(unittest.TestCase):
 
   def makechr(self, args, is_expect_fail=False):
     curr_dir = os.path.dirname(os.path.abspath(__file__))
-    makechr = os.path.join(curr_dir, '../makechr/makechr.py')
+    makechr = os.path.join(curr_dir, '../src/makechr/makechr.py')
     cmd = 'python ' + makechr + ' ' + ' '.join(args)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
