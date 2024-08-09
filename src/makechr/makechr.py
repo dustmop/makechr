@@ -11,37 +11,6 @@ import sys
 __version__ = '1.5'
 
 
-def allow_overflow_build(text):
-  if text == '':
-    return []
-  elif text == 's':
-    return ['s']
-  elif text == 'c':
-    return ['c']
-  elif text in ['cs', 'sc']:
-    return ['c', 's']
-  else:
-    # TODO: Support more types of components.
-    raise errors.CommandLineArgError(
-      '--allow_overflow only usable with "s" or "c"')
-
-
-def is_valiant(filename):
-  fp = open(filename, 'rb')
-  content = fp.read()
-  fp.close()
-  return content.startswith(b'(VALIANT)')
-
-
-class BlankLineFormatter(argparse.RawDescriptionHelpFormatter):
-  def _split_lines(self, text, width):
-    parts = text.split('\n')
-    text = parts[0]
-    lines = parts[1:]
-    lines = argparse.HelpFormatter._split_lines(self, text, width) + lines
-    return lines + ['']
-
-
 def main():
   usage = ''
   parser = argparse.ArgumentParser(
@@ -298,6 +267,38 @@ def main():
     parser.print_usage()
     sys.exit(1)
   sys.exit(0)
+
+
+# formatter class for ArgumentParser
+class BlankLineFormatter(argparse.RawDescriptionHelpFormatter):
+  def _split_lines(self, text, width):
+    parts = text.split('\n')
+    text = parts[0]
+    lines = parts[1:]
+    lines = argparse.HelpFormatter._split_lines(self, text, width) + lines
+    return lines + ['']
+
+
+def allow_overflow_build(text):
+  if text == '':
+    return []
+  elif text == 's':
+    return ['s']
+  elif text == 'c':
+    return ['c']
+  elif text in ['cs', 'sc']:
+    return ['c', 's']
+  else:
+    # TODO: Support more types of components.
+    raise errors.CommandLineArgError(
+      '--allow_overflow only usable with "s" or "c"')
+
+
+def is_valiant(filename):
+  fp = open(filename, 'rb')
+  content = fp.read()
+  fp.close()
+  return content.startswith(b'(VALIANT)')
 
 
 if __name__ == '__main__':

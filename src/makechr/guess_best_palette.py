@@ -107,6 +107,8 @@ class GuessBestPalette(object):
     """
     merged_color_possibilities = []
     num_available = NUM_ALLOWED_PALETTES - len(finalized)
+    # Iterate over all possible partitions of the subsets
+    # The merge_strategy is the set of indexes to use per group
     for merge_strategy in partitions.partitions(len(remaining)):
       if len(merge_strategy) > num_available:
         continue
@@ -129,12 +131,18 @@ class GuessBestPalette(object):
 
     minimal_colors: Set of minimal needed colors.
     """
+    # Consider this example:
+    #   minimal_colors = [1,2,3],[1,2,4],[1,5,6,7]
     finalized = []
     remaining = []
     # We know from earlier steps that minimal_colors is a set of color_sets
     # such that none are subsets of each other. However, some may have some
     # colors in common such that they could be merged. First, let's remove all
     # full palettes, leaving only those that might be mergable.
+    #
+    # in our example:
+    #   finalized = [1,5,6,7]
+    #   remaining = [1,2,3],[1,2,4]
     for color_set in minimal_colors:
       if len(color_set) == PALETTE_SIZE:
         finalized.append(color_set)
@@ -143,6 +151,12 @@ class GuessBestPalette(object):
     if remaining:
       # There are remaining unmerged palettes. Generate all valid combinations
       # of merged palettes, which may fail if there is no way to merge them.
+      #
+      # in our example, the result is:
+      # [
+      #   {bg: 1, finalized: [1,5,6,7], remaining: [1,2,3,4]}
+      #   {bg: 1, finalized: [1,5,6,7], remaining: [1,2,4],[1,2,3]}
+      # ]
       return self.get_valid_combinations(finalized, remaining)
     elif len(finalized) > NUM_ALLOWED_PALETTES:
       # The number of necessary palettes is more than the number allowed.
