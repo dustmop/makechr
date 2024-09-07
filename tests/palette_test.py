@@ -73,6 +73,15 @@ class PaletteTests(unittest.TestCase):
     pal.set_bg_color(0x30)
     self.assertEqual(str(pal), 'P/30-01/')
 
+  def test_palette_file_reader(self):
+    reader = palette.PaletteFileReader()
+    pal = reader.read('testdata/simple_palette.o')
+    self.assertEqual(str(pal), 'P/0f-00-10-30/0f-01-11-21/0f-03-13-23/0f-04-14-24/')
+    pal = reader.read('testdata/partial_palette.o')
+    self.assertEqual(str(pal), 'P/0f-28-1a-0f/0f-1c/')
+    pal = reader.read('testdata/bigger_palette.o')
+    self.assertEqual(str(pal), 'P/30-38-16-01/30-19/')
+
 
 if __name__ == '__main__':
   unittest.main()

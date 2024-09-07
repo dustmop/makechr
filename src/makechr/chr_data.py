@@ -92,7 +92,7 @@ class ChrTile(object):
     if self.low < other.low:
       return True
     elif self.low == other.low:
-      return self.high < other.high
+      return self.hi < other.hi
     return False
 
   def __eq__(self, other):

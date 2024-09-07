@@ -10,7 +10,7 @@ RGB_COLORS = [
 #   grey 10  blue 11  blue 12 purple13 purple14   red 15   red 16 orange17
    0xbcbcbc,0x0078f8,0x0058f8,0x6844fc,0xd800cc,0xe40058,0xf83800,0xe45c10,
 #  brown 18 green 19 green 1a green 1b  cyan 1c  grey 1d black 1e black 1f
-   0xac7c00,0x00b800,0x00a800,0x00a844,0x008888,0x080808,0x080808,0x080808,
+   0xac7c00,0x00b800,0x00a800,0x00a844,0x008888,0x2c2c2c,0x080808,0x080808,
 #-------------------------------------------------------------------------
 #  white 20  blue 21  blue 22 purple23  pink 24  pink 25 orange26 orange27
    0xf8f8f8,0x3cbcfc,0x6888fc,0x9878f8,0xf878f8,0xf85898,0xf87858,0xfca044,

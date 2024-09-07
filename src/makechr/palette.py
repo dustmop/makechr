@@ -117,15 +117,15 @@ class PaletteFileReader(object):
     fp = open(filename, 'rb')
     content = fp.read(0x29)
     fp.close()
-    if len(content) >= 0x1a and content[:0x09] == '(VALIANT)':
+    if len(content) >= 0x1a and content[:0x09] == b'(VALIANT)':
       short_palette = content[0x0c:0x0f]
-      if short_palette == '\x02\x10\x01':
-        length = ord(content[0x18])
+      if short_palette == b'\x02\x10\x01':
+        length = content[0x18]
         data = content[0x19:0x19 + length]
-        bytes = [int(ord(n)) for n in data]
+        values = [int(n) for n in data]
         pal = Palette()
-        pal.set_bg_color(bytes[0])
-        for row in [bytes[i*4:i*4+4] for i in range(4)]:
+        pal.set_bg_color(values[0])
+        for row in [values[i*4:i*4+4] for i in range(4)]:
           if row:
             pal.add(row)
         return pal

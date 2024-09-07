@@ -57,6 +57,10 @@ class ChrDataTests(unittest.TestCase):
     self.assertTrue(rite < left)
     self.assertTrue(left == left)
     self.assertTrue(rite == rite)
+    self.assertEqual(left.__cmp__(rite), 1)
+    self.assertEqual(rite.__cmp__(left), -1)
+    self.assertEqual(left.__lt__(rite), False)
+    self.assertEqual(rite.__lt__(left), True)
 
   def test_chr_page(self):
     raw_data = bytes(bytearray(range(64)))
