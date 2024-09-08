@@ -10,7 +10,7 @@ makechr = "makechr.makechr:main"
 
 [project]
 name = "makechr"
-version = "1.8.0"
+version = "1.8.5"
 authors = [
   { name="Dustin Long", email="me@dustmop.io" },
 ]
